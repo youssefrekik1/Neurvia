@@ -14,7 +14,6 @@ ERRORS = {
     409: ("CONFLICT", "Action impossible dans l'état actuel."),
     422: ("INVALID_INPUT", "Les données envoyées sont invalides."),
     429: ("RATE_LIMITED", "Trop de tentatives. Réessayez plus tard."),
-    501: ("PHASE_NOT_IMPLEMENTED", "Disponible en mode démonstration uniquement."),
 }
 
 

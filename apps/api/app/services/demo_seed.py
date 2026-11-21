@@ -8,7 +8,7 @@ from app.core.auth import password_hash
 from app.models import Classroom, Concept, Lesson, LessonConcept, Membership, Question, Quiz, QuizQuestion, User
 from app.models import enums as e
 from app.schemas.learning import QuestionDraft
-from app.services.assessments import get_or_begin, save_choice, submit_attempt
+from app.services.assessments import confirmation_for, get_or_begin, save_choice, submit_attempt
 from app.schemas.learning import AnswerInput
 from app.services.questions import approve_question, create_question, opts, question_input, quiz_items
 
@@ -136,8 +136,22 @@ def seed_demo(db: Session, now):
             if concept.code == wrong_code:
                 wrong = tuple(VARIANTS)[index % 3][1]
                 option = next(row for row, code in options if code == wrong)
+            elif index % 4 == 0 and concept.code == "C_SCOPE":
+                option = next(row for row, code in options if not row.is_correct and code is None)
             else:
                 option = next(row for row, _ in options if row.is_correct)
             save_choice(db, attempt, quiz, AnswerInput(question_id=item.id, option_id=option.id,
                                                       confidence=e.Confidence.sure if index % 2 else e.Confidence.medium))
         submit_attempt(db, attempt, quiz, room, now)
+        if index in (0, 1):
+            assigned = confirmation_for(db, attempt.id)
+            private = db.get(Quiz, assigned.quiz_id) if assigned else None
+            if private:
+                verification = get_or_begin(db, private, student, now)
+                _, item, _ = quiz_items(db, private.id)[0]
+                option = next(row for row, _ in opts(db, item.id)
+                              if (row.is_correct if index == 0 else row.misconception_id == assigned.misconception_id))
+                save_choice(db, verification, private, AnswerInput(
+                    question_id=item.id, option_id=option.id, confidence=e.Confidence.sure,
+                ))
+                submit_attempt(db, verification, private, room, now, assigned)

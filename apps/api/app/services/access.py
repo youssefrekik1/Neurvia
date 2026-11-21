@@ -39,7 +39,3 @@ def attempt_access(db, user, attempt_id):
         raise error(404)
     quiz, lesson, classroom = quiz_access(db, user, attempt.quiz_id)
     return attempt, quiz, lesson, classroom
-
-
-def missing_resource():
-    return error(404)

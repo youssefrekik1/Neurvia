@@ -205,6 +205,9 @@ def test_demo_uses_real_analytics_and_protected_clock(tmp_path):
         assert len(graph["nodes"]) == 20 and graph["is_synthetic"]
         groups = call(client, "POST", base + "/groups/suggest", teacher)
         assert len(groups) == 3
+        dashboard = call(client, "GET", base + "/dashboard", teacher)
+        assert len(dashboard["insights"]) == 2
+        assert any(item["corroborated_students"] > 0 for item in dashboard["priorities"])
         call(client, "POST", "/dev/clock/advance", expected=403)
         call(client, "POST", "/demo/advance", student, expected=403)
         assert call(client, "POST", "/demo/advance", teacher)["is_simulated"]
