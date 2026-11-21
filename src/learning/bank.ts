@@ -1,3 +1,5 @@
+import type { Schema } from "../lib/api";
+
 export const levels = ["Essentiel", "Intermédiaire", "Approfondi"] as const;
 export type Level = (typeof levels)[number];
 export type Question = {
@@ -13,4 +15,5 @@ export type Question = {
   misconceptions: string[];
   source: "Banque" | "IA" | "Professeur";
   level: Level;
+  sourcePages?: Schema["SourceView"][];
 };

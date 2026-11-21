@@ -14,7 +14,7 @@ export type Lesson = {
   concepts: string[]; content: string; date: string; questions: Question[];
   status: "draft" | "published" | "closed"; count: number; level: Level; evaluate: string[];
   responses: number; difficulty: string; trend: string; quizId?: string; release?: string;
-  pitfalls: string; instructions: string; usedFallback?: boolean;
+  pitfalls: string; instructions: string; usedFallback?: boolean; isGrounded?: boolean;
 };
 export type Answer = { option: number; confidence: Confidence };
 export type Attempt = {
@@ -69,6 +69,7 @@ function question(row: Schema["StudentQuestion"] | Schema["TeacherQuestion"], ta
     optionIds: row.options.map((o) => o.id), concept: label(row.concept_code, taxonomy),
     conceptCode: row.concept_code, correct: teacher?.options.findIndex((o) => o.is_correct) ?? -1,
     explanation: teacher?.explanation ?? "", misconceptions: teacher?.options.map((o) => o.misconception_code ?? "") ?? [],
+    sourcePages: teacher?.source_pages,
     source: teacher ? sources[teacher.source] : "Professeur", level: levels[(teacher?.difficulty ?? 1) - 1] ?? levels[0],
   };
 }
@@ -110,7 +111,7 @@ async function load(key: string): Promise<LearningData> {
       status: row.status, responses: row.submitted_count ?? 0, quizId: row.quiz_id ?? undefined,
       count: teacher ? brief?.question_count ?? 6 : row.question_count ?? 0,
       level: levels[(brief?.difficulty ?? 1) - 1], pitfalls: brief?.pitfalls?.join(", ") ?? "",
-      instructions: brief?.instructions ?? "", usedFallback: quiz?.used_fallback,
+      instructions: brief?.instructions ?? "", usedFallback: quiz?.used_fallback, isGrounded: quiz?.is_grounded,
       questions: quiz?.questions.map((q) => question(q, taxonomy)) ?? [],
     };
   }));

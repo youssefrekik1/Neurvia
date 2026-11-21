@@ -26,9 +26,15 @@ class RateLimiter:
         self._lock = Lock()
         self._cleanup_at = 0.0
 
-    def check(self, request: Request, action: str, limit: int) -> None:
+    def check(self, request: Request, action: str, limit: int, subject: object | None = None) -> None:
+        """Allow `limit` calls per minute per client address, or per `subject` (e.g. a user id).
+
+        Authenticated model-backed routes pass the user id: behind the Next.js proxy, every browser shares
+        the proxy's address.
+        """
         now = monotonic()
-        key = (action, request.client.host if request.client else "unknown")
+        key = (action, str(subject) if subject is not None else
+               request.client.host if request.client else "unknown")
         with self._lock:
             if now >= self._cleanup_at:
                 self._windows = {

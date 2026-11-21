@@ -23,6 +23,7 @@ import { blankLesson, dayLabel, lessonHref, prepareQuiz, saveLesson, saveQuestio
   subjects, type Lesson, type LearningData } from "./service";
 import { api, errorMessage, refresh, type Schema, useGet } from "../lib/api";
 import { Empty, Heading, Prompt, Stepper } from "./ui";
+import { CourseDocuments, Sources } from "./CourseDocuments";
 
 const editorHref = (id: string, step = "review") =>
   "/teacher/quiz?lesson=" + encodeURIComponent(id) + "&step=" + step;
@@ -223,6 +224,8 @@ export function LessonDetail({
           )}
         </aside>
       </div>
+      <CourseDocuments key={lesson.id} lessonId={lesson.id} allowQuiz={lesson.status === "draft"}
+        hasGroundedQuiz={lesson.isGrounded} allowTaxonomy={lesson.status === "draft" && !lesson.quizId} />
     </>
   );
 }
@@ -601,6 +604,9 @@ function Review({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["Concep
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const q = lesson.questions[index];
+  // Teacher-approved misconceptions carry generated codes; show their reviewed label instead.
+  const misconceptionLabels = new Map(taxonomy.flatMap((item) =>
+    item.misconceptions.map((error) => [error.code, error.label_fr] as const)));
   const readOnly = lesson.status !== "draft";
   const root = "/quizzes/" + lesson.quizId;
   async function run(action: () => Promise<unknown>) {
@@ -651,7 +657,8 @@ function Review({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["Concep
               checked={approved}
               onChange={(e) => setApproved(e.target.checked)}
             />
-            J’ai vérifié les questions, les réponses et les explications.
+            {lesson.isGrounded ? "J’ai vérifié les questions, les réponses, les explications et les sources." :
+              "J’ai vérifié les questions, les réponses et les explications."}
           </label>
           {message && <p className="lr-error" role="alert">{message}</p>}
           <div className="lr-actions">
@@ -681,7 +688,9 @@ function Review({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["Concep
         back={[lessonHref(lesson.id), "Détail de la séance"]}
       />
       {!readOnly && <Stepper step={2} />}
-      {lesson.usedFallback && <p className="lr-notice">Le stock de la banque et du modèle a produit un brouillon partiel. Complétez-le manuellement.</p>}
+      {lesson.usedFallback && <p className="lr-notice">{lesson.isGrounded ?
+        "Les sources ont permis de valider une partie des questions demandées." :
+        "Le stock de la banque et du modèle a produit un brouillon partiel. Complétez-le manuellement."}</p>}
       {busy && <p role="status">Enregistrement en cours…</p>}
       {message && editor && <p className="lr-error" role="alert">{message}</p>}
       {lesson.status === "published" && <button className="lr-btn" disabled={busy} onClick={() => void run(() => api(root + "/close", "POST"))}>Fermer le quiz</button>}
@@ -735,7 +744,9 @@ function Review({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["Concep
                     </span>
                     <div>
                       {o}
-                      {i !== q.correct && <small>{q.misconceptions[i]}</small>}
+                      {i !== q.correct && q.misconceptions[i] && <small title={q.misconceptions[i]}>
+                        {misconceptionLabels.get(q.misconceptions[i]) ?? q.misconceptions[i]}
+                      </small>}
                     </div>
                     {i === q.correct && (
                       <CheckCircle2 size={18} aria-label="Réponse correcte" />
@@ -751,16 +762,17 @@ function Review({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["Concep
                 <span>{q.concept}</span>
                 <span>Source · {q.source}</span>
               </div>
+              <Sources sources={q.sourcePages ?? []} />
               {!readOnly && (
                 <div className="lr-tools">
                   <button onClick={() => setEditor("edit")}>
                     <Pencil />
                     Modifier
                   </button>
-                  <button onClick={regenerate} disabled={busy}>
+                  {!lesson.isGrounded && <button onClick={regenerate} disabled={busy}>
                     <RefreshCw />
                     Régénérer
-                  </button>
+                  </button>}
                   <button
                     disabled={busy}
                     onClick={() => void run(async () => {
@@ -834,20 +846,18 @@ function Review({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["Concep
           )}
           {!readOnly && (
             <>
-              {lesson.questions.length < lesson.count && (
+              {!lesson.isGrounded && lesson.questions.length < lesson.count && (
                 <small>
                   Objectif de préparation : {lesson.count} questions. Vous
                   pouvez compléter le quiz manuellement.
                 </small>
               )}
-              <button
-                className="lr-btn"
-                disabled={!!editor}
-                onClick={() => setEditor("add")}
-              >
+              {lesson.isGrounded ? <a className="lr-btn" href={lessonHref(lesson.id) + "#documents"}>
+                Ajouter des questions à partir des PDF
+              </a> : <button className="lr-btn" disabled={!!editor} onClick={() => setEditor("add")}>
                 <Plus size={16} />
                 Ajouter une question
-              </button>
+              </button>}
               <div className="lr-rule" />
               <button
                 className="lr-btn primary"
@@ -858,7 +868,7 @@ function Review({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["Concep
                 <ArrowRight size={16} />
               </button>
               <a
-                href={editorHref(lesson.id, "prepare")}
+                href={lesson.isGrounded ? lessonHref(lesson.id) + "#documents" : editorHref(lesson.id, "prepare")}
                 className="lr-textlink"
               >
                 <ArrowLeft size={14} />

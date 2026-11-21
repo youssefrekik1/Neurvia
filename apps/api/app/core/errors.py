@@ -13,6 +13,9 @@ ERRORS = {
     404: ("RESOURCE_NOT_FOUND", "Ressource introuvable."),
     409: ("CONFLICT", "Action impossible dans l'état actuel."),
     422: ("INVALID_INPUT", "Les données envoyées sont invalides."),
+    413: ("DOCUMENT_TOO_LARGE", "Le document dépasse la taille autorisée."),
+    415: ("INVALID_DOCUMENT", "Seuls les documents PDF valides sont acceptés."),
+    503: ("SERVICE_UNAVAILABLE", "Ce service est momentanément indisponible."),
     429: ("RATE_LIMITED", "Trop de tentatives. Réessayez plus tard."),
 }
 

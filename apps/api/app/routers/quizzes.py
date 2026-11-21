@@ -7,6 +7,10 @@ from app.ai.tasks import generate_question
 from app.core.auth import Teacher
 from app.core.errors import documented_errors, error
 from app.db.session import Db
+from app.documents.access import scope_for
+from app.documents.generation import verify_question
+from app.documents.provenance import question_references, require_fresh, save_sources, source_views
+from app.models.documents import GroundedQuiz, SourceCitation
 from app.models import Quiz, QuizQuestion, TeacherDecision
 from app.models.enums import LessonStatus, QuestionRole, QuizStatus, Source
 from app.routers.lessons import current_quiz
@@ -27,8 +31,17 @@ def quiz_view(db, quiz, classroom):
         generation_mode=quiz.generation_mode, used_fallback=quiz.used_fallback,
         validated_by=quiz.validated_by, validated_at=quiz.validated_at,
         questions=[teacher_view(db, item, concept.code) for _, item, concept in quiz_items(db, quiz.id)],
-        is_synthetic=classroom.is_synthetic,
+        is_synthetic=classroom.is_synthetic, is_grounded=is_grounded(db, quiz.id),
     )
+
+
+def is_grounded(db, quiz_id):
+    return db.scalar(select(GroundedQuiz.id).where(GroundedQuiz.quiz_id == quiz_id)) is not None
+
+
+def require_grounded_generator(db, quiz_id):
+    if is_grounded(db, quiz_id):
+        raise error(409, "GROUNDED_GENERATOR_REQUIRED", "Ajoutez ou régénérez cet item depuis l’assistant du cours.")
 
 
 def require_draft(quiz):
@@ -97,7 +110,7 @@ def generate_quiz(id: UUID, request: Request, user: Teacher, db: Db, data: QuizG
         selected.append((value, source))
 
     start_write(db)
-    lesson, classroom = lesson_access(db, user, id, teacher=True)
+    lesson, classroom = lesson_access(db, user, id, teacher=True, lock=True)
     existing = current_quiz(db, id)
     if existing is not None:
         require_draft(existing)
@@ -126,8 +139,9 @@ def read_quiz(id: UUID, user: Teacher, db: Db):
 @router.post("/quizzes/{id}/questions", response_model=TeacherQuestion, status_code=201)
 def add_item(id: UUID, data: QuestionDraft, user: Teacher, db: Db):
     start_write(db)
-    quiz, lesson, _ = quiz_access(db, user, id, teacher=True)
+    quiz, lesson, _ = quiz_access(db, user, id, teacher=True, lock=True)
     require_draft(quiz)
+    require_grounded_generator(db, id)
     items = quiz_items(db, id)
     if len(items) >= 10:
         raise error(409, "QUIZ_FULL", "Un quiz peut contenir dix questions au maximum.")
@@ -147,9 +161,24 @@ def item_link(items, question_id):
 
 
 @router.patch("/quizzes/{id}/questions/{qid}", response_model=TeacherQuestion)
-def edit_item(id: UUID, qid: UUID, data: QuestionDraft, user: Teacher, db: Db):
-    start_write(db)
+def edit_item(id: UUID, qid: UUID, data: QuestionDraft, user: Teacher, db: Db, request: Request):
     quiz, lesson, _ = quiz_access(db, user, id, teacher=True)
+    require_draft(quiz)
+    references, objective = [], None
+    grounded = is_grounded(db, id)
+    if grounded:
+        if any(option.misconception_code is None for option in data.options if not option.is_correct):
+            raise error(422, "TAXONOMY_REVIEW_REQUIRED", "Chaque distracteur doit porter un code d’erreur approuvé.")
+        references = question_references(db, qid)
+        if not references or any(hit.lesson_id != lesson.id for hit, _ in references):
+            raise error(404)
+        sources = source_views(db, SourceCitation.question_id == qid)
+        objective = sources[0].objective
+        db.rollback()
+        if not verify_question(request.app.state.gateway, data, references):
+            raise error(409, "COURSE_EVIDENCE_INSUFFICIENT", "Les sources ne permettent pas de valider la modification.")
+    start_write(db)
+    quiz, lesson, _ = quiz_access(db, user, id, teacher=True, lock=True)
     require_draft(quiz)
     items = quiz_items(db, id)
     link, old, _ = item_link(items, qid)
@@ -157,6 +186,9 @@ def edit_item(id: UUID, qid: UUID, data: QuestionDraft, user: Teacher, db: Db):
     row = create_question(db, data, concept_ids={c.id for c in lesson_concepts(db, lesson.id)},
                           version=old.version + 1)
     link.question_id = row.id
+    if grounded:
+        require_fresh(db, references, scope_for(db, user, lesson.id))
+        save_sources(db, references, question_id=row.id, objective=objective)
     db.commit()
     return teacher_view(db, row, data.concept_code)
 
@@ -166,6 +198,7 @@ def regenerate_item(id: UUID, qid: UUID, request: Request, user: Teacher, db: Db
                     data: QuestionRegenerate | None = None):
     quiz, lesson, _ = quiz_access(db, user, id, teacher=True)
     require_draft(quiz)
+    require_grounded_generator(db, id)
     items = quiz_items(db, id)
     _, old, concept = item_link(items, qid)
     concept_code, concept_id = concept.code, concept.id
@@ -186,7 +219,7 @@ def regenerate_item(id: UUID, qid: UUID, request: Request, user: Teacher, db: Db
     if result is None:
         raise error(409, "NO_QUESTION_AVAILABLE", "Aucune nouvelle question disponible. Ajoutez un item manuellement.")
     start_write(db)
-    quiz, lesson, _ = quiz_access(db, user, id, teacher=True)
+    quiz, lesson, _ = quiz_access(db, user, id, teacher=True, lock=True)
     require_draft(quiz)
     if lesson.updated_at != revision:
         raise error(409, "LESSON_CHANGED", "La séance a changé pendant la génération.")
@@ -204,7 +237,7 @@ def regenerate_item(id: UUID, qid: UUID, request: Request, user: Teacher, db: Db
 @router.delete("/quizzes/{id}/questions/{qid}", response_model=TeacherQuiz)
 def remove_item(id: UUID, qid: UUID, user: Teacher, db: Db):
     start_write(db)
-    quiz, _, classroom = quiz_access(db, user, id, teacher=True)
+    quiz, _, classroom = quiz_access(db, user, id, teacher=True, lock=True)
     require_draft(quiz)
     link, _, _ = item_link(quiz_items(db, id), qid)
     db.delete(link)
@@ -217,13 +250,19 @@ def publish(id: UUID, data: Approval, request: Request, user: Teacher, db: Db):
     if not data.validated:
         raise error(409, "TEACHER_VALIDATION_REQUIRED", "La validation explicite est requise.")
     start_write(db)
-    quiz, lesson, classroom = quiz_access(db, user, id, teacher=True)
+    quiz, lesson, classroom = quiz_access(db, user, id, teacher=True, lock=True)
     if quiz.kind == QuestionRole.initial and quiz.status == QuizStatus.published:
         return quiz_view(db, quiz, classroom)
     require_draft(quiz)
     items = quiz_items(db, id)
     if not items:
         raise error(409, "EMPTY_QUIZ", "Ajoutez une question avant publication.")
+    if is_grounded(db, id):
+        scoped = scope_for(db, user, lesson.id)
+        references = [question_references(db, row.id) for _, row, _ in items]
+        if scoped is None or any(not group for group in references):
+            raise error(409, "QUIZ_EVIDENCE_REQUIRED", "Chaque question doit conserver une source vérifiée.")
+        require_fresh(db, [reference for group in references for reference in group], scoped)
     now = request.app.state.clock.now()
     for _, question, _ in items:
         approve_question(db, question, user.id, now)
@@ -238,7 +277,7 @@ def publish(id: UUID, data: Approval, request: Request, user: Teacher, db: Db):
 @router.post("/quizzes/{id}/close", response_model=TeacherQuiz)
 def close_quiz(id: UUID, user: Teacher, db: Db):
     start_write(db)
-    quiz, lesson, classroom = quiz_access(db, user, id, teacher=True)
+    quiz, lesson, classroom = quiz_access(db, user, id, teacher=True, lock=True)
     if quiz.kind != QuestionRole.initial or quiz.status == QuizStatus.draft:
         raise error(409)
     quiz.status = QuizStatus.closed

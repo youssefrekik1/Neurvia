@@ -12,10 +12,11 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(path: string, method = "GET", data?: unknown): Promise<T> {
+  const multipart = data instanceof FormData;
   const response = await fetch("/backend" + path, {
     method, cache: "no-store",
-    headers: data === undefined ? undefined : { "Content-Type": "application/json" },
-    body: data === undefined ? undefined : JSON.stringify(data),
+    headers: data === undefined || multipart ? undefined : { "Content-Type": "application/json" },
+    body: multipart ? data : data === undefined ? undefined : JSON.stringify(data),
   });
   const payload = await response.json();
   if (!response.ok) {

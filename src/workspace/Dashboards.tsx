@@ -263,6 +263,8 @@ export function Classes({ classroom, choose, teacher, classrooms, joinCode }: {
   const [code, setCode] = useState(joinCode ?? "");
   const [pseudonym, setPseudonym] = useState("");
   const [validHours, setValidHours] = useState(72);
+  const [institution, setInstitution] = useState("");
+  const institutions = useGet<Schema["InstitutionView"][]>(teacher ? "/institutions" : "").value ?? [];
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [qr, setQr] = useState("");
@@ -287,10 +289,16 @@ export function Classes({ classroom, choose, teacher, classrooms, joinCode }: {
     {notice && <p role="status">{notice}</p>}
     <section className="nd-card">
       {teacher ? <form className="lr-form" onSubmit={(event) => {
-        event.preventDefault(); void run(() => api("/classrooms", "POST", { name, subject: "python_intro", join_ttl_hours: validHours }),
+        event.preventDefault(); void run(() => api("/classrooms", "POST", { name, subject: "python_intro", join_ttl_hours: validHours, institution_id: institution || null }),
           "Classe créée.");
       }}>
         <label>Nom de la classe<input value={name} onChange={(event) => setName(event.target.value)} required maxLength={120} /></label>
+        {!!institutions.length && <label>Établissement
+          <select value={institution} onChange={(event) => setInstitution(event.target.value)}>
+            <option value="">Espace enseignant</option>
+            {institutions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+          </select>
+        </label>}
         <label>Validité du code (heures)<input type="number" min={1} max={720} value={validHours} required
           onChange={(event) => setValidHours(Number(event.target.value))} /></label>
         <button className="lr-btn primary" disabled={busy}>Créer la classe</button>

@@ -13,21 +13,25 @@ def start_write(db: Session) -> None:
         connection.exec_driver_sql("BEGIN IMMEDIATE")
 
 
-def lesson_access(db, user, lesson_id, *, teacher=False):
+def lesson_access(db, user, lesson_id, *, teacher=False, lock=False):
     lesson = db.get(Lesson, lesson_id)
     if lesson is None:
         raise error(404)
     classroom = get_classroom(lesson.classroom_id, user, db, teacher_only=teacher)
+    if lock and db.get_bind().dialect.name == "postgresql":
+        db.refresh(lesson, with_for_update=True)
     if user.role == Role.student and lesson.status == LessonStatus.draft:
         raise error(404)
     return lesson, classroom
 
 
-def quiz_access(db, user, quiz_id, *, teacher=False):
+def quiz_access(db, user, quiz_id, *, teacher=False, lock=False):
     quiz = db.get(Quiz, quiz_id)
     if quiz is None:
         raise error(404)
-    lesson, classroom = lesson_access(db, user, quiz.lesson_id, teacher=teacher)
+    lesson, classroom = lesson_access(db, user, quiz.lesson_id, teacher=teacher, lock=lock)
+    if lock and db.get_bind().dialect.name == "postgresql":
+        db.refresh(quiz, with_for_update=True)
     if user.role == Role.student and quiz.recipient_id not in (None, user.id):
         raise error(404)
     return quiz, lesson, classroom

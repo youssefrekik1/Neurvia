@@ -6,6 +6,7 @@ from pydantic import Field, StrictBool, model_validator
 
 from app.models import enums as e
 from app.schemas.common import Input, View
+from app.schemas.documents import SourceView
 
 Code = Annotated[str, Field(pattern=r"^[A-Z][A-Z0-9_]{1,39}$")]
 ShortText = Annotated[str, Field(min_length=1, max_length=400)]
@@ -31,6 +32,23 @@ class LessonCreate(Input):
     def distinct_concepts(self):
         if len(set(self.concept_codes)) != len(self.concept_codes):
             raise ValueError("Les concepts doivent être distincts.")
+        return self
+
+
+class ReviewedMisconception(Input):
+    label: Annotated[str, Field(min_length=1, max_length=200)]
+    remediation_hint: ShortText
+
+
+class TaxonomyApproval(Input):
+    label: Annotated[str, Field(min_length=1, max_length=200)]
+    misconceptions: Annotated[list[ReviewedMisconception], Field(min_length=1, max_length=8)]
+    validated: StrictBool
+
+    @model_validator(mode="after")
+    def distinct_misconceptions(self):
+        if len({item.label.casefold() for item in self.misconceptions}) != len(self.misconceptions):
+            raise ValueError("Les erreurs diagnostiques doivent être distinctes.")
         return self
 
 
@@ -117,6 +135,7 @@ class TeacherQuestion(QuestionDraft):
     validated_by: UUID | None = None
     validated_at: datetime | None = None
     target_misconception_code: str | None = None
+    source_pages: list[SourceView] = []
 
 
 class BankQuestionCreate(QuestionDraft):
@@ -135,6 +154,7 @@ class TeacherQuiz(View):
     validated_at: datetime | None = None
     questions: list[TeacherQuestion]
     is_synthetic: bool
+    is_grounded: bool = False
 
 
 class AnswerInput(Input):
