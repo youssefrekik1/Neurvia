@@ -64,6 +64,10 @@ Exécutez `./start-demo.ps1` ou définissez `DEMO_MODE=true` avant de démarrer 
 - Mot de passe des comptes fictifs `FAHM-demo-2026`.
 - Comme professeur fictif, utilisez **Simuler J+7** après une soumission de retest. La date simulée est signalée dans l’interface. Pour un scénario sans Ollama, définissez `LLM_ENABLED=false` ou utilisez `./start-demo.ps1 -Offline`.
 
+## Documents de cours
+
+L’import de PDF, l’OCR avec relecture, l’assistant de cours et les quiz fondés sur les sources demandent PostgreSQL, un stockage S3 privé et un worker. `docker compose -f compose.documents.yml up -d --build` démarre ces services en local. Le déploiement, la sécurité, les sauvegardes et l’évaluation sont décrits dans [docs/DOCUMENTS.md](docs/DOCUMENTS.md).
+
 ## Tests
 
 ```powershell

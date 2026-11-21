@@ -1,0 +1,23 @@
+[
+  {"file": "mit-lists.pdf", "lang": "en", "pages": [6], "query": "What happens if you index outside the length of a list?"},
+  {"file": "mit-lists.pdf", "lang": "en", "pages": [3], "query": "How can a function return more than one value using a tuple?"},
+  {"file": "mit-lists.pdf", "lang": "en", "pages": [2, 3], "query": "How do you swap the values of two variables x and y with a tuple?"},
+  {"file": "mit-lists.pdf", "lang": "en", "pages": [10, 12], "query": "Difference between sort and sorted: which one mutates the list?"},
+  {"file": "mit-lists.pdf", "lang": "en", "pages": [11], "query": "What is an alias of a list and why does appending through one name change the other?"},
+  {"file": "mit-lists.pdf", "lang": "en", "pages": [12], "query": "How do you clone a list with square brackets and a colon?"},
+  {"file": "mit-lists.pdf", "lang": "en", "pages": [8], "query": "How does the extend method mutate a list?"},
+  {"file": "mit-lists.pdf", "lang": "en", "pages": [9], "query": "Why does printing L.remove return None?"},
+  {"file": "mit-while.pdf", "lang": "en", "pages": [9], "query": "What values does range(5) produce and what are the default start and step?"},
+  {"file": "mit-while.pdf", "lang": "en", "pages": [3, 5, 8], "query": "Why can a while loop execute an infinite number of times?"},
+  {"file": "mit-while.pdf", "lang": "en", "pages": [8, 12], "query": "Computing a factorial with a while loop compared with a for loop"},
+  {"file": "mit-break.pdf", "lang": "en", "pages": [1, 2], "query": "What does the break statement do and which loop does it exit when loops are nested?"},
+  {"file": "mit-break.pdf", "lang": "en", "pages": [13, 14], "query": "Using a Boolean flag to print not found only after checking every number"},
+  {"file": "mit-break.pdf", "lang": "en", "pages": [14, 15], "query": "Guess and check algorithm to find the cube root of a number"},
+  {"file": "mit-break.pdf", "lang": "en", "pages": [18, 19], "query": "How do you convert a decimal integer to binary by repeatedly dividing by 2?"},
+  {"file": "mit-break.pdf", "lang": "en", "pages": [3], "query": "Counting even numbers using the remainder when i is divided by 2"},
+  {"file": "mit-lists.pdf", "lang": "fr", "pages": [6], "query": "Que se passe-t-il quand on accède à un indice en dehors de la longueur d’une liste ?"},
+  {"file": "mit-lists.pdf", "lang": "fr", "pages": [10, 12], "query": "Quelle différence entre sort et sorted, et laquelle modifie la liste ?"},
+  {"file": "mit-while.pdf", "lang": "fr", "pages": [9], "query": "Quelles valeurs range produit-il pour une boucle for ?"},
+  {"file": "mit-break.pdf", "lang": "fr", "pages": [1, 2], "query": "À quoi sert l’instruction break dans une boucle imbriquée ?"},
+  {"file": "mit-break.pdf", "lang": "fr", "pages": [13, 14], "query": "Utiliser un drapeau booléen pour afficher « not found » seulement à la fin de la boucle"}
+]
