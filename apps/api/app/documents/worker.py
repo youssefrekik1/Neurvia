@@ -5,17 +5,16 @@ import logging
 from time import perf_counter, sleep
 from uuid import UUID, uuid4
 
-import httpx
 import pymupdf as pdf
 from sqlalchemy import and_, or_, select, update
 
+from app.ai.serving import model_clients, model_http
 from app.core.config import Settings
 from app.db.base import utcnow
 from app.db.migrate import initialize_schema
 from app.db.session import build_database
 from app.documents.chunking import split_block
 from app.documents.extract import extract_page
-from app.documents.llm import OllamaDocumentModels
 from app.documents.storage import ObjectStore
 from app.models.documents import (
     ChunkEmbedding, DocumentBlock, DocumentChunk, DocumentJob, DocumentPage, DocumentVersion,
@@ -250,9 +249,8 @@ def main():
     engine, sessions = build_database(settings.db_url)
     initialize_schema(engine)
     store = ObjectStore(settings)
-    with httpx.Client(base_url=settings.llm_base_url, trust_env=False,
-                      timeout=httpx.Timeout(settings.llm_timeout_s, connect=4)) as http:
-        model = OllamaDocumentModels(http, settings)
+    with model_http(settings, connect=4) as http:
+        _, model = model_clients(http, settings)
         while True:
             worked = run_one(sessions, store, model, settings)
             if args.once:
