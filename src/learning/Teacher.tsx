@@ -19,11 +19,11 @@ import {
   Trash2,
 } from "lucide-react";
 import { levels, type Level, type Question } from "./bank";
-import { blankLesson, dayLabel, lessonHref, prepareQuiz, saveLesson, saveQuestion,
-  subjects, type Lesson, type LearningData } from "./service";
+import { blankLesson, dayLabel, defaultSubject, lessonHref, prepareQuiz, saveLesson, saveQuestion,
+  subjectLabel, type Lesson, type LearningData } from "./service";
 import { api, errorMessage, refresh, type Schema, useGet } from "../lib/api";
 import { Empty, Heading, Prompt, Stepper } from "./ui";
-import { CourseDocuments, Sources } from "./CourseDocuments";
+import { CourseDocuments, Sources, TaxonomyForm } from "./CourseDocuments";
 
 const editorHref = (id: string, step = "review") =>
   "/teacher/quiz?lesson=" + encodeURIComponent(id) + "&step=" + step;
@@ -245,6 +245,16 @@ export function LessonEditor({
   const rooms = useGet<Schema["ClassroomView"][]>("/classrooms").value ?? [];
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // Concepts belong to the classroom's subject; a new subject starts by validating its first concept.
+  const subject = rooms.find((room) => room.id === lesson.classroom)?.subject ?? defaultSubject;
+  const available = taxonomy.filter((item) => item.subject === subject);
+  async function approveConcept(operation: () => Promise<unknown>) {
+    setBusy(true);
+    setError("");
+    try { await operation(); refresh(); }
+    catch (cause) { setError(errorMessage(cause)); }
+    finally { setBusy(false); }
+  }
   function update(key: "title" | "subject" | "classroom" | "content", value: string) {
     setLesson({ ...lesson, [key]: value });
   }
@@ -297,17 +307,8 @@ export function LessonEditor({
           </label>
           <label>
             Matière
-            <input
-              value={lesson.subject}
-              list="lr-subjects"
-              onChange={(e) => update("subject", e.target.value)}
-              required
-            />
-            <datalist id="lr-subjects">
-              {subjects.map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </datalist>
+            <input value={subjectLabel(subject)} readOnly aria-describedby="lr-subject-hint" />
+            <small id="lr-subject-hint">La matière est celle de la classe.</small>
           </label>
         </div>
         <label>
@@ -321,7 +322,8 @@ export function LessonEditor({
         </label>
         <fieldset>
           <legend>Notions principales</legend>
-          <div className="lr-checks">{taxonomy.map(({ code, label_fr }) =>
+          {!available.length && <p>Aucune notion validée pour cette matière. Validez-en une sous ce formulaire.</p>}
+          <div className="lr-checks">{available.map(({ code, label_fr }) =>
             <label className="lr-check" key={code}>
               <input type="checkbox" checked={concepts.includes(label_fr)}
                 disabled={!!existing?.quizId}
@@ -353,6 +355,10 @@ export function LessonEditor({
           </button>
         </div>
       </form>
+      {lesson.classroom && <section className="lr-panel lr-pad lr-docs">
+        <TaxonomyForm path={"/classrooms/" + lesson.classroom + "/taxonomy"} busy={busy} run={approveConcept}
+          open={!available.length} submitLabel="Valider la notion pour cette classe" />
+      </section>}
     </>
   );
 }

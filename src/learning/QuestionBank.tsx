@@ -5,6 +5,7 @@ import { api, errorMessage, refresh, type Schema, useGet } from "../lib/api";
 import { levels, type Question } from "./bank";
 import { QuestionForm } from "./Teacher";
 import { Heading, Prompt } from "./ui";
+import { Sources } from "./CourseDocuments";
 import "./learning.css";
 
 const roles: Record<Schema["QuestionRole"], string> = {
@@ -69,7 +70,9 @@ export default function QuestionBank() {
     </section>}
     {bank.loading && <p role="status">Chargement de la banque…</p>}
     <div className="lr-stack">{bank.value?.map((item) => <section className="lr-panel lr-pad" key={item.id}>
-      <p className="lr-badge">{roles[item.role]} · {item.status === "validated" ? "Approuvé" : "Brouillon"}</p>
+      <p className="lr-badge">{roles[item.role]} · {item.status === "validated" ? "Approuvé" : "Brouillon"}
+        {item.source === "llm" && " · Généré depuis les documents"}
+        {item.target_misconception_code && " · Cible : " + (errors.get(item.target_misconception_code) ?? "")}</p>
       <Prompt question={{ id: item.id, text: item.stem, code: item.code ?? undefined, options: [],
         correct: -1, concept: item.concept_code, explanation: "", misconceptions: [], source: "Banque", level: levels[0] }} />
       {review === item.id ? <>
@@ -77,6 +80,7 @@ export default function QuestionBank() {
           {option.is_correct ? " · Réponse correcte" : option.misconception_code ? " · " + errors.get(option.misconception_code) : ""}
         </li>)}</ul>
         <p>{item.explanation}</p>
+        <div className="lr-docs"><Sources sources={item.source_pages ?? []} /></div>
         {item.status !== "validated" && <div className="lr-actions">
           <label className="lr-check"><input type="checkbox" checked={approved}
             onChange={(event) => setApproved(event.target.checked)} /> J’ai relu cet item</label>

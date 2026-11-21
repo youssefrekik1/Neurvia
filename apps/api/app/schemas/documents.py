@@ -117,6 +117,12 @@ class ConversationView(View):
     brief_revision: int
 
 
+class VariantRequest(DocumentSelection):
+    conversation_id: UUID
+    brief_revision: int = Field(ge=1)
+    skip: Annotated[list[Annotated[str, Field(max_length=80)]], Field(max_length=300)] = []
+
+
 class GroundedQuizRequest(DocumentSelection):
     conversation_id: UUID
     brief_revision: int = Field(ge=1)

@@ -143,6 +143,12 @@ class BankQuestionCreate(QuestionDraft):
     target_misconception_code: Code | None = None
 
 
+class VariantResult(View):
+    question: TeacherQuestion | None = None
+    remaining: int
+    attempted: list[str] = []
+
+
 class TeacherQuiz(View):
     id: UUID
     lesson_id: UUID

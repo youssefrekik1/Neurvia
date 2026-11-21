@@ -10,19 +10,22 @@ from app.db.session import Db
 from app.documents import generation
 from app.documents.access import scope_for
 from app.documents.provenance import require_fresh, save_sources, source_views
-from app.documents.ranking import terms
+from app.documents.ranking import content_terms, terms
 from app.documents.retrieval import retrieve
-from app.models import Classroom, Lesson, Quiz, QuizQuestion
+from app.models import Classroom, Lesson, Question, QuestionOption, Quiz, QuizQuestion
 from app.models.documents import CourseConversation, CourseMessage, GenerationBrief, GroundedQuiz, SourceCitation
 from app.models.enums import LessonStatus, QuestionRole, QuizStatus, Source
 from app.routers.lessons import current_quiz
 from app.routers.quizzes import quiz_view
 from app.schemas.documents import (
     Brief, BriefUpdate, ConversationView, GroundedQuizRequest, MessageRequest, MessageView,
-    SearchRequest, SearchView,
+    SearchRequest, SearchView, VariantRequest,
 )
-from app.schemas.learning import TeacherQuiz
-from app.services.questions import create_question, fingerprint, lesson_concepts, quiz_items, taxonomy_labels
+from app.schemas.learning import TeacherQuiz, VariantResult
+from app.services.questions import (
+    allowed_codes, bank_items, create_question, fingerprint, lesson_concepts, quiz_items, taxonomy_labels,
+    teacher_view,
+)
 
 router = APIRouter(prefix="/lessons/{lesson_id}/course-assistant", tags=["Assistant du cours"],
                    responses=documented_errors(401, 403, 404, 409, 422, 429, 503))
@@ -33,6 +36,19 @@ LIMITS = {"search": 60, "chat": 12, "brief": 10, "quiz": 12}
 
 def throttle(request, user, action):
     request.app.state.rate_limiter.check(request, "course_" + action, LIMITS[action], subject=user.id)
+
+
+def concept_query(concept, labels, brief, *extra):
+    """Retrieval query for one concept: its label, its approved misconceptions and the related brief topics.
+
+    Brief topics about other concepts would pull their pages into this concept's context, so only topics
+    sharing vocabulary with the concept or its misconceptions are kept.
+    """
+    own = [concept.label_fr, *labels.values(), *extra]
+    vocabulary = content_terms(" ".join(own))
+    related = [topic for topic in [*brief.focus_topics, *brief.observed_difficulties]
+               if content_terms(topic) & vocabulary]
+    return " ".join([*own, *related])[:1200]
 
 
 def assistant_for(db, scope, conversation_id=None):
@@ -207,12 +223,16 @@ def grounded_quiz(lesson_id: UUID, body: GroundedQuizRequest, user: Teacher, db:
         raise error(503, "COURSE_MODEL_DISABLED", "Activez le modèle local pour générer des questions.")
     picks = []
     for position in range(requested):
-        concept, approved = taxonomy[(len(items) + position) % len(taxonomy)]
-        query = " ".join([concept.label_fr, *brief.focus_topics, *brief.observed_difficulties])[:1200]
-        found = retrieve(db, request.app.state.document_models, settings, scope, body.document_ids, query)
-        db.rollback()
-        created = generation.generate_item(request.app.state.gateway, brief, concept, approved, found.hits,
-                                           excluded, fingerprint)
+        # When a concept yields no verified item, try the next one rather than stall on the same concept.
+        for shift in range(min(2, len(taxonomy))):
+            concept, approved = taxonomy[(len(items) + position + shift) % len(taxonomy)]
+            found = retrieve(db, request.app.state.document_models, settings, scope, body.document_ids,
+                             concept_query(concept, approved, brief))
+            db.rollback()
+            created = generation.generate_item(request.app.state.gateway, brief, concept, approved, found.hits,
+                                               excluded, fingerprint)
+            if created is not None:
+                break
         if created is None:
             continue
         value, sources = created
@@ -246,3 +266,85 @@ def grounded_quiz(lesson_id: UUID, body: GroundedQuizRequest, user: Teacher, db:
         save_sources(db, sources, question_id=item.id, objective=candidate.objective)
     db.commit()
     return quiz_view(db, quiz, classroom)
+
+
+FOLLOW_UP_ROLES = (QuestionRole.confirmation, QuestionRole.immediate_retest, QuestionRole.j7_retest)
+
+
+def variant_slots(db, teacher_id, lesson_id):
+    """(concept, labels, misconception code, role) slots of the lesson with no variant in the teacher's bank.
+
+    Confirmation, immediate retest and J+7 each need an independent item for every approved misconception;
+    a draft awaiting approval already fills its slot.
+    """
+    slots = []
+    for concept in lesson_concepts(db, lesson_id):
+        labels, ids = taxonomy_labels(db, concept.id), allowed_codes(db, concept.id)
+        for code in labels:
+            for role in FOLLOW_UP_ROLES:
+                query = select(Question.id).where(Question.bank_owner_id == teacher_id,
+                                                  Question.concept_id == concept.id, Question.role == role)
+                if role == QuestionRole.confirmation:
+                    query = query.where(Question.target_misconception_id == ids[code])
+                else:
+                    query = query.where(select(QuestionOption.id).where(
+                        QuestionOption.question_id == Question.id, QuestionOption.misconception_id == ids[code],
+                    ).exists())
+                if db.scalar(query.limit(1)) is None:
+                    slots.append((concept, labels, code, role))
+    return slots
+
+
+def slot_key(code, role):
+    return f"{code}:{role.value}"
+
+
+@router.post("/variants", response_model=VariantResult)
+def follow_up_variants(lesson_id: UUID, body: VariantRequest, user: Teacher, db: Db, request: Request):
+    """Draft one grounded follow-up variant (confirmation, retest or J+7) into the teacher's bank.
+
+    Variants stay drafts: the teacher approves them in the bank before any student sees them. Slots that fail
+    come back in `attempted`; the client passes them as `skip` so the next call moves on.
+    """
+    throttle(request, user, "quiz")
+    scope = scope_for(db, user, lesson_id)
+    conversation = require_conversation(db, scope, body.conversation_id)
+    brief_row = brief_for(db, conversation.id)
+    if brief_row.revision != body.brief_revision:
+        raise error(409, "BRIEF_CHANGED", "Le brief de génération a changé.")
+    brief = Brief.model_validate(brief_row.values)
+    if not request.app.state.settings.llm_enabled:
+        raise error(503, "COURSE_MODEL_DISABLED", "Activez le modèle local pour générer des variantes.")
+    slots = [slot for slot in variant_slots(db, user.id, lesson_id) if slot_key(slot[2], slot[3]) not in body.skip]
+    excluded = {fingerprint(item.stem, item.code) for item, _ in bank_items(
+        db, user.id, concept_ids={concept.id for concept in lesson_concepts(db, lesson_id)}, seed_drafts=True)}
+    quiz = current_quiz(db, lesson_id)
+    excluded |= {fingerprint(item.stem, item.code) for _, item, _ in quiz_items(db, quiz.id)} if quiz else set()
+    attempted, created = [], None
+    for concept, labels, code, role in slots[:2]:
+        attempted.append(slot_key(code, role))
+        query = concept_query(concept, labels, brief, labels[code])
+        found = retrieve(db, request.app.state.document_models, request.app.state.settings,
+                         scope, body.document_ids, query)
+        db.rollback()
+        value = generation.generate_item(
+            request.app.state.gateway, brief,
+            SimpleNamespace(id=concept.id, code=concept.code, label_fr=concept.label_fr),
+            labels, found.hits, excluded, fingerprint, target=code, role=role.value,
+        )
+        if value is not None:
+            created = (concept, code, role, value)
+            break
+    if created is None:
+        return VariantResult(remaining=len(slots), attempted=attempted)
+    concept, code, role, (candidate, sources) = created
+    scope = scope_for(db, user, lesson_id, create=True)
+    if not any(slot[0].id == concept.id and slot[2] == code and slot[3] == role
+               for slot in variant_slots(db, user.id, lesson_id)):
+        raise error(409, "VARIANT_EXISTS", "Une variante a déjà été préparée pour cette erreur.")
+    require_fresh(db, sources, scope)
+    row = create_question(db, candidate.question, source=Source.llm, owner_id=user.id, role=role,
+                          target_code=code, concept_ids={concept.id})
+    save_sources(db, sources, question_id=row.id, objective=candidate.objective)
+    db.commit()
+    return VariantResult(question=teacher_view(db, row, concept.code), remaining=len(slots) - 1, attempted=[])

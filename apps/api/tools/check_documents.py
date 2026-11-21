@@ -280,12 +280,19 @@ def benchmark(args):
     expectations = args.expectations or args.corpus / "expectations.json"
     cases = json.loads(expectations.read_text(encoding="utf-8"))
     with httpx.Client(base_url=args.url + "/api/v1", timeout=310) as api:
-        _, teacher = account(api, "teacher")
-        _, lesson_id = lesson(api, teacher, "Document retrieval evaluation")
+        if args.lesson:
+            # Evaluate documents already indexed in a lesson, e.g. after tools.scenario_course.
+            email, password = args.login.split(":", 1)
+            token = checked(api, "POST", "/auth/login", json={"email": email, "password": password}).json()
+            teacher, lesson_id = {"Authorization": "Bearer " + token["access_token"]}, args.lesson
+        else:
+            _, teacher = account(api, "teacher")
+            _, lesson_id = lesson(api, teacher, "Document retrieval evaluation")
         root = f"/lessons/{lesson_id}/documents"
         assistant = f"/lessons/{lesson_id}/course-assistant/search"
-        names = {}
-        for path in sorted(args.corpus.glob("*.pdf")):
+        names = {doc["id"]: doc["name"] for doc in checked(api, "GET", root, headers=teacher).json()
+                 if args.lesson and doc["state"] == "ready"}
+        for path in [] if args.lesson else sorted(args.corpus.glob("*.pdf")):
             name = path.name
             version = checked(api, "POST", root, 202, headers=teacher,
                               files={"file": (name, path.read_bytes(), "application/pdf")}).json()
@@ -345,7 +352,9 @@ if __name__ == "__main__":
                         help="Query/page expectations (default: CORPUS/expectations.json)")
     parser.add_argument("--min-recall", type=float, default=0.8, help="Fail below this Recall@5")
     parser.add_argument("--report", type=Path, help="Write per-query results and metrics as JSON")
+    parser.add_argument("--lesson", help="Benchmark: evaluate this lesson's indexed documents instead of uploading")
+    parser.add_argument("--login", help="Benchmark with --lesson: teacher credentials as email:password")
     parser.add_argument("--accept-extraction", action="store_true",
                         help="Benchmark only: confirm blocks flagged for review exactly as extracted")
     args = parser.parse_args()
-    (benchmark if args.corpus else run)(args)
+    (benchmark if args.corpus or args.lesson else run)(args)

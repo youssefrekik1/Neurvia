@@ -48,6 +48,14 @@ def scope_for(db, user, lesson_id, *, create=False):
         from app.models import User
         db.execute(select(User.id).where(User.id == user.id).with_for_update())
         db.execute(select(Lesson.id).where(Lesson.id == lesson.id).with_for_update())
+    institution = classroom_institution(db, user, classroom, create=create)
+    if institution is None:
+        return None
+    return Scope(institution, classroom.id, lesson.id, user.id)
+
+
+def classroom_institution(db, user, classroom, *, create=False):
+    """The institution a teacher's classroom belongs to, enrolling it in their personal space if needed."""
     tenant = db.scalar(select(ClassroomTenant).where(ClassroomTenant.classroom_id == classroom.id))
     if tenant is None:
         if not create:
@@ -60,7 +68,7 @@ def scope_for(db, user, lesson_id, *, create=False):
     ))
     if allowed is None:
         raise error(404)
-    return Scope(tenant.institution_id, classroom.id, lesson.id, user.id)
+    return tenant.institution_id
 
 
 def document_for(db, scope, version_id):

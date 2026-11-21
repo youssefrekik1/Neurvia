@@ -5,6 +5,11 @@ import { api, refresh, type Schema, useResource } from "../lib/api";
 import { levels, type Level, type Question } from "./bank";
 
 export const subjects = ["Algorithmique & Python"];
+export const defaultSubject = "python_intro";
+/** Classrooms store a subject key; the built-in Python subject has a display name, others are named as typed. */
+export function subjectLabel(subject: string) {
+  return subject === defaultSubject ? subjects[0] : subject;
+}
 export const confidenceLevels = ["Sûr", "Moyennement sûr", "Incertain"] as const;
 const confidenceCodes = ["sure", "medium", "unsure"] as const;
 export type Confidence = (typeof confidenceLevels)[number];
@@ -107,7 +112,7 @@ async function load(key: string): Promise<LearningData> {
     const concepts = row.concept_codes.map((code) => label(code, taxonomy));
     return {
       ...blankLesson(classroom), id: row.id, title: row.title, date: row.created_at,
-      classroomName: room?.name ?? "", concepts, evaluate: concepts, content: row.content_text ?? "",
+      subject: subjectLabel(room?.subject ?? defaultSubject), classroomName: room?.name ?? "", concepts, evaluate: concepts, content: row.content_text ?? "",
       status: row.status, responses: row.submitted_count ?? 0, quizId: row.quiz_id ?? undefined,
       count: teacher ? brief?.question_count ?? 6 : row.question_count ?? 0,
       level: levels[(brief?.difficulty ?? 1) - 1], pitfalls: brief?.pitfalls?.join(", ") ?? "",

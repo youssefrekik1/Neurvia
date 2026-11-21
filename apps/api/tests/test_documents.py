@@ -118,6 +118,8 @@ class FakeGateway:
         return {"source": passage["source"], "quote": " ".join(passage["passage"].split()[:9])}
 
     def course_chat(self, payload):
+        if getattr(self, "instruction", False):
+            return {"answer": "Je note la consigne.", "citations": [], "teacher_instruction": True}
         return {"answer": "Le dernier indice valide est len(values) - 1.", "citations": [self.quote(payload)]}
 
     def course_verify(self, payload):
@@ -128,14 +130,18 @@ class FakeGateway:
 
     def course_question(self, payload):
         codes = sorted(payload["taxonomy"])
+        target = payload.get("target_misconception", {}).get("code")
+        if target:
+            codes = [target] + [code for code in codes if code != target]
         options = [{"text": "len(values) - 1", "is_correct": True, "misconception_code": None}]
         options += [{"text": text, "is_correct": False, "misconception_code": codes[index % len(codes)]}
                     for index, text in enumerate(["len(values)", "1", "values[-0]"])]
+        number = sum(task == "course_question" for task, _ in self.calls)
         return {
             "question": {"concept_code": payload["concept"]["code"],
-                         "stem": "Quel est le dernier indice positif valide de la liste values ?",
-                         "options": options, "explanation": "Les indices commencent Ã  zÃ©ro.", "difficulty": 1},
-            "objective": "Identifier le dernier indice valide dâ€™une liste.",
+                         "stem": f"Quel est le dernier indice positif valide de la liste values ? (variante {number})",
+                         "options": options, "explanation": "Les indices commencent à zéro.", "difficulty": 1},
+            "objective": "Identifier le dernier indice valide d’une liste.",
             "citations": [self.quote(payload)],
         }
 
@@ -160,7 +166,7 @@ def drain(client):
 def classroom_lesson(client, teacher, name="Indexation", concepts=("C_INDEXING",)):
     room = call(client, "POST", "/classrooms", teacher, {"name": name}, 201)
     lesson = call(client, "POST", f"/classrooms/{room['id']}/lessons", teacher, {
-        "title": name, "content_text": "PrÃ©paration", "concept_codes": list(concepts),
+        "title": name, "content_text": "Préparation", "concept_codes": list(concepts),
     }, 201)
     return room, lesson["id"]
 
@@ -278,7 +284,7 @@ def test_digital_pdf_is_indexed_and_retrieved_with_page_citations(env):
     assert env.get("/api/v1" + top["path"], headers=teacher).content.startswith(b"\x89PNG")
     assert env.get("/api/v1" + top["path"], headers=outsider).status_code == 404
 
-    _, other_lesson = classroom_lesson(env, teacher, "Autre sÃ©ance")
+    _, other_lesson = classroom_lesson(env, teacher, "Autre séance")
     search(env, teacher, other_lesson, [doc["id"]], "last valid index", expected=404)
 
 
@@ -415,7 +421,7 @@ def test_grounded_quiz_requires_brief_revision_sources_and_explicit_approval(env
     assert all(option["misconception_code"] for option in item["options"] if not option["is_correct"])
 
     draft = {key: item[key] for key in ("concept_code", "stem", "code", "difficulty", "explanation")}
-    manual = {**draft, "stem": "Une question ajoutÃ©e sans source vÃ©rifiÃ©e ?",
+    manual = {**draft, "stem": "Une question ajoutée sans source vérifiée ?",
               "options": [{key: option[key] for key in ("text", "is_correct", "misconception_code")}
                           for option in item["options"]]}
     call(env, "POST", f"/quizzes/{quiz['id']}/questions", teacher, manual, 409)
@@ -442,14 +448,14 @@ def test_teacher_taxonomy_is_private_to_its_institution_and_published_lessons(en
     joined, joined_lesson = classroom_lesson(env, teacher, "Classe suivie")
     call(env, "POST", "/classrooms/join", student, {"code": joined["join_code"]})
     _, other_lesson = classroom_lesson(env, teacher, "Autre classe")
-    custom = {"label": "Bornes dâ€™une liste", "validated": True, "misconceptions": [
-        {"label": "Utilise la longueur comme indice", "remediation_hint": "Compter les positions depuis zÃ©ro."},
+    custom = {"label": "Bornes d’une liste", "validated": True, "misconceptions": [
+        {"label": "Utilise la longueur comme indice", "remediation_hint": "Compter les positions depuis zéro."},
     ]}
     call(env, "POST", f"/lessons/{other_lesson}/taxonomy", teacher, {**custom, "validated": False}, 409)
     call(env, "POST", f"/lessons/{other_lesson}/taxonomy", outsider, custom, 404)
     hidden = call(env, "POST", f"/lessons/{other_lesson}/taxonomy", teacher, custom, 201)["code"]
     shared = call(env, "POST", f"/lessons/{joined_lesson}/taxonomy", teacher,
-                  {**custom, "label": "Bornes partagÃ©es"}, 201)["code"]
+                  {**custom, "label": "Bornes partagées"}, 201)["code"]
 
     def codes(headers):
         return {entry["code"] for entry in call(env, "GET", "/taxonomy", headers)}
@@ -465,7 +471,7 @@ def test_teacher_taxonomy_is_private_to_its_institution_and_published_lessons(en
     assert shared in visible and hidden not in visible
     _, outsider_lesson = classroom_lesson(env, outsider, "Classe externe")
     call(env, "PATCH", f"/lessons/{outsider_lesson}", outsider, {
-        "title": "Classe externe", "content_text": "PrÃ©paration", "concept_codes": [hidden],
+        "title": "Classe externe", "content_text": "Préparation", "concept_codes": [hidden],
     }, 422)
 
 
@@ -491,3 +497,95 @@ def test_reindex_tool_requeues_only_documents_from_another_model_revision(env):
     state = call(env, "GET", path + first["id"], teacher)
     assert state["state"] == "ready" and state["model_revision"] == "fake-embedding@2"
     assert search(env, teacher, lesson_id, [first["id"], second["id"]], "last valid index")["mode"] == "hybrid"
+
+
+# New subjects and follow-up variants
+
+
+def test_a_new_subject_starts_with_a_classroom_level_concept(env):
+    teacher, student = register(env, "bd-teacher", "teacher"), register(env, "bd-student", "student")
+    room = call(env, "POST", "/classrooms", teacher, {"name": "BD", "subject": "Bases de données"}, 201)
+    lesson = {"title": "Normalisation", "content_text": "Cours", "concept_codes": ["C_INDEXING"]}
+    call(env, "POST", f"/classrooms/{room['id']}/lessons", teacher, lesson, 422)
+    concept = {"label": "Formes normales", "validated": True, "misconceptions": [
+        {"label": "Confond 2FN et 3FN", "remediation_hint": "Comparer dépendance partielle et transitive."}]}
+    call(env, "POST", f"/classrooms/{room['id']}/taxonomy", teacher, {**concept, "validated": False}, 409)
+    call(env, "POST", f"/classrooms/{room['id']}/taxonomy", student, concept, 403)
+    created = call(env, "POST", f"/classrooms/{room['id']}/taxonomy", teacher, concept, 201)
+    assert created["subject"] == "Bases de données"
+    visible = {entry["code"]: entry["subject"] for entry in call(env, "GET", "/taxonomy", teacher)}
+    assert visible[created["code"]] == "Bases de données" and visible["C_INDEXING"] == "python_intro"
+    call(env, "POST", f"/classrooms/{room['id']}/lessons", teacher, {**lesson, "concept_codes": [created["code"]]}, 201)
+    python_room = call(env, "POST", "/classrooms", teacher, {"name": "Python"}, 201)
+    call(env, "POST", f"/classrooms/{python_room['id']}/lessons", teacher,
+         {**lesson, "concept_codes": [created["code"]]}, 422)
+
+
+def test_follow_up_variants_are_grounded_drafts_until_the_teacher_approves_them(env):
+    teacher, _, lesson_id, doc_id, chat = ready_lesson(env, "variant-teacher")
+    url = f"/lessons/{lesson_id}/course-assistant/variants"
+    body = {"document_ids": [doc_id], "conversation_id": chat["id"], "brief_revision": chat["brief_revision"]}
+    first = call(env, "POST", url, teacher, body)
+    item = first["question"]
+    assert item["role"] == "confirmation" and item["status"] == "draft" and item["source"] == "llm"
+    assert item["source_pages"][0]["page"] in {1, 2} and item["source_pages"][0]["objective"]
+    target = item["target_misconception_code"]
+    assert any(option["misconception_code"] == target for option in item["options"])
+    total = first["remaining"] + 1
+    assert total % 3 == 0, "three follow-up roles per approved misconception"
+
+    second = call(env, "POST", url, teacher, body)
+    assert second["question"]["role"] == "immediate_retest" and second["remaining"] == total - 2
+    assert second["question"]["stem"] != item["stem"]
+
+    bank = {row["id"]: row for row in call(env, "GET", "/bank/questions", teacher)}
+    assert bank[item["id"]]["status"] == "draft"
+    approved = call(env, "POST", f"/bank/questions/{item['id']}/approve", teacher, {"validated": True})
+    assert approved["status"] == "validated"
+
+    env.app.state.gateway.verdict = "unsupported"
+    failed = call(env, "POST", url, teacher, body)
+    # A retest whose distractors cover several misconceptions fills each of their retest slots.
+    assert failed["question"] is None and len(failed["attempted"]) == 2 and 0 < failed["remaining"] <= total - 2
+    env.app.state.gateway.verdict = "supported"
+    moved_on = call(env, "POST", url, teacher, {**body, "skip": failed["attempted"]})
+    key = f"{moved_on['question']['target_misconception_code']}:{moved_on['question']['role']}"
+    assert key not in failed["attempted"]
+
+
+def test_slide_frames_are_not_tables_and_slide_lines_merge_into_paragraphs():
+    import pymupdf
+    from app.documents.extract import PRIVATE_GLYPHS, digital_blocks
+
+    with pymupdf.open() as document:
+        slide = document.new_page(width=720, height=540)
+        for inset in (4, 10):  # exported slides draw nested frames around the whole page
+            slide.draw_rect(pymupdf.Rect(inset, inset, 720 - inset, 540 - inset), width=1)
+        slide.insert_text((60, 60), "Traduction des associations binaires", fontsize=20)
+        # Built-in PDF fonts only draw ASCII; real slides' symbol bullets are checked on PRIVATE_GLYPHS below.
+        for row, line in enumerate(["Case 3: many-to-many association",
+                                    "- The relation receives both keys", "- Its key concatenates them"]):
+            slide.insert_text((60, 140 + row * 22), line, fontsize=14)
+        grid = document.new_page(width=720, height=540)
+        for row in range(4):
+            for col in range(3):
+                cell = pymupdf.Rect(60 + col * 150, 100 + row * 40, 210 + col * 150, 140 + row * 40)
+                grid.draw_rect(cell, width=1)
+                grid.insert_text((cell.x0 + 8, cell.y0 + 25), f"R{row}C{col}", fontsize=11)
+        slide_blocks, grid_blocks = digital_blocks(document[0]), digital_blocks(document[1])
+
+    assert {block.kind for block in slide_blocks} == {"text"}, "the slide frame is neither a table nor a figure"
+    body = next(block.text for block in slide_blocks if "Case 3" in block.text)
+    assert "both keys" in body and "concatenates" in body, "slide lines merge into one paragraph"
+    assert PRIVATE_GLYPHS.sub("•", " Sa clé") == "• Sa clé"
+    assert [block.kind for block in grid_blocks].count("table") == 1
+
+
+def test_quiz_instructions_are_acknowledged_without_unverified_text(env):
+    from app.documents.generation import INSTRUCTION_NOTED
+    teacher, _, lesson_id, doc_id, chat = ready_lesson(env, "instruction-teacher")
+    env.app.state.gateway.instruction = True
+    chat = call(env, "POST", f"/lessons/{lesson_id}/course-assistant/{chat['id']}/messages", teacher,
+                {"document_ids": [doc_id], "message": "Je veux huit questions sur les indices, niveau essentiel."})
+    reply = chat["messages"][-1]
+    assert reply["text"] == INSTRUCTION_NOTED and reply["sources"] == []

@@ -92,9 +92,9 @@ const fields = [
   ["focus_topics", "Thèmes à évaluer"], ["exclusions", "À exclure"], ["observed_difficulties", "Difficultés observées"],
 ] as const;
 
-function BriefForm({ conversation, busy, allowQuiz, hasSelection, save, extract, generate }: {
+function BriefForm({ conversation, busy, allowQuiz, hasSelection, save, extract, generate, variants }: {
   conversation: Conversation; busy: boolean; allowQuiz: boolean; hasSelection: boolean;
-  save: (brief: Schema["BriefUpdate"]) => void; extract: () => void; generate: () => void;
+  save: (brief: Schema["BriefUpdate"]) => void; extract: () => void; generate: () => void; variants: () => void;
 }) {
   const { brief } = conversation;
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -131,12 +131,17 @@ function BriefForm({ conversation, busy, allowQuiz, hasSelection, save, extract,
       {allowQuiz && <button className="lr-btn primary" type="button" disabled={!hasSelection || busy} onClick={generate}>
         Générer le quiz à partir des PDF
       </button>}
+      <button className="lr-btn" type="button" disabled={!hasSelection || busy} onClick={variants}
+        title="Une variante par erreur approuvée pour la vérification, le retest immédiat et la révision J+7">
+        Préparer les variantes de suivi
+      </button>
     </div>
   </form>;
 }
 
-function TaxonomyForm({ path, busy, run }: {
+export function TaxonomyForm({ path, busy, run, open = false, submitLabel = "Valider et ajouter à la séance" }: {
   path: string; busy: boolean; run: (operation: () => Promise<unknown>) => Promise<void>;
+  open?: boolean; submitLabel?: string;
 }) {
   const [count, setCount] = useState(1);
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -156,7 +161,7 @@ function TaxonomyForm({ path, busy, run }: {
       setCount(1);
     });
   }
-  return <details>
+  return <details open={open}>
     <summary>Valider une notion et ses erreurs diagnostiques</summary>
     <form className="lr-form" onSubmit={submit}>
       <label>Notion<input name="concept" required maxLength={200} /></label>
@@ -171,7 +176,7 @@ function TaxonomyForm({ path, busy, run }: {
       <label className="lr-check"><input type="checkbox" name="validated" required />
         J’ai vérifié la notion et les erreurs proposées.
       </label>
-      <button className="lr-btn" disabled={busy}>Valider et ajouter à la séance</button>
+      <button className="lr-btn" disabled={busy}>{submitLabel}</button>
     </form>
   </details>;
 }
@@ -192,6 +197,7 @@ export function CourseDocuments({ lessonId, allowQuiz, hasGroundedQuiz, allowTax
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [generated, setGenerated] = useState(false);
+  const [variantsReady, setVariantsReady] = useState<number>();
   const current = conversation ?? stored.value;
   const pending = !!docs.value?.some((doc) => doc.state === "processing" || doc.state === "queued");
   const documentIds = selected.filter((id) => docs.value?.some((doc) => doc.id === id && doc.state === "ready"));
@@ -264,6 +270,24 @@ export function CourseDocuments({ lessonId, allowQuiz, hasGroundedQuiz, allowTax
     });
   }
 
+  function prepareVariants() {
+    if (!current) return;
+    void run(async () => {
+      const skip: string[] = [];
+      let created = 0;
+      for (let round = 0; round < 80; round++) {
+        const result = await api<Schema["VariantResult"]>(assistant + "/variants", "POST", {
+          ...selection, conversation_id: current.id, brief_revision: current.brief_revision, skip,
+        });
+        if (result.question) created += 1;
+        else if (result.attempted.length) skip.push(...result.attempted);
+        setStatus("Variantes de suivi préparées : " + created + (skip.length ? " · non retenues : " + skip.length : ""));
+        if (!result.question && result.remaining <= result.attempted.length) break;
+      }
+      setVariantsReady(created);
+    });
+  }
+
   return <section id="documents" className="lr-panel lr-pad lr-docs">
     <div className="lr-section-title"><FileText /><h2>Documents de cours</h2></div>
     <form className="lr-form" onSubmit={upload}>
@@ -325,7 +349,11 @@ export function CourseDocuments({ lessonId, allowQuiz, hasGroundedQuiz, allowTax
     {current && <BriefForm key={current.id + ":" + current.brief_revision} conversation={current}
       busy={busy} allowQuiz={allowQuiz} hasSelection={ready} generate={generate}
       save={(brief) => void update("/" + current.id + "/brief", "PATCH", brief)}
-      extract={() => void update("/" + current.id + "/brief/extract", "POST")} />}
+      extract={() => void update("/" + current.id + "/brief/extract", "POST")} variants={prepareVariants} />}
+    {variantsReady !== undefined && <p role="status">
+      {variantsReady} variante(s) préparée(s) en brouillon. Relisez-les et approuvez-les dans la{" "}
+      <a href="/teacher/bank">Banque pédagogique</a> pour qu’elles servent aux vérifications et aux retests.
+    </p>}
     {(generated || hasGroundedQuiz) && <a className="lr-btn" href={"/teacher/quiz?lesson=" + lessonId + "&step=review"}>
       Relire le quiz et ses sources
     </a>}

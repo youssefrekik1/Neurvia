@@ -99,6 +99,7 @@ class MisconceptionView(View):
 class ConceptView(View):
     code: str
     label_fr: str
+    subject: str
     misconceptions: list[MisconceptionView]
 
 

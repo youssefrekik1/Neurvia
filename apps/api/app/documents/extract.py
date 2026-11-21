@@ -3,6 +3,7 @@ from csv import DictReader
 from dataclasses import dataclass
 from io import BytesIO, StringIO
 import logging
+import re
 from re import search
 from subprocess import SubprocessError, run
 
@@ -12,6 +13,8 @@ from PIL import Image
 
 logger = logging.getLogger(__name__)
 MAX_ARTIFACT = 16 * 1024 * 1024
+# Symbol-font bullets (Wingdings and similar) land in the Unicode private-use area.
+PRIVATE_GLYPHS = re.compile("[-]")
 
 
 @dataclass
@@ -37,13 +40,26 @@ def rect(points, page):
     return pdf.Rect(points) & page.rect
 
 
+def is_data_table(table):
+    """Tell a data table from a layout frame such as the border of an exported slide.
+
+    Slide decks draw frames that table detection reports as a page-sized table whose one or two cells hold
+    the whole slide. Treating that as a table turns every slide into Markdown noise and hides its text from
+    normal block extraction, so only grids with several filled cells and no dominant cell count as tables.
+    """
+    filled = [cell.strip() for row in table.extract() for cell in row if cell and cell.strip()]
+    total = sum(map(len, filled))
+    return len(filled) >= 4 and total > 0 and max(map(len, filled)) < 0.6 * total
+
+
 def digital_blocks(page):
     result = []
     tables = []
     if len(page.get_drawings()) >= 4:
         try:
             for table in page.find_tables().tables[:25]:
-                tables.append((rect(table.bbox, page), table.to_markdown()[:24000]))
+                if is_data_table(table):
+                    tables.append((rect(table.bbox, page), table.to_markdown()[:24000]))
         except (ValueError, RuntimeError):
             logger.info("layout_table_extraction_failed")
     result.extend(Block("table", list(box), value, "digital") for box, value in tables if value.strip())
@@ -55,6 +71,7 @@ def digital_blocks(page):
         if any((bounds & box).get_area() > 0.7 * bounds.get_area() for box, _ in tables):
             continue
         value = "\n".join("".join(span["text"] for span in line["spans"]) for line in block["lines"]).strip("\n")
+        value = PRIVATE_GLYPHS.sub("•", value)
         mono = any(span["flags"] & pdf.TEXT_FONT_MONOSPACED
                    for line in block["lines"] for span in line["spans"])
         if value.strip():
@@ -66,14 +83,37 @@ def digital_blocks(page):
     for points in diagrams[:30]:
         box = rect(points, page)
         key = tuple(round(point) for point in box)
-        if box.is_empty or box.get_area() < 1800 or key in seen:
+        # A drawing cluster covering most of the page is a slide frame or background, not a figure.
+        if box.is_empty or box.get_area() < 1800 or box.get_area() > 0.8 * page.rect.get_area() or key in seen:
             continue
         if any((box & table_rect).get_area() > 0.6 * box.get_area() for table_rect, _ in tables):
             continue
         seen.add(key)
         result.append(Block("figure", list(box), "", "layout", review=True,
                             image=render(page, clip=box)))
-    return sorted(result, key=lambda block: (round(block.bounds[1]), round(block.bounds[0])))
+    return merge_lines(sorted(result, key=lambda block: (round(block.bounds[1]), round(block.bounds[0]))))
+
+
+def merge_lines(blocks, *, gap=28, limit=1500):
+    """Join consecutive digital text blocks of one column into paragraphs.
+
+    Slides and some exports store every line as a separate block; indexed alone, single lines make poor
+    retrieval units and fragment the assembled context. Blocks only merge when they are vertically close,
+    overlap horizontally (so two columns stay apart) and stay under `limit` characters.
+    """
+    merged = []
+    for block in blocks:
+        previous = merged[-1] if merged else None
+        if (previous and block.kind == previous.kind == "text" and block.method == previous.method == "digital"
+                and block.bounds[1] - previous.bounds[3] < gap
+                and min(block.bounds[2], previous.bounds[2]) > max(block.bounds[0], previous.bounds[0])
+                and len(previous.text) + len(block.text) < limit):
+            previous.text += "\n" + block.text
+            previous.bounds = [min(previous.bounds[0], block.bounds[0]), min(previous.bounds[1], block.bounds[1]),
+                               max(previous.bounds[2], block.bounds[2]), max(previous.bounds[3], block.bounds[3])]
+        else:
+            merged.append(block)
+    return merged
 
 
 def render(page, clip=None):

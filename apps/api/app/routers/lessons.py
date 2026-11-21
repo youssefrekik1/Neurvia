@@ -6,7 +6,7 @@ from sqlalchemy import delete, func, select
 from app.core.auth import CurrentUser, Teacher
 from app.core.errors import documented_errors, error
 from app.db.session import Db
-from app.documents.access import scope_for
+from app.documents.access import classroom_institution, scope_for
 from app.documents.taxonomy import visible_concepts
 from app.models import Attempt, Concept, Lesson, LessonConcept, Misconception, MisconceptionConcept, Quiz, QuizQuestion
 from app.models.documents import InstitutionConcept
@@ -22,7 +22,7 @@ router = APIRouter(tags=["Séances et taxonomie"], responses=documented_errors(4
 
 @router.get("/taxonomy", response_model=list[ConceptView])
 def taxonomy(user: CurrentUser, db: Db):
-    concepts = {item.id: ConceptView(code=item.code, label_fr=item.label_fr, misconceptions=[])
+    concepts = {item.id: ConceptView(code=item.code, label_fr=item.label_fr, subject=item.subject, misconceptions=[])
                 for item in db.scalars(select(Concept).where(visible_concepts(user)).order_by(Concept.code))}
     for concept_id, code, label in db.execute(
         select(MisconceptionConcept.concept_id, Misconception.code, Misconception.label_fr)
@@ -91,24 +91,18 @@ def list_lessons(id: UUID, user: CurrentUser, db: Db):
     return [lesson_view(db, row, classroom, teacher) for row in db.scalars(query)]
 
 
-@router.post("/lessons/{id}/taxonomy", response_model=ConceptView, status_code=201)
-def approve_taxonomy(id: UUID, data: TaxonomyApproval, request: Request, user: Teacher, db: Db):
+def require_validation(data):
     if not data.validated:
         raise error(409, "TEACHER_VALIDATION_REQUIRED", "Confirmez la validation de la taxonomie.")
-    scope = scope_for(db, user, id, create=True)
-    row, classroom = lesson_access(db, user, id, teacher=True)
-    if row.status != LessonStatus.draft or current_quiz(db, id):
-        raise error(409, "LESSON_IMMUTABLE", "Validez les notions avant de créer le brouillon de quiz.")
-    if len(lesson_concepts(db, id)) >= 20:
-        raise error(409, "LESSON_CONCEPT_LIMIT", "Une séance peut contenir vingt notions.")
+
+
+def add_concept(db, request, user, institution_id, classroom, data):
+    """Persist a teacher-validated concept and its misconceptions for the classroom's subject."""
     concept = Concept(code=f"C_{uuid4().hex.upper()}", subject=classroom.subject, label_fr=data.label)
     db.add(concept)
     db.flush()
-    db.add_all([
-        LessonConcept(lesson_id=id, concept_id=concept.id),
-        InstitutionConcept(institution_id=scope.institution_id, concept_id=concept.id,
-                           validated_by=user.id, validated_at=request.app.state.system_clock.now()),
-    ])
+    db.add(InstitutionConcept(institution_id=institution_id, concept_id=concept.id,
+                              validated_by=user.id, validated_at=request.app.state.system_clock.now()))
     values = []
     for item in data.misconceptions:
         misconception = Misconception(code=f"M_{uuid4().hex.upper()}", label_fr=item.label,
@@ -117,8 +111,35 @@ def approve_taxonomy(id: UUID, data: TaxonomyApproval, request: Request, user: T
         db.flush()
         db.add(MisconceptionConcept(concept_id=concept.id, misconception_id=misconception.id))
         values.append(MisconceptionView(code=misconception.code, label_fr=misconception.label_fr))
+    return concept, ConceptView(code=concept.code, label_fr=concept.label_fr, subject=concept.subject,
+                                misconceptions=values)
+
+
+@router.post("/classrooms/{id}/taxonomy", response_model=ConceptView, status_code=201)
+def approve_classroom_taxonomy(id: UUID, data: TaxonomyApproval, request: Request, user: Teacher, db: Db):
+    """Validate a concept for the classroom's subject before any lesson exists, e.g. for a new subject."""
+    require_validation(data)
+    start_write(db)
+    classroom = get_classroom(id, user, db, teacher_only=True)
+    institution = classroom_institution(db, user, classroom, create=True)
+    _, view = add_concept(db, request, user, institution, classroom, data)
     db.commit()
-    return ConceptView(code=concept.code, label_fr=concept.label_fr, misconceptions=values)
+    return view
+
+
+@router.post("/lessons/{id}/taxonomy", response_model=ConceptView, status_code=201)
+def approve_taxonomy(id: UUID, data: TaxonomyApproval, request: Request, user: Teacher, db: Db):
+    require_validation(data)
+    scope = scope_for(db, user, id, create=True)
+    row, classroom = lesson_access(db, user, id, teacher=True)
+    if row.status != LessonStatus.draft or current_quiz(db, id):
+        raise error(409, "LESSON_IMMUTABLE", "Validez les notions avant de créer le brouillon de quiz.")
+    if len(lesson_concepts(db, id)) >= 20:
+        raise error(409, "LESSON_CONCEPT_LIMIT", "Une séance peut contenir vingt notions.")
+    concept, view = add_concept(db, request, user, scope.institution_id, classroom, data)
+    db.add(LessonConcept(lesson_id=id, concept_id=concept.id))
+    db.commit()
+    return view
 
 
 @router.get("/lessons/{id}", response_model=LessonView)

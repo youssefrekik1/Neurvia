@@ -27,6 +27,12 @@ class CourseAnswer(BaseModel):
     answer: str = Field(min_length=1, max_length=3200)
     citations: Annotated[list[CitationDraft], Field(max_length=5)]
     insufficient_evidence: bool = False
+    teacher_instruction: bool = False
+
+
+INSTRUCTION_NOTED = ("Consigne notée. Elle sera reprise dans les consignes de génération lorsque vous cliquerez sur "
+                     "« Extraire les consignes de la conversation ».")
+NO_EVIDENCE = "Les passages sélectionnés ne permettent pas de vérifier une réponse à cette question."
 
 
 class GroundedQuestion(BaseModel):
@@ -69,7 +75,7 @@ def answer(gateway, question, history, hits):
     evidence = keyed(hits)
 
     def verify(value: CourseAnswer):
-        if not value.insufficient_evidence:
+        if not value.insufficient_evidence and not value.teacher_instruction:
             verify_citations(value.citations, evidence)
 
     if evidence:
@@ -77,14 +83,19 @@ def answer(gateway, question, history, hits):
             gateway, "course_chat",
             "Answer the teacher in their language. Address the latest question and use previous turns "
             "only to resolve references. Cite each factual claim with a short exact quotation of at least "
-            "twelve characters. Mark insufficient_evidence when the course does not support an answer.",
+            "twelve characters. Mark insufficient_evidence when the course does not support an answer. "
+            "If the latest message only gives instructions for preparing a quiz (topics, number of questions, "
+            "difficulty, students' difficulties) and asks nothing about the course, set teacher_instruction.",
             {"question": question, "history": history, "passages": context(evidence)}, CourseAnswer, verify,
         )
+        # A fixed acknowledgement: this path never returns model text, so it cannot carry unverified claims.
+        if value and value.teacher_instruction:
+            return INSTRUCTION_NOTED, []
         if value and not value.insufficient_evidence:
             references = verify_citations(value.citations, evidence)
             if evidence_supports(gateway, value.answer, references, "Check each substantive factual claim."):
                 return value.answer, references
-    return "Les passages sélectionnés ne permettent pas de vérifier une réponse à cette question.", []
+    return NO_EVIDENCE, []
 
 
 def extract_brief(gateway, previous, teacher_turns):
@@ -107,17 +118,37 @@ def verify_question(gateway, candidate, references):
     )
 
 
-def generate_item(gateway, brief, concept, allowed, hits, excluded, fingerprint):
-    if not hits or not allowed:
+ROLE_GOALS = {
+    "confirmation": "La question sert à confirmer une erreur précise : elle doit la mettre à l’épreuve d’une "
+                    "autre façon que le quiz initial.",
+    "immediate_retest": "La question sert de retest juste après la remédiation : même notion, autre situation.",
+    "j7_retest": "La question sert de révision sept jours plus tard : même notion, autre situation que les "
+                 "questions déjà posées.",
+}
+
+
+def generate_item(gateway, brief, concept, allowed, hits, excluded, fingerprint, *, target=None, role=None):
+    """Draft one grounded question. With `target`, one distractor must carry that misconception code."""
+    if not hits or not allowed or (target is not None and target not in allowed):
         return None
     evidence = keyed(hits)
+    # Teacher-approved codes are long random identifiers that a model miscopies. It sees short aliases instead;
+    # the server restores the real codes and sets the concept itself before any validation.
+    aliases = {f"E{index}": code for index, code in enumerate(sorted(allowed), start=1)}
+    alias_of = {code: alias for alias, code in aliases.items()}
 
     def check(value: GroundedQuestion):
         item = value.question
+        item.concept_code = concept.code
+        for option in item.options:
+            if option.misconception_code in aliases:
+                option.misconception_code = aliases[option.misconception_code]
         try:
             item.check_taxonomy(concept.code, set(allowed))
             if any(option.misconception_code is None for option in item.options if not option.is_correct):
                 raise ValueError("missing diagnostic code")
+            if target is not None and not any(option.misconception_code == target for option in item.options):
+                raise ValueError("target misconception missing")
             if fingerprint(item.stem, item.code) in excluded:
                 raise ValueError("duplicate question")
             verify_citations(value.citations, evidence)
@@ -125,19 +156,25 @@ def generate_item(gateway, brief, concept, allowed, hits, excluded, fingerprint)
             logger.info("course_question_rejected reason=%s", exc)
             raise
 
-    value = structured(
-        gateway, "course_question",
-        "Rédige une question diagnostique en français. Utilise exactement le code de concept donné, "
+    instruction = (
+        "Rédige une question diagnostique en français sur le concept donné, avec "
         "quatre choix distincts et une seule bonne réponse. Pour la bonne réponse, mets misconception_code "
-        "à null. Chaque distracteur doit porter le code d’une erreur approuvée que ce choix reflète. "
+        "à null. Chaque distracteur doit porter l’identifiant (E1, E2…) d’une erreur approuvée de la taxonomie "
+        "que ce choix reflète. "
         "Explique la bonne réponse et donne l’objectif pédagogique. Pour chaque citation, prends un "
         "court extrait de la source, mot pour mot et dans sa langue originale, puis indique son identifiant P. "
         "Fais une question différente "
-        "des énoncés déjà présents. Respecte le brief lorsqu’il est compatible avec les sources.",
-        {"concept": {"code": concept.code, "label": concept.label_fr}, "taxonomy": allowed,
-         "brief": brief.model_dump(), "excluded_stems": [stem for stem, _ in sorted(excluded)][:12],
-         "passages": context(evidence)}, GroundedQuestion, check,
+        "des énoncés déjà présents. Respecte le brief lorsqu’il est compatible avec les sources."
     )
+    payload = {"concept": {"code": "C1", "label": concept.label_fr},
+               "taxonomy": {alias: allowed[code] for alias, code in aliases.items()},
+               "brief": brief.model_dump(), "excluded_stems": [stem for stem, _ in sorted(excluded)][:12],
+               "passages": context(evidence)}
+    if target is not None:
+        instruction += (" " + ROLE_GOALS.get(role, "") + " Un des distracteurs doit porter exactement "
+                        "l’identifiant target_misconception et refléter cette erreur de façon plausible.")
+        payload["target_misconception"] = {"code": alias_of[target], "label": allowed[target]}
+    value = structured(gateway, "course_question", instruction, payload, GroundedQuestion, check)
     if value is None:
         return None
     references = verify_citations(value.citations, evidence)

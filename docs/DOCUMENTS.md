@@ -103,7 +103,12 @@ Pour une installation réelle :
 - Les étudiants n’ont aucun accès aux documents ni à l’assistant (`403`).
 - Les clés d’objets sont préfixées par `institution/{id}/classroom/{id}/lesson/{id}`.
 - Taxonomie : les notions de référence restent globales. Une notion validée par un professeur appartient à son établissement. Les professeurs de cet établissement la voient et peuvent l’utiliser dans les classes de l’établissement. Un étudiant ne la voit que via une séance publiée d’une classe qu’il a rejointe. Être membre d’une classe ne révèle pas les notions préparées pour une autre classe du même professeur.
-- Limites par professeur et par minute : 30 imports, 60 recherches, 12 messages, 10 extractions de brief, 12 générations de quiz. Au-delà, l’API répond `429`. La clé est l’identifiant du professeur, car tous les navigateurs partagent l’adresse du proxy Next.js.
+- Limites par professeur et par minute : 30 imports, 60 recherches, 12 messages, 10 extractions de brief, 12 générations de quiz. Au-delà, l’API répond `429`. La clé est l’identifiant du professeur, car tous les navigateurs partagent l’adresse du proxy Next.js. Les compteurs sont tenus en mémoire par processus : l’image lance un seul processus Uvicorn. Avec plusieurs processus ou plusieurs instances de l’API, chacune applique sa propre limite, et un compteur partagé (Redis, par exemple) devient nécessaire.
+
+## Matières et variantes de suivi
+
+- Une classe porte une matière. Les notions de référence fournies concernent l’algorithmique et Python (`python_intro`). Pour une autre matière, le professeur valide d’abord des notions et leurs erreurs diagnostiques, soit pour la classe (`POST /classrooms/{id}/taxonomy`, proposé dans le formulaire de séance), soit pour une séance (`POST /lessons/{id}/taxonomy`). Ces notions appartiennent à l’établissement de la classe.
+- Les vérifications, retests et révisions J+7 utilisent des variantes approuvées de la banque du professeur. `POST /lessons/{id}/course-assistant/variants` en rédige une à la fois depuis les documents sélectionnés, pour la prochaine combinaison erreur et étape sans variante. Chaque variante cite sa source et reste en brouillon jusqu’à l’approbation dans la **Banque pédagogique**. Une combinaison que les documents ne permettent pas de traiter est renvoyée dans `attempted`, et le client la passe dans `skip` pour avancer.
 
 ## Établissements
 
