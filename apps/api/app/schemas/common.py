@@ -54,10 +54,16 @@ class Profile(View):
     is_synthetic: bool
 
 
+class InstitutionView(View):
+    id: UUID
+    name: str
+
+
 class ClassroomCreate(Input):
     name: Annotated[str, Field(min_length=1, max_length=120)]
     subject: Annotated[str, Field(min_length=1, max_length=100)] = "python_intro"
     join_ttl_hours: Annotated[int, Field(ge=1, le=720)] = 72
+    institution_id: UUID | None = None
 
 
 class JoinRotate(Input):

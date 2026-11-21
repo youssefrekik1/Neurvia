@@ -6,6 +6,8 @@ from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[4]
+# Defaults published in compose.documents.yml. They are acceptable only on a developer machine.
+LOCAL_SECRETS = ("neurvia-local-db", "neurvia-local-object-password")
 
 
 class Settings(BaseSettings):
@@ -33,6 +35,22 @@ class Settings(BaseSettings):
     group_similarity: float = Field(0.5, gt=0, le=1)
     group_min_size: int = Field(3, ge=2, le=20)
 
+    document_s3_endpoint: str | None = None
+    document_s3_bucket: str = "neurvia-documents"
+    document_s3_access_key: SecretStr | None = None
+    document_s3_secret_key: SecretStr | None = None
+    document_s3_region: str = "us-east-1"
+    document_max_upload_mb: int = Field(24, ge=1, le=64)
+    document_max_pages: int = Field(120, ge=1, le=300)
+    document_ocr_languages: str = "eng+fra+ara"
+    document_tesseract: str = "tesseract"
+    document_vision_enabled: bool = True
+    document_vision_model: str = "qwen3.5:9b"
+    embedding_model: str = "qwen3-embedding:0.6b"
+    rag_context_budget: int = Field(5500, ge=2000, le=30000)
+    rag_rerank: bool = True
+    document_job_retries: int = Field(3, ge=1, le=8)
+
     demo_mode: bool = False
     demo_admin_secret: SecretStr | None = None
 
@@ -42,6 +60,7 @@ class Settings(BaseSettings):
             raise ValueError("JWT_SECRET must contain at least 32 bytes")
         if self.app_env == "production" and (
             self.demo_mode or "jwt_secret" not in self.model_fields_set
+            or self.jwt_secret.get_secret_value() == "neurvia-compose-local-only-32-bytes"
         ):
             raise ValueError("Production requires an explicit JWT_SECRET and DEMO_MODE=false")
         if "*" in self.allowed_origins:
@@ -49,11 +68,20 @@ class Settings(BaseSettings):
         endpoint = urlsplit(self.llm_base_url)
         if endpoint.scheme not in {"http", "https"} or not endpoint.hostname or endpoint.username:
             raise ValueError("LLM_BASE_URL must be an HTTP(S) Ollama URL without credentials")
+        if self.document_s3_endpoint and (not self.document_s3_access_key or not self.document_s3_secret_key):
+            raise ValueError("Configure both S3 credentials for the document bucket")
+        if self.app_env == "production" and (
+            (self.document_s3_secret_key and self.document_s3_secret_key.get_secret_value() in LOCAL_SECRETS)
+            or any(secret in (self.database_url or "") for secret in LOCAL_SECRETS)
+        ):
+            raise ValueError("Production cannot use the local Compose database or object-storage credentials")
         return self
 
     @property
-    def sqlite_url(self) -> str:
+    def db_url(self) -> str:
         filename = "fahm-demo.db" if self.demo_mode else "fahm.db"
+        if self.database_url and self.database_url.startswith('postgresql://'):
+            return self.database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
         return self.database_url or f"sqlite:///{(ROOT / 'apps' / 'api' / filename).as_posix()}"
 
     @property

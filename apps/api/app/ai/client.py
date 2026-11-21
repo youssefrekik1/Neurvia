@@ -9,13 +9,17 @@ from typing import Generic, Literal, Protocol, TypeVar
 import httpx
 from pydantic import BaseModel
 from sqlalchemy import select
-from sqlalchemy.dialects.sqlite import insert
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from app.core.config import Settings
 from app.models import LLMCache
 
 T = TypeVar("T", bound=BaseModel)
-Task = Literal["generate_questions", "generate_remediation_plan"]
+Task = Literal[
+    "generate_questions", "generate_remediation_plan", "course_chat",
+    "course_verify", "course_brief", "course_question",
+]
 Messages = list[dict[str, str]]
 logger = logging.getLogger("uvicorn.error").getChild("fahm.ai")
 
@@ -87,7 +91,7 @@ class LLMGateway:
     def generate(
         self, task: Task, messages: Messages, schema: type[T], *,
         check: Callable[[T], None], fallback: Callable[[], T | None],
-        fixture: dict | None = None,
+        fixture: dict | None = None, cache: bool = True,
     ) -> Generation[T] | None:
         if self.settings.demo_mode and fixture is not None:
             try:
@@ -112,8 +116,7 @@ class LLMGateway:
                         "top_k": self.settings.llm_top_k, "num_ctx": self.settings.llm_num_ctx,
                     }),
                 }
-                cached = self._cached(key, schema, check)
-                if cached is not None:
+                if cache and (cached := self._cached(key, schema, check)) is not None:
                     return Generation(cached, "cache", model)
                 for attempt in range(self.settings.llm_max_retries + 1):
                     start = perf_counter()
@@ -131,7 +134,8 @@ class LLMGateway:
                         ):
                             break
                         continue
-                    self._remember(key, value)
+                    if cache:
+                        self._remember(key, value)
                     logger.info("llm task=%s model=%s ms=%.0f",
                                 task, model, (perf_counter() - start) * 1000)
                     return Generation(value, "llm", model)
@@ -159,6 +163,7 @@ class LLMGateway:
 
     def _remember(self, key, value: BaseModel) -> None:
         with self.sessions.begin() as session:
+            insert = pg_insert if session.get_bind().dialect.name == "postgresql" else sqlite_insert
             session.execute(insert(LLMCache).values(
                 **key, output_json=value.model_dump(mode="json"),
             ).on_conflict_do_nothing(index_elements=list(key)))

@@ -4,6 +4,8 @@ from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.errors import error
+from app.documents.provenance import source_views
+from app.models.documents import SourceCitation
 from app.models import (
     Concept, LessonConcept, Misconception, MisconceptionConcept, Question, QuestionOption, QuizQuestion,
 )
@@ -21,6 +23,13 @@ def allowed_codes(db: Session, concept_id) -> dict[str, UUID]:
     return dict(db.execute(select(Misconception.code, Misconception.id)
                            .join(MisconceptionConcept)
                            .where(MisconceptionConcept.concept_id == concept_id)).all())
+
+
+def taxonomy_labels(db: Session, concept_id) -> dict[str, str]:
+    return dict(db.execute(select(Misconception.code, Misconception.label_fr)
+                           .join(MisconceptionConcept)
+                           .where(MisconceptionConcept.concept_id == concept_id)
+                           .order_by(Misconception.code)).all())
 
 
 def fingerprint(stem: str, code: str | None) -> tuple[str, str]:
@@ -57,6 +66,7 @@ def teacher_view(db: Session, row: Question, concept_code: str):
         explanation=row.explanation, source=row.source, status=row.status, role=row.role,
         version=row.version, validated_at=row.validated_at, validated_by=row.validated_by,
         target_misconception_code=target_code,
+        source_pages=source_views(db, SourceCitation.question_id == row.id),
         options=[{"id": option.id, "text": option.text, "is_correct": option.is_correct,
                   "misconception_code": key} for option, key in opts(db, row.id)],
     )

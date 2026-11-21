@@ -10,9 +10,10 @@ from app.core.auth import CurrentUser, Student, Teacher, issue_token, password_h
 from app.core.errors import documented_errors, error
 from app.db.session import Db
 from app.models import Classroom, Membership, User
+from app.models.documents import ClassroomTenant, Institution, InstitutionMember, personal_institution_id
 from app.models.enums import Role
 from app.schemas.common import (
-    ClassroomCreate, ClassroomJoin, ClassroomView, JoinRotate, Login, Member, Profile, Register, Token,
+    ClassroomCreate, ClassroomJoin, ClassroomView, InstitutionView, JoinRotate, Login, Member, Profile, Register, Token,
 )
 
 router = APIRouter(tags=["Identité et classes"])
@@ -60,9 +61,24 @@ def classroom_view(row: Classroom, teacher: bool = False) -> ClassroomView:
     )
 
 
+@router.get("/institutions", response_model=list[InstitutionView], responses=documented_errors(401, 403))
+def institutions(user: Teacher, db: Db):
+    return list(db.scalars(select(Institution).join(InstitutionMember).where(
+        InstitutionMember.user_id == user.id, Institution.is_synthetic == user.is_synthetic,
+        Institution.id != personal_institution_id(user.id),
+    ).order_by(Institution.name, Institution.id)))
+
+
 @router.post("/classrooms", response_model=ClassroomView, status_code=201,
-             responses=documented_errors(401, 403, 422))
+             responses=documented_errors(401, 403, 404, 422))
 def create_classroom(data: ClassroomCreate, request: Request, user: Teacher, db: Db):
+    if data.institution_id is not None:
+        allowed = db.scalar(select(Institution.id).join(InstitutionMember).where(
+            Institution.id == data.institution_id, InstitutionMember.user_id == user.id,
+            Institution.is_synthetic == user.is_synthetic,
+        ))
+        if allowed is None:
+            raise error(404)
     row = Classroom(
         teacher_id=user.id, name=data.name, subject=data.subject,
         join_code=token_hex(10).upper(),
@@ -70,6 +86,9 @@ def create_classroom(data: ClassroomCreate, request: Request, user: Teacher, db:
         is_synthetic=user.is_synthetic,
     )
     db.add(row)
+    if data.institution_id is not None:
+        db.flush()
+        db.add(ClassroomTenant(institution_id=data.institution_id, classroom_id=row.id))
     db.commit()
     return classroom_view(row, teacher=True)
 

@@ -1,7 +1,8 @@
-from sqlalchemy import inspect
+from sqlalchemy import inspect, text
 from sqlalchemy.engine import Engine
 
 from app.db.base import Base
+from app.models import documents
 
 # Additive upgrade from the existing Phase 0 SQLite schema.
 COLUMNS = {
@@ -21,9 +22,15 @@ COLUMNS = {
 
 
 def initialize_schema(engine: Engine) -> None:
-    Base.metadata.create_all(engine)
-    if engine.dialect.name != "sqlite":
+    if engine.dialect.name == "postgresql":
+        with engine.connect() as connection:
+            if not inspect(connection).has_table("alembic_version"):
+                raise RuntimeError("Run alembic upgrade head before starting the PostgreSQL application.")
+            revisions = set(connection.scalars(text("SELECT version_num FROM alembic_version")))
+            if revisions != {"20261121_04"}:
+                raise RuntimeError("Run alembic upgrade head before starting the PostgreSQL application.")
         return
+    Base.metadata.create_all(engine)
     with engine.begin() as connection:
         for table, columns in COLUMNS.items():
             existing = {column["name"] for column in inspect(connection).get_columns(table)}

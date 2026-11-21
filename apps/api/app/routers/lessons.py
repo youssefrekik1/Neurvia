@@ -1,16 +1,19 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from sqlalchemy import delete, func, select
 
 from app.core.auth import CurrentUser, Teacher
 from app.core.errors import documented_errors, error
 from app.db.session import Db
+from app.documents.access import scope_for
+from app.documents.taxonomy import visible_concepts
 from app.models import Attempt, Concept, Lesson, LessonConcept, Misconception, MisconceptionConcept, Quiz, QuizQuestion
+from app.models.documents import InstitutionConcept
 from app.models.enums import AttemptStatus, LessonStatus, QuestionRole, Role
 from app.routers.identity import get_classroom
 from app.schemas.common import ConceptView, MisconceptionView
-from app.schemas.learning import LessonCreate, LessonView
+from app.schemas.learning import LessonCreate, LessonView, TaxonomyApproval
 from app.services.access import lesson_access, start_write
 from app.services.questions import lesson_concepts
 
@@ -20,10 +23,10 @@ router = APIRouter(tags=["Séances et taxonomie"], responses=documented_errors(4
 @router.get("/taxonomy", response_model=list[ConceptView])
 def taxonomy(user: CurrentUser, db: Db):
     concepts = {item.id: ConceptView(code=item.code, label_fr=item.label_fr, misconceptions=[])
-                for item in db.scalars(select(Concept).order_by(Concept.code))}
+                for item in db.scalars(select(Concept).where(visible_concepts(user)).order_by(Concept.code))}
     for concept_id, code, label in db.execute(
         select(MisconceptionConcept.concept_id, Misconception.code, Misconception.label_fr)
-        .join(Misconception).order_by(Misconception.code)
+        .join(Misconception).where(MisconceptionConcept.concept_id.in_(concepts)).order_by(Misconception.code)
     ):
         concepts[concept_id].misconceptions.append(MisconceptionView(code=code, label_fr=label))
     return list(concepts.values())
@@ -55,9 +58,10 @@ def lesson_view(db, row, classroom, teacher):
     )
 
 
-def resolve_concepts(db, data, classroom):
+def resolve_concepts(db, data, classroom, user):
     concepts = list(db.scalars(select(Concept).where(
         Concept.code.in_(data.concept_codes), Concept.subject == classroom.subject,
+        visible_concepts(user, classroom.id),
     )))
     if len(concepts) != len(data.concept_codes):
         raise error(422, "UNKNOWN_CONCEPT", "Un concept ne correspond pas à la matière.")
@@ -67,7 +71,7 @@ def resolve_concepts(db, data, classroom):
 @router.post("/classrooms/{id}/lessons", response_model=LessonView, status_code=201)
 def create_lesson(id: UUID, data: LessonCreate, user: Teacher, db: Db):
     classroom = get_classroom(id, user, db, teacher_only=True)
-    concepts = resolve_concepts(db, data, classroom)
+    concepts = resolve_concepts(db, data, classroom, user)
     row = Lesson(classroom_id=id, title=data.title, content_text=data.content_text,
                  focus_brief_json=data.focus_brief.model_dump(), status=LessonStatus.draft)
     db.add(row)
@@ -87,6 +91,36 @@ def list_lessons(id: UUID, user: CurrentUser, db: Db):
     return [lesson_view(db, row, classroom, teacher) for row in db.scalars(query)]
 
 
+@router.post("/lessons/{id}/taxonomy", response_model=ConceptView, status_code=201)
+def approve_taxonomy(id: UUID, data: TaxonomyApproval, request: Request, user: Teacher, db: Db):
+    if not data.validated:
+        raise error(409, "TEACHER_VALIDATION_REQUIRED", "Confirmez la validation de la taxonomie.")
+    scope = scope_for(db, user, id, create=True)
+    row, classroom = lesson_access(db, user, id, teacher=True)
+    if row.status != LessonStatus.draft or current_quiz(db, id):
+        raise error(409, "LESSON_IMMUTABLE", "Validez les notions avant de créer le brouillon de quiz.")
+    if len(lesson_concepts(db, id)) >= 20:
+        raise error(409, "LESSON_CONCEPT_LIMIT", "Une séance peut contenir vingt notions.")
+    concept = Concept(code=f"C_{uuid4().hex.upper()}", subject=classroom.subject, label_fr=data.label)
+    db.add(concept)
+    db.flush()
+    db.add_all([
+        LessonConcept(lesson_id=id, concept_id=concept.id),
+        InstitutionConcept(institution_id=scope.institution_id, concept_id=concept.id,
+                           validated_by=user.id, validated_at=request.app.state.system_clock.now()),
+    ])
+    values = []
+    for item in data.misconceptions:
+        misconception = Misconception(code=f"M_{uuid4().hex.upper()}", label_fr=item.label,
+                                      remediation_hint=item.remediation_hint)
+        db.add(misconception)
+        db.flush()
+        db.add(MisconceptionConcept(concept_id=concept.id, misconception_id=misconception.id))
+        values.append(MisconceptionView(code=misconception.code, label_fr=misconception.label_fr))
+    db.commit()
+    return ConceptView(code=concept.code, label_fr=concept.label_fr, misconceptions=values)
+
+
 @router.get("/lessons/{id}", response_model=LessonView)
 def read_lesson(id: UUID, user: CurrentUser, db: Db):
     row, classroom = lesson_access(db, user, id)
@@ -96,10 +130,10 @@ def read_lesson(id: UUID, user: CurrentUser, db: Db):
 @router.patch("/lessons/{id}", response_model=LessonView)
 def edit_lesson(id: UUID, data: LessonCreate, user: Teacher, db: Db):
     start_write(db)
-    row, classroom = lesson_access(db, user, id, teacher=True)
+    row, classroom = lesson_access(db, user, id, teacher=True, lock=True)
     if row.status != LessonStatus.draft:
         raise error(409, "LESSON_IMMUTABLE", "Cette séance est déjà publiée.")
-    concepts = resolve_concepts(db, data, classroom)
+    concepts = resolve_concepts(db, data, classroom, user)
     quiz = current_quiz(db, row.id)
     if quiz and set(data.concept_codes) != {c.code for c in lesson_concepts(db, row.id)}:
         raise error(409, "QUIZ_EXISTS", "Conservez les concepts du quiz déjà préparé.")

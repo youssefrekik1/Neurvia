@@ -7,6 +7,7 @@ from app.core.auth import Teacher
 from app.core.clock import SystemClock
 from app.core.errors import documented_errors, error
 from app.db.session import Db
+from app.documents.taxonomy import visible_concepts
 from app.models import Concept, Question
 from app.models.enums import QuestionStatus, Source
 from app.schemas.common import Approval
@@ -27,7 +28,9 @@ def list_questions(user: Teacher, db: Db):
 @router.post("", response_model=TeacherQuestion, status_code=201)
 def add_question(data: BankQuestionCreate, user: Teacher, db: Db):
     start_write(db)
-    row = create_question(db, data, owner_id=user.id, role=data.role, target_code=data.target_misconception_code)
+    targets = set(db.scalars(select(Concept.id).where(Concept.code == data.concept_code, visible_concepts(user))))
+    row = create_question(db, data, owner_id=user.id, role=data.role, target_code=data.target_misconception_code,
+                          concept_ids=targets)
     db.commit()
     return teacher_view(db, row, data.concept_code)
 
