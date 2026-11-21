@@ -86,6 +86,10 @@ def save_choice(db, attempt, quiz, data):
     ))
     values = {"option_id": option.id, "confidence": data.confidence, "is_correct": option.is_correct,
               "quadrant": quadrant(option.is_correct, data.confidence)}
+    if "justification" in data.model_fields_set:
+        values["justification"] = data.justification
+    elif answer is not None and answer.option_id != option.id:
+        values["justification"] = None
     if answer is None:
         answer = Answer(attempt_id=attempt.id, question_id=data.question_id, **values)
         db.add(answer)

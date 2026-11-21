@@ -22,10 +22,24 @@ from app.schemas.common import Approval
 from app.services.access import lesson_access, start_write
 from app.services.assessments import choose_variant, personal_quiz
 from app.services.class_analytics import dashboard_view, load_classroom
+from app.services.difficulty_assistance import DifficultyAssistance, classify, inputs_for_student
 from app.services.questions import lesson_concepts
 
 router = APIRouter(tags=["MindMirror et remédiation"], responses=documented_errors(401, 403, 404, 409, 422))
 ACTIVE_GROUP = {e.GroupStatus.accepted, e.GroupStatus.modified}
+
+
+@router.post("/lessons/{id}/members/{member_id}/difficulty-assistance",
+             response_model=DifficultyAssistance, responses=documented_errors(429, 503))
+def difficulty_assistance(id: UUID, member_id: UUID, request: Request, user: Teacher, db: Db):
+    lesson, classroom = lesson_access(db, user, id, teacher=True)
+    member = db.get(Membership, member_id)
+    if member is None or member.classroom_id != classroom.id:
+        raise error(404)
+    request.app.state.rate_limiter.check(request, "difficulty_assistance", 12, subject=user.id)
+    items = inputs_for_student(db, lesson, member)
+    db.rollback()
+    return classify(request.app.state.gateway, items)
 
 
 def group_access(db, user, id):

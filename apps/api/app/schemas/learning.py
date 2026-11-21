@@ -167,6 +167,7 @@ class AnswerInput(Input):
     question_id: UUID
     option_id: UUID
     confidence: e.Confidence
+    justification: str | None = Field(default=None, max_length=600)
 
 
 class AnswerSaved(View):

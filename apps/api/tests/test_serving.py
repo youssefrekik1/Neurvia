@@ -57,7 +57,7 @@ def http_for(server, config):
 
 def test_backend_selection():
     with httpx.Client() as http:
-        llm, docs = model_clients(http, Settings(_env_file=None))
+        llm, docs = model_clients(http, Settings(_env_file=None, model_backend="ollama"))
         assert isinstance(llm, OllamaClient) and isinstance(docs, OllamaDocumentModels)
         llm, docs = model_clients(http, settings())
         assert isinstance(llm, OpenAICompatibleClient) and isinstance(docs, OpenAICompatibleDocumentModels)

@@ -200,6 +200,7 @@ class Answer(Record):
     question_id: Mapped[UUID] = fk("questions")
     option_id: Mapped[UUID] = mapped_column(index=True)
     confidence: Mapped[e.Confidence] = mapped_column(enum_column(e.Confidence))
+    justification: Mapped[str | None] = mapped_column(Text)
     is_correct: Mapped[bool]
     quadrant: Mapped[e.Quadrant] = mapped_column(enum_column(e.Quadrant))
 

@@ -3,8 +3,9 @@ from secrets import token_urlsafe
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from app.ai.client import LLMGateway
+from app.ai.client import LLMGateway, ModelConfigurationError
 from app.ai.serving import model_clients, model_http
 from app.core.auth import RateLimiter, password_hash
 from app.core.clock import DemoClock, SystemClock
@@ -40,7 +41,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             with model_http(settings) as http:
                 client, app.state.document_models = model_clients(http, settings)
                 app.state.gateway = LLMGateway(client, settings, sessions)
-                yield
+                try:
+                    yield
+                finally:
+                    if close := getattr(client, "close", None):
+                        close()
         finally:
             engine.dispose()
 
@@ -55,6 +60,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["Authorization", "Content-Type", "X-Demo-Secret"],
     )
     configure_errors(app)
+
+    @app.exception_handler(ModelConfigurationError)
+    async def model_configuration_error(request, exc):
+        return JSONResponse({"error": {"code": "MODEL_CONFIGURATION_ERROR", "message": str(exc)}}, 503)
 
     @app.get("/health", response_model=Health, tags=["Système"])
     def health():

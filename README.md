@@ -6,7 +6,7 @@ Neurvia aide les professeurs d’algorithmique et de Python à comprendre **pour
 
 Le professeur peut aussi importer ses supports de cours en PDF, y compris manuscrits, interroger un assistant qui cite les pages sources, et générer des questions fondées sur ces documents. Chaque quiz exige l’approbation explicite du professeur avant publication.
 
-Les modèles (Qwen3.5-9B et `qwen3-embedding:0.6b`) tournent en local par défaut via Ollama.
+L’API utilise Gemini par défaut pour la génération, la vision et les embeddings. Ollama et les serveurs compatibles OpenAI restent disponibles sur configuration explicite.
 
 ![Assistant de cours avec citation de la page source](docs/screenshots/course-assistant.png)
 
@@ -14,7 +14,7 @@ Les modèles (Qwen3.5-9B et `qwen3-embedding:0.6b`) tournent en local par défau
 
 | Parcours | Ce que fait Neurvia |
 | --- | --- |
-| **Préparation de séance** | Notions de la séance, quiz préparé depuis la banque approuvée ou par Qwen, relecture et publication explicite |
+| **Préparation de séance** | Notions de la séance, quiz préparé depuis la banque approuvée ou par Gemini, relecture et publication explicite |
 | **Diagnostic** | Réponses avec niveau de confiance. Une erreur seule reste une hypothèse, que vient confirmer une variante indépendante |
 | **MindMirror** | Constellation des profils d’erreurs et priorités de la classe, avec pseudonymes |
 | **Groupes et remédiation** | Groupes proposés par similarité, plan de remédiation éditable, affectation et retest ciblé |
@@ -45,7 +45,7 @@ flowchart LR
     end
     db[("PostgreSQL + pgvector<br/>données, chunks, vecteurs, file de travaux")]
     s3[("Stockage S3 privé<br/>PDF, rendus de pages, images")]
-    models["Serveur de modèles<br/>Ollama (défaut) ou vLLM<br/>Qwen3.5-9B · qwen3-embedding"]
+    models["Serveur de modèles<br/>Gemini API (défaut)<br/>Ollama ou compatible OpenAI sur configuration"]
 
     browser --> ui --> proxy -->|"Bearer JWT"| api
     api --> db
@@ -67,7 +67,7 @@ flowchart LR
     job --> kind{"Page numérique<br/>ou scannée ?"}
     kind -->|numérique| digital["Texte, code, tableaux<br/>et figures avec coordonnées"]
     kind -->|scannée| ocr["Tesseract (fra, eng, ara)"]
-    ocr -->|"texte vide ou peu fiable"| vision["Transcription littérale<br/>par Qwen vision"]
+    ocr -->|"texte vide ou peu fiable"| vision["Transcription littérale<br/>par Gemini"]
     digital --> flagged{"Bloc incertain ?"}
     ocr --> flagged
     vision --> flagged
@@ -86,7 +86,7 @@ sequenceDiagram
     actor P as Professeur
     participant A as API
     participant R as Recherche hybride
-    participant L as Qwen3.5-9B
+    participant L as Gemini API
     P->>A: question sur les PDF sélectionnés
     A->>R: requête filtrée par établissement, classe, séance et documents
     R->>R: pgvector + plein texte, fusion des rangs, reclassement, budget de contexte
@@ -150,15 +150,13 @@ Chaque requête documentaire filtre par établissement, classe et séance. Les c
 
 ## Démarrage
 
-Prérequis : **Windows et PowerShell**, **Python 3.11+**, **Node.js 24**, **Ollama** avec `qwen3.5:9b` et `qwen3-embedding:0.6b`, et **Docker Desktop** pour les documents de cours.
+Prérequis : **Windows et PowerShell**, **Python 3.11+**, **Node.js 24**, une clé Gemini pour les fonctions IA, et **Docker Desktop** pour les documents de cours.
 
 ```powershell
 python -m venv apps/api/.venv
 .\apps\api\.venv\Scripts\python.exe -m pip install -r apps/api/requirements-dev.txt
 npm ci
 if (!(Test-Path .env)) { Copy-Item .env.example .env }
-ollama pull qwen3.5:9b
-ollama pull qwen3-embedding:0.6b
 ```
 
 ### Option A : installation complète, avec les documents de cours
@@ -180,7 +178,7 @@ Les mots de passe de `compose.documents.yml` ne servent qu’au développement l
 ```powershell
 ./start-demo.ps1            # 20 apprenants fictifs, une séance publiée et des réponses
 ./start-demo.ps1 -Fresh     # nouvelle base de démonstration
-./start-demo.ps1 -Offline   # sans Ollama
+./start-demo.ps1 -Offline   # sans génération IA
 ./start-demo.ps1 -Sqlite    # sans Docker, avec une base SQLite locale
 ```
 
@@ -192,6 +190,10 @@ Le script démarre le service PostgreSQL de `compose.documents.yml` et y crée u
 Comme professeur, **Simuler J+7** avance l’horloge de démonstration après un retest. La date simulée est signalée dans l’interface.
 
 Les classes **Algorithmique A** et **Algorithmique B** contiennent chacune 40 élèves fictifs. Connectez-vous avec `amel.bensalem.prof@neurvia.demo` et le mot de passe `Algo-Prof-2026!`. Les comptes élèves figurent dans [data/demo_classrooms.json](data/demo_classrooms.json). En mode démo, les comptes du dataset soumettent automatiquement des réponses variées à la publication du quiz initial.
+
+Placez votre nouvelle clé dans `GEMINI_API_KEY` dans le fichier local `apps/api/.env`. Gardez cette variable côté API et worker. Pour vérifier les modèles accessibles au compte, exécutez `python -m tools.probe_gemini` depuis `apps/api`. Le script utilise des données fictives. Pour démarrer sans génération, utilisez `LLM_ENABLED=false` ou `./start-demo.ps1 -Offline`.
+
+Dans MindMirror, l’onglet **Difficultés** permet de demander des hypothèses sur les réponses d’un apprenant. Les réponses observées sont affichées avec chaque hypothèse. Le résultat reste consultatif. Les applications clientes peuvent fournir une justification facultative avec la réponse via le champ `justification`.
 
 ## Parcours type
 
@@ -206,7 +208,7 @@ Les variantes peuvent aussi être rédigées à la main dans la **Banque pédago
 
 ## Données et confidentialité
 
-- Les modèles tournent en local par défaut. La passerelle ne transmet ni noms, ni courriels, ni réponses, ni profils étudiants. Les extraits de cours doivent rester anonymisés.
+- Les extraits de cours, les images de pages et les contenus utilisés pour les embeddings sont envoyés à Gemini quand ce fournisseur est sélectionné. L’analyse assistée transmet le contenu pédagogique de la réponse sans transmettre le profil ni les identifiants du compte. Utilisez des cours et justifications sans données personnelles.
 - Les PDF sont traités comme des données non fiables : une instruction cachée dans un document ne modifie ni les consignes du modèle ni les droits.
 - Une classe ne peut jamais accéder aux documents d’une autre. Les ressources hors périmètre répondent `404`.
 

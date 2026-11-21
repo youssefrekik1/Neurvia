@@ -18,10 +18,18 @@ from app.models import LLMCache
 T = TypeVar("T", bound=BaseModel)
 Task = Literal[
     "generate_questions", "generate_remediation_plan", "course_chat",
-    "course_verify", "course_brief", "course_question",
+    "course_verify", "course_brief", "course_question", "classify_difficulty",
 ]
 Messages = list[dict[str, str]]
 logger = logging.getLogger("uvicorn.error").getChild("fahm.ai")
+
+
+class ModelConfigurationError(RuntimeError):
+    """Sanitized model configuration error safe to return to operators."""
+
+
+class ModelRequestFailed(ValueError):
+    """Model request exhausted the provider's retry policy."""
 
 
 @dataclass(frozen=True)
@@ -91,7 +99,7 @@ class LLMGateway:
     def generate(
         self, task: Task, messages: Messages, schema: type[T], *,
         check: Callable[[T], None], fallback: Callable[[], T | None],
-        fixture: dict | None = None, cache: bool = True,
+        fixture: dict | None = None, cache: bool = True, model_override: str | None = None,
     ) -> Generation[T] | None:
         if self.settings.demo_mode and fixture is not None:
             try:
@@ -102,16 +110,25 @@ class LLMGateway:
                 logger.warning("Invalid demo fixture for %s", task)
 
         if self.settings.llm_enabled:
-            models = list(dict.fromkeys(filter(None, [self.settings.llm_model, self.settings.llm_fallback_model])))
+            models = [model_override] if model_override else list(dict.fromkeys(
+                filter(None, [self.settings.llm_model, self.settings.llm_fallback_model])
+            ))
             json_schema = schema.model_json_schema()
-            for model in models:
-                if model != self.settings.llm_model and not self.client.available(model):
+            for index, model in enumerate(models):
+                if index and not self.client.available(model):
+                    continue
+                revision_lookup = getattr(self.client, "cache_revision", None)
+                try:
+                    model_revision = revision_lookup(model) if cache and revision_lookup else None
+                except ModelRequestFailed:
                     continue
                 key = {
                     "task": task, "model": model,
                     "schema_version": digest(json_schema),
                     "input_hash": digest({
                         "messages": messages, "think": self.settings.llm_think,
+                        "backend": self.settings.model_backend, "provider_revision": model_revision,
+                        "configured_revision": self.settings.llm_model_revision,
                         "temperature": self.settings.llm_temperature, "top_p": self.settings.llm_top_p,
                         "top_k": self.settings.llm_top_k, "num_ctx": self.settings.llm_num_ctx,
                     }),
@@ -129,7 +146,7 @@ class LLMGateway:
                         logger.info("llm task=%s model=%s attempt=%d ms=%.0f failure=%s",
                                     task, model, attempt + 1, (perf_counter() - start) * 1000,
                                     type(exc).__name__)
-                        if isinstance(exc, httpx.ConnectError) or (
+                        if isinstance(exc, (httpx.ConnectError, ModelRequestFailed)) or (
                             isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code == 404
                         ):
                             break

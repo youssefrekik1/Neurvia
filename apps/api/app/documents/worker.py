@@ -7,6 +7,8 @@ from uuid import UUID, uuid4
 
 import pymupdf as pdf
 from sqlalchemy import and_, or_, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from app.ai.serving import model_clients, model_http
 from app.core.config import Settings
@@ -72,13 +74,15 @@ def claim(sessions, attempts):
             return None
         if job.attempts >= attempts:
             job.state, job.error_code = "failed", "lease_expired"
-            version.state, version.failure = "failed", job.error_code
+            if job.kind != "reindex":
+                version.state, version.failure = "failed", job.error_code
             return None
         token = uuid4()
         job.state, job.lease_token, job.locked_until = "processing", token, now + LEASE
         job.attempts += 1
         job.progress = 0
-        version.state, version.failure = "processing", None
+        if job.kind != "reindex":
+            version.state, version.failure = "processing", None
         return Claim(job.id, job.version_id, job.revision, token, job.kind)
 
 
@@ -200,6 +204,39 @@ def finish(job, start):
     logger.info("document_job_finished kind=%s elapsed_ms=%d", job.kind, job.elapsed_ms)
 
 
+def reembed(sessions, item, model, start):
+    with sessions() as db:
+        chunks = db.execute(select(DocumentChunk.id, DocumentChunk.text).where(
+            DocumentChunk.version_id == item.version_id, DocumentChunk.revision == item.revision,
+            DocumentChunk.position > 0,
+        ).order_by(DocumentChunk.id)).all()
+    profile = model.revision()
+    values = []
+    for offset in range(0, len(chunks), 24):
+        batch = chunks[offset:offset + 24]
+        vectors = model.embed([row.text for row in batch], profile)
+        values.extend({"chunk_id": row.id, "model_revision": profile, "vector": vector}
+                      for row, vector in zip(batch, vectors, strict=True))
+        heartbeat(sessions, item, int(95 * (offset + len(batch)) / len(chunks)))
+    if model.revision() != profile:
+        raise ValueError("embedding_model_changed")
+    with sessions.begin() as db:
+        version, job = lock_current(db, item)
+        if version is None:
+            return
+        if version.state != "ready" or version.indexed_revision != item.revision:
+            job.state = "obsolete"
+            return
+        insert = pg_insert if db.get_bind().dialect.name == "postgresql" else sqlite_insert
+        for offset in range(0, len(values), 24):
+            statement = insert(ChunkEmbedding).values(values[offset:offset + 24])
+            db.execute(statement.on_conflict_do_update(
+                index_elements=["chunk_id", "model_revision"], set_={"vector": statement.excluded.vector},
+            ))
+        version.model_revision = profile
+        finish(job, start)
+
+
 def fail(sessions, item, settings, exc, start):
     with sessions.begin() as db:
         version, job = lock_current(db, item)
@@ -209,10 +246,14 @@ def fail(sessions, item, settings, exc, start):
         job.error_code, job.locked_until = code, None
         job.elapsed_ms = round((perf_counter() - start) * 1000)
         if isinstance(exc, PermanentError) or job.attempts >= settings.document_job_retries:
-            version.state, version.failure, job.state = "failed", code, "failed"
+            job.state = "failed"
+            if item.kind != "reindex":
+                version.state, version.failure = "failed", code
         else:
             job.available_at = utcnow() + timedelta(seconds=min(300, 4 ** job.attempts))
-            version.state, version.failure, job.state = "queued", code, "queued"
+            job.state = "queued"
+            if item.kind != "reindex":
+                version.state, version.failure = "queued", code
         logger.warning("document_job_failed kind=%s state=%s reason=%s attempt=%d", job.kind, job.state, code, job.attempts)
 
 
@@ -226,6 +267,8 @@ def run_one(sessions, store, model, settings):
             ingest(sessions, item, store, model, settings, start)
         elif item.kind == "index":
             index(sessions, item, model, start)
+        elif item.kind == "reindex":
+            reembed(sessions, item, model, start)
         else:
             raise PermanentError("unknown_job_type")
     except ObsoleteJob:

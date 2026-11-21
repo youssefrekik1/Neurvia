@@ -112,7 +112,9 @@ class FakeGateway:
         return Generation(parsed, "llm", "fake")
 
     def quote(self, payload):
-        passage = payload["passages"][0]
+        passages = payload["passages"]
+        passage = next((item for item in passages
+                        if "last valid non-negative index" in " ".join(item["passage"].split())), passages[0])
         if self.fabricate:
             return {"source": passage["source"], "quote": "an invented sentence absent from every page"}
         return {"source": passage["source"], "quote": " ".join(passage["passage"].split()[:9])}
@@ -491,7 +493,11 @@ def test_reindex_tool_requeues_only_documents_from_another_model_revision(env):
     assert reindex(sessions, models.revision(), dry_run=True) == (1, 0)
     assert reindex(sessions, models.revision()) == (1, 1)
     path = f"/lessons/{lesson_id}/documents/"
-    assert call(env, "GET", path + first["id"], teacher)["state"] == "queued"
+    assert call(env, "GET", path + first["id"], teacher)["state"] == "ready"
+    before = search(env, teacher, lesson_id, [first["id"]], "last valid index")
+    assert before["mode"] == "lexical"
+    assert before["hits"]
+    assert reindex(sessions, models.revision()) == (0, 0)
     assert call(env, "GET", path + second["id"], teacher)["state"] == "ready"
     drain(env)
     state = call(env, "GET", path + first["id"], teacher)

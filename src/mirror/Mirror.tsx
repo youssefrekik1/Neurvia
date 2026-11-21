@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { api, errorMessage, type Schema } from "../lib/api";
 import {
   ArrowRight,
   BookOpen,
@@ -39,7 +40,23 @@ function StudentPanel({
   onClose: () => void;
 }) {
   const [tab, setTab] = useState("Profil");
+  const [assistance, setAssistance] = useState<Schema["DifficultyAssistance"]>();
+  const [assistanceError, setAssistanceError] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
   const measured = student.mastery !== null;
+  async function analyze() {
+    setAnalyzing(true);
+    setAssistanceError("");
+    try {
+      setAssistance(await api<Schema["DifficultyAssistance"]>(
+        `/lessons/${lessonId}/members/${student.id}/difficulty-assistance`, "POST",
+      ));
+    } catch (error) {
+      setAssistanceError(errorMessage(error));
+    } finally {
+      setAnalyzing(false);
+    }
+  }
   return (
     <aside className="mm-panel">
       <header className="mm-panel-heading">
@@ -157,6 +174,36 @@ function StudentPanel({
               </p>
             )}
           </>
+        )}
+        {tab === "Difficultés" && measured && (
+          <section className="mm-evidence">
+            <h3>Analyse assistée par Gemini</h3>
+            <button type="button" className="lr-btn sm" disabled={analyzing} onClick={analyze}>
+              {analyzing ? "Analyse en cours…" : "Analyser les réponses"}
+            </button>
+            {assistanceError && <p role="alert">{assistanceError}</p>}
+            {assistance && (
+              <>
+                <p>
+                  {assistance.model
+                    ? "Hypothèses à vérifier à partir des réponses du quiz."
+                    : "Aucune analyse disponible pour ces réponses."}
+                </p>
+                {(assistance.evidence ?? []).map((item, index) => (
+                  <div key={index}>
+                    <strong>{item.misconception_label ?? "Éléments insuffisants"}</strong>
+                    <p>{item.question}</p>
+                    <p>
+                      Réponse choisie « {item.selected_option} » · Confiance {
+                        { sure: "forte", medium: "moyenne", unsure: "faible" }[item.confidence]
+                      } · Objectif {item.objective}
+                    </p>
+                    {item.rationale && <p>{item.rationale}</p>}
+                  </div>
+                ))}
+              </>
+            )}
+          </section>
         )}
         {tab === "Historique" && (
           <>
@@ -452,7 +499,7 @@ function ClassroomMirror({ data, selector }: {
             ) : (
               student && (
                 <StudentPanel
-                  key={student.id}
+                  key={lessonId + ":" + student.id}
                   student={student}
                   classroom={classroom}
                   lessonId={lessonId}
