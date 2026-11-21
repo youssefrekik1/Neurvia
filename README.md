@@ -1,6 +1,8 @@
 # Neurvia
 
-Neurvia est une plateforme de démonstration pour un cours de Python. Elle permet au professeur de préparer des quiz et de repérer les difficultés de la classe dans MindMirror. L’étudiant peut répondre aux quiz et suivre sa progression.
+Neurvia est une plateforme éducative conçue pour accompagner l’apprentissage dans toutes les matières scientifiques et dans les cours proposés par les centres de formation, selon les besoins du programme. Les enseignants et les formateurs peuvent préparer des quiz, repérer les difficultés communes avec MindMirror et proposer des activités ciblées. Les apprenants peuvent répondre aux quiz et suivre leur progression.
+
+Le prototype illustre ce parcours avec un enseignant d’algorithmique et ses étudiants, à partir d’un cours de Python.
 
 ## Ouvrir la plateforme
 
