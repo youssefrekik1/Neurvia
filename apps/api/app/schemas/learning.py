@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -24,8 +24,9 @@ class FocusBrief(Input):
 
 class LessonCreate(Input):
     title: Annotated[str, Field(min_length=1, max_length=160)]
-    content_text: Annotated[str, Field(min_length=1, max_length=30000)]
-    concept_codes: Annotated[list[Code], Field(min_length=1, max_length=20)]
+    content_text: Annotated[str, Field(max_length=30000)] = ""
+    concept_codes: Annotated[list[Code], Field(max_length=20)] = []
+    taught_on: date | None = None
     focus_brief: FocusBrief = Field(default_factory=FocusBrief)
 
     @model_validator(mode="after")
@@ -64,6 +65,7 @@ class LessonView(View):
     quiz_id: UUID | None = None
     quiz_status: e.QuizStatus | None = None
     created_at: datetime
+    taught_on: date | None = None
     submitted_count: int = 0
     question_count: int = 0
 

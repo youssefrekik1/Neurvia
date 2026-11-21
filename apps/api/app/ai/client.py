@@ -18,7 +18,7 @@ from app.models import LLMCache
 T = TypeVar("T", bound=BaseModel)
 Task = Literal[
     "generate_questions", "generate_remediation_plan", "course_chat",
-    "course_verify", "course_brief", "course_question", "classify_difficulty",
+    "course_verify", "course_brief", "course_question", "classify_difficulty", "course_taxonomy",
 ]
 Messages = list[dict[str, str]]
 logger = logging.getLogger("uvicorn.error").getChild("fahm.ai")

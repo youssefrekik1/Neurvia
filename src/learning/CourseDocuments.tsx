@@ -139,11 +139,12 @@ function BriefForm({ conversation, busy, allowQuiz, hasSelection, save, extract,
   </form>;
 }
 
-export function TaxonomyForm({ path, busy, run, open = false, submitLabel = "Valider et ajouter à la séance" }: {
+export function TaxonomyForm({ path, busy, run, open = false, submitLabel = "Valider et ajouter à la séance", suggestion, onApproved }: {
   path: string; busy: boolean; run: (operation: () => Promise<unknown>) => Promise<void>;
   open?: boolean; submitLabel?: string;
+  suggestion?: Schema["TaxonomySuggestion"]; onApproved?: () => void;
 }) {
-  const [count, setCount] = useState(1);
+  const [count, setCount] = useState(suggestion?.misconceptions.length ?? 1);
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -159,16 +160,19 @@ export function TaxonomyForm({ path, busy, run, open = false, submitLabel = "Val
       await api(path, "POST", data);
       form.reset();
       setCount(1);
+      onApproved?.();
     });
   }
   return <details open={open}>
     <summary>Valider une notion et ses erreurs diagnostiques</summary>
     <form className="lr-form" onSubmit={submit}>
-      <label>Notion<input name="concept" required maxLength={200} /></label>
+      <label>Notion<input name="concept" defaultValue={suggestion?.label} required maxLength={200} /></label>
       {Array.from({ length: count }, (_, index) => <fieldset key={index}>
         <legend>Erreur diagnostique {index + 1}</legend>
-        <label>Erreur observée<input name={"label-" + index} required maxLength={200} /></label>
-        <label>Piste de remédiation<input name={"remediation-" + index} required maxLength={400} /></label>
+        <label>Erreur observée<input name={"label-" + index}
+          defaultValue={suggestion?.misconceptions[index]?.label} required maxLength={200} /></label>
+        <label>Piste de remédiation<input name={"remediation-" + index}
+          defaultValue={suggestion?.misconceptions[index]?.remediation_hint} required maxLength={400} /></label>
       </fieldset>)}
       <button className="lr-btn" type="button" disabled={busy || count >= 8} onClick={() => setCount(count + 1)}>
         Ajouter une erreur diagnostique
@@ -198,6 +202,7 @@ export function CourseDocuments({ lessonId, allowQuiz, hasGroundedQuiz, allowTax
   const [error, setError] = useState("");
   const [generated, setGenerated] = useState(false);
   const [variantsReady, setVariantsReady] = useState<number>();
+  const [suggestions, setSuggestions] = useState<Schema["TaxonomySuggestion"][]>([]);
   const current = conversation ?? stored.value;
   const pending = !!docs.value?.some((doc) => doc.state === "processing" || doc.state === "queued");
   const documentIds = selected.filter((id) => docs.value?.some((doc) => doc.id === id && doc.state === "ready"));
@@ -345,7 +350,20 @@ export function CourseDocuments({ lessonId, allowQuiz, hasGroundedQuiz, allowTax
         {!current && <button className="lr-btn" type="button" disabled={busy} onClick={() => void update("", "POST")}>Ouvrir les consignes</button>}
       </div>
     </form>
-    {allowTaxonomy && <TaxonomyForm path={base + "/taxonomy"} busy={busy} run={run} />}
+    {allowTaxonomy && <>
+      <button type="button" disabled={!ready || busy} className="lr-btn" onClick={() => void run(async () => {
+        const proposed = await api<Schema["TaxonomySuggestion"][]>(assistant + "/taxonomy/suggest", "POST", selection);
+        setSuggestions(proposed);
+        if (!proposed.length) setStatus("Aucune notion étayée par les PDF sélectionnés.");
+      })}>Proposer des notions à partir des PDF</button>
+      {suggestions.map((item, index) => <div key={index + ":" + item.label}>
+        <p>Proposition : {item.label}</p>
+        <Sources sources={item.sources} />
+        <TaxonomyForm path={base + "/taxonomy"} busy={busy} run={run} open suggestion={item}
+          onApproved={() => setSuggestions((items) => items.filter((entry) => entry !== item))} />
+      </div>)}
+      <TaxonomyForm path={base + "/taxonomy"} busy={busy} run={run} />
+    </>}
     {current && <BriefForm key={current.id + ":" + current.brief_revision} conversation={current}
       busy={busy} allowQuiz={allowQuiz} hasSelection={ready} generate={generate}
       save={(brief) => void update("/" + current.id + "/brief", "PATCH", brief)}

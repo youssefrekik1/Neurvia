@@ -106,6 +106,123 @@
         }
       }
     },
+    "/api/v1/registration/classes": {
+      "get": {
+        "tags": [
+          "Identité et classes"
+        ],
+        "summary": "Registration Classes",
+        "operationId": "registration_classes_api_v1_registration_classes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RegistrationClass"
+                  },
+                  "type": "array",
+                  "title": "Response Registration Classes Api V1 Registration Classes Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/cohorts": {
+      "get": {
+        "tags": [
+          "Identité et classes"
+        ],
+        "summary": "My Cohorts",
+        "operationId": "my_cohorts_api_v1_me_cohorts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RegistrationClass"
+                  },
+                  "type": "array",
+                  "title": "Response My Cohorts Api V1 Me Cohorts Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification requise.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "Authentification requise."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé à cette ressource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED_RESOURCE",
+                    "message": "Accès refusé à cette ressource."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/subjects": {
+      "get": {
+        "tags": [
+          "Identité et classes"
+        ],
+        "summary": "Subjects",
+        "operationId": "subjects_api_v1_subjects_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubjectView"
+                  },
+                  "type": "array",
+                  "title": "Response Subjects Api V1 Subjects Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "tags": [
@@ -421,6 +538,36 @@
                     "code": "INVALID_INPUT",
                     "message": "Les données envoyées sont invalides."
                   }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/teaching-assignments": {
+      "get": {
+        "tags": [
+          "Identité et classes"
+        ],
+        "summary": "Teaching Assignments",
+        "operationId": "teaching_assignments_api_v1_me_teaching_assignments_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ClassroomView"
+                  },
+                  "type": "array",
+                  "title": "Response Teaching Assignments Api V1 Me Teaching Assignments Get"
                 }
               }
             }
@@ -8670,6 +8817,170 @@
         }
       }
     },
+    "/api/v1/lessons/{lesson_id}/course-assistant/taxonomy/suggest": {
+      "post": {
+        "tags": [
+          "Assistant du cours"
+        ],
+        "summary": "Suggest Taxonomy",
+        "operationId": "suggest_taxonomy_api_v1_lessons__lesson_id__course_assistant_taxonomy_suggest_post",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "lesson_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Lesson Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentSelection"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaxonomySuggestion"
+                  },
+                  "title": "Response Suggest Taxonomy Api V1 Lessons  Lesson Id  Course Assistant Taxonomy Suggest Post"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification requise.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "Authentification requise."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé à cette ressource.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED_RESOURCE",
+                    "message": "Accès refusé à cette ressource."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": "Ressource introuvable."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Action impossible dans l'état actuel.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "CONFLICT",
+                    "message": "Action impossible dans l'état actuel."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Les données envoyées sont invalides.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "Les données envoyées sont invalides."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de tentatives. Réessayez plus tard.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "RATE_LIMITED",
+                    "message": "Trop de tentatives. Réessayez plus tard."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Ce service est momentanément indisponible.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "SERVICE_UNAVAILABLE",
+                    "message": "Ce service est momentanément indisponible."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/lessons/{lesson_id}/course-assistant/{id}/messages": {
       "post": {
         "tags": [
@@ -10142,6 +10453,76 @@
             "type": "boolean",
             "title": "Is Synthetic"
           },
+          "assignment_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignment Id"
+          },
+          "cohort_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cohort Id"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
+          "subject_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Label"
+          },
+          "academic_year": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Academic Year"
+          },
+          "institution_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
           "join_code": {
             "anyOf": [
               {
@@ -10587,6 +10968,26 @@
           "validated"
         ],
         "title": "DocumentReview"
+      },
+      "DocumentSelection": {
+        "properties": {
+          "document_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Document Ids"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "document_ids"
+        ],
+        "title": "DocumentSelection"
       },
       "DocumentView": {
         "properties": {
@@ -11398,8 +11799,8 @@
           "content_text": {
             "type": "string",
             "maxLength": 30000,
-            "minLength": 1,
-            "title": "Content Text"
+            "title": "Content Text",
+            "default": ""
           },
           "concept_codes": {
             "items": {
@@ -11408,8 +11809,20 @@
             },
             "type": "array",
             "maxItems": 20,
-            "minItems": 1,
-            "title": "Concept Codes"
+            "title": "Concept Codes",
+            "default": []
+          },
+          "taught_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taught On"
           },
           "focus_brief": {
             "$ref": "#/components/schemas/FocusBrief"
@@ -11418,9 +11831,7 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "title",
-          "content_text",
-          "concept_codes"
+          "title"
         ],
         "title": "LessonCreate"
       },
@@ -11510,6 +11921,18 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "taught_on": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taught On"
           },
           "submitted_count": {
             "type": "integer",
@@ -12021,6 +12444,43 @@
           },
           "role": {
             "$ref": "#/components/schemas/Role"
+          },
+          "cohort_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cohort Id"
+          },
+          "institution_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "join_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 32,
+                "minLength": 4
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Join Code"
           }
         },
         "additionalProperties": false,
@@ -12032,6 +12492,41 @@
           "role"
         ],
         "title": "Register"
+      },
+      "RegistrationClass": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "institution_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Institution Id"
+          },
+          "institution_name": {
+            "type": "string",
+            "title": "Institution Name"
+          },
+          "academic_year": {
+            "type": "string",
+            "title": "Academic Year"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "institution_id",
+          "institution_name",
+          "academic_year"
+        ],
+        "title": "RegistrationClass"
       },
       "RemediationPlan": {
         "properties": {
@@ -12508,6 +13003,35 @@
         ],
         "title": "StudentTask"
       },
+      "SubjectView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "label",
+          "active"
+        ],
+        "title": "SubjectView"
+      },
       "TaxonomyApproval": {
         "properties": {
           "label": {
@@ -12538,6 +13062,35 @@
           "validated"
         ],
         "title": "TaxonomyApproval"
+      },
+      "TaxonomySuggestion": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "misconceptions": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewedMisconception"
+            },
+            "type": "array",
+            "title": "Misconceptions"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceView"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "misconceptions",
+          "sources"
+        ],
+        "title": "TaxonomySuggestion"
       },
       "TeacherOption": {
         "properties": {

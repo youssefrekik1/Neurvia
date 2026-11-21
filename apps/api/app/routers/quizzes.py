@@ -67,6 +67,9 @@ def generate_quiz(id: UUID, request: Request, user: Teacher, db: Db, data: QuizG
 
     teacher_id = user.id
     concepts = lesson_concepts(db, id)
+    if not lesson.content_text.strip() or not concepts:
+        raise error(409, "LESSON_CONTENT_REQUIRED",
+                    "Ajoutez du texte et des notions, ou préparez le quiz depuis les PDF.")
     concept_ids = {c.id for c in concepts}
     codes = [c.code for c in concepts]
     taxonomy = {c.code: set(allowed_codes(db, c.id)) for c in concepts}

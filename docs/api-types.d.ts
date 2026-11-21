@@ -38,6 +38,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/registration/classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Registration Classes */
+        get: operations["registration_classes_api_v1_registration_classes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/cohorts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Cohorts */
+        get: operations["my_cohorts_api_v1_me_cohorts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/subjects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Subjects */
+        get: operations["subjects_api_v1_subjects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -101,6 +152,23 @@ export interface paths {
         put?: never;
         /** Create Classroom */
         post: operations["create_classroom_api_v1_classrooms_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/teaching-assignments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Teaching Assignments */
+        get: operations["teaching_assignments_api_v1_me_teaching_assignments_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1035,6 +1103,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lessons/{lesson_id}/course-assistant/taxonomy/suggest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suggest Taxonomy */
+        post: operations["suggest_taxonomy_api_v1_lessons__lesson_id__course_assistant_taxonomy_suggest_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lessons/{lesson_id}/course-assistant/{id}/messages": {
         parameters: {
             query?: never;
@@ -1419,6 +1504,18 @@ export interface components {
             subject: string;
             /** Is Synthetic */
             is_synthetic: boolean;
+            /** Assignment Id */
+            assignment_id?: string | null;
+            /** Cohort Id */
+            cohort_id?: string | null;
+            /** Subject Id */
+            subject_id?: string | null;
+            /** Subject Label */
+            subject_label?: string | null;
+            /** Academic Year */
+            academic_year?: string | null;
+            /** Institution Id */
+            institution_id?: string | null;
             /** Join Code */
             join_code?: string | null;
             /** Join Path */
@@ -1596,6 +1693,11 @@ export interface components {
             revision: number;
             /** Validated */
             validated: boolean;
+        };
+        /** DocumentSelection */
+        DocumentSelection: {
+            /** Document Ids */
+            document_ids: string[];
         };
         /** DocumentView */
         DocumentView: {
@@ -1941,10 +2043,18 @@ export interface components {
         LessonCreate: {
             /** Title */
             title: string;
-            /** Content Text */
+            /**
+             * Content Text
+             * @default
+             */
             content_text: string;
-            /** Concept Codes */
+            /**
+             * Concept Codes
+             * @default []
+             */
             concept_codes: string[];
+            /** Taught On */
+            taught_on?: string | null;
             focus_brief?: components["schemas"]["FocusBrief"];
         };
         /**
@@ -1982,6 +2092,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Taught On */
+            taught_on?: string | null;
             /**
              * Submitted Count
              * @default 0
@@ -2195,6 +2307,31 @@ export interface components {
             /** Full Name */
             full_name: string;
             role: components["schemas"]["Role"];
+            /** Cohort Id */
+            cohort_id?: string | null;
+            /** Institution Id */
+            institution_id?: string | null;
+            /** Join Code */
+            join_code?: string | null;
+        };
+        /** RegistrationClass */
+        RegistrationClass: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Institution Id
+             * Format: uuid
+             */
+            institution_id: string;
+            /** Institution Name */
+            institution_name: string;
+            /** Academic Year */
+            academic_year: string;
         };
         /** RemediationPlan */
         RemediationPlan: {
@@ -2387,6 +2524,20 @@ export interface components {
             /** Is Synthetic */
             is_synthetic: boolean;
         };
+        /** SubjectView */
+        SubjectView: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            /** Label */
+            label: string;
+            /** Active */
+            active: boolean;
+        };
         /** TaxonomyApproval */
         TaxonomyApproval: {
             /** Label */
@@ -2395,6 +2546,15 @@ export interface components {
             misconceptions: components["schemas"]["ReviewedMisconception"][];
             /** Validated */
             validated: boolean;
+        };
+        /** TaxonomySuggestion */
+        TaxonomySuggestion: {
+            /** Label */
+            label: string;
+            /** Misconceptions */
+            misconceptions: components["schemas"]["ReviewedMisconception"][];
+            /** Sources */
+            sources: components["schemas"]["SourceView"][];
         };
         /** TeacherOption */
         TeacherOption: {
@@ -2636,6 +2796,100 @@ export interface operations {
                      *     }
                      */
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    registration_classes_api_v1_registration_classes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationClass"][];
+                };
+            };
+        };
+    };
+    my_cohorts_api_v1_me_cohorts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RegistrationClass"][];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    subjects_api_v1_subjects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubjectView"][];
                 };
             };
         };
@@ -2931,6 +3185,26 @@ export interface operations {
                      *     }
                      */
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    teaching_assignments_api_v1_me_teaching_assignments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassroomView"][];
                 };
             };
         };
@@ -10117,6 +10391,151 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SearchView"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Trop de tentatives. Réessayez plus tard. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RATE_LIMITED",
+                     *         "message": "Trop de tentatives. Réessayez plus tard."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ce service est momentanément indisponible. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "SERVICE_UNAVAILABLE",
+                     *         "message": "Ce service est momentanément indisponible."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    suggest_taxonomy_api_v1_lessons__lesson_id__course_assistant_taxonomy_suggest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lesson_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentSelection"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomySuggestion"][];
                 };
             };
             /** @description Authentification requise. */

@@ -10,6 +10,15 @@ export const defaultSubject = "python_intro";
 export function subjectLabel(subject: string) {
   return subject === defaultSubject ? subjects[0] : subject;
 }
+export function roomSubject(room: Schema["ClassroomView"]) {
+  return room.subject_label ?? subjectLabel(room.subject);
+}
+export function roomSubjectKey(room: Schema["ClassroomView"]) {
+  return room.subject_id ?? room.subject;
+}
+export function roomLabel(room: Schema["ClassroomView"]) {
+  return [room.name, roomSubject(room), room.academic_year].filter(Boolean).join(" · ");
+}
 export const confidenceLevels = ["Sûr", "Moyennement sûr", "Incertain"] as const;
 const confidenceCodes = ["sure", "medium", "unsure"] as const;
 export type Confidence = (typeof confidenceLevels)[number];
@@ -18,7 +27,7 @@ export type Lesson = {
   id: string; classroom: string; classroomName: string; title: string; subject: string;
   concepts: string[]; content: string; date: string; questions: Question[];
   status: "draft" | "published" | "closed"; count: number; level: Level; evaluate: string[];
-  responses: number; difficulty: string; trend: string; quizId?: string; release?: string;
+  responses: number; difficulty: string; trend: string; quizId?: string; quizStatus?: Schema["QuizStatus"]; release?: string;
   pitfalls: string; instructions: string; usedFallback?: boolean; isGrounded?: boolean;
 };
 export type Answer = { option: number; confidence: Confidence };
@@ -55,12 +64,15 @@ export function dayLabel(date: string, long = false) {
   return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: long ? "long" : "short",
     timeZone: "Africa/Tunis" }).format(new Date(date));
 }
+export function teachingDateLabel(date: string, long = false) {
+  return date ? dayLabel(date + "T12:00:00Z", long) : "Date non renseignée";
+}
 export function isDue(date: string) { return Date.parse(date) <= Date.now(); }
 
 export function blankLesson(classroom: string): Lesson {
   return {
     id: "", classroom, classroomName: "", title: "", subject: subjects[0], concepts: [], content: "",
-    date: new Date().toISOString(), questions: [], status: "draft", count: 6, level: levels[0],
+    date: "", questions: [], status: "draft", count: 6, level: levels[0],
     evaluate: [], responses: 0, difficulty: "À observer", trend: "À observer", pitfalls: "", instructions: "",
   };
 }
@@ -111,9 +123,10 @@ async function load(key: string): Promise<LearningData> {
     const brief = row.focus_brief;
     const concepts = row.concept_codes.map((code) => label(code, taxonomy));
     return {
-      ...blankLesson(classroom), id: row.id, title: row.title, date: row.created_at,
-      subject: subjectLabel(room?.subject ?? defaultSubject), classroomName: room?.name ?? "", concepts, evaluate: concepts, content: row.content_text ?? "",
+      ...blankLesson(classroom), id: row.id, title: row.title, date: row.taught_on ?? "",
+      subject: room ? roomSubject(room) : subjectLabel(defaultSubject), classroomName: room?.name ?? "", concepts, evaluate: concepts, content: row.content_text ?? "",
       status: row.status, responses: row.submitted_count ?? 0, quizId: row.quiz_id ?? undefined,
+      quizStatus: row.quiz_status ?? undefined,
       count: teacher ? brief?.question_count ?? 6 : row.question_count ?? 0,
       level: levels[(brief?.difficulty ?? 1) - 1], pitfalls: brief?.pitfalls?.join(", ") ?? "",
       instructions: brief?.instructions ?? "", usedFallback: quiz?.used_fallback, isGrounded: quiz?.is_grounded,
@@ -154,6 +167,7 @@ function conceptCodes(labels: string[], taxonomy: Schema["ConceptView"][]) {
 export async function saveLesson(lesson: Lesson, taxonomy: Schema["ConceptView"][]) {
   const payload: Schema["LessonCreate"] = {
     title: lesson.title, content_text: lesson.content, concept_codes: conceptCodes(lesson.evaluate, taxonomy),
+    ...(lesson.date ? { taught_on: lesson.date } : {}),
     focus_brief: {
       difficulty: levels.indexOf(lesson.level) + 1, question_count: lesson.count,
       pitfalls: lesson.pitfalls.split(",").map((value) => value.trim()).filter(Boolean),

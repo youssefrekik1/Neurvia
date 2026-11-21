@@ -18,6 +18,8 @@ from app.documents.storage import ObjectStore
 from app.routers import analytics, attempts, bank, course_assistant, dev, documents, identity, lessons, quizzes
 from app.schemas.common import Health
 from app.services.demo_seed import seed_demo
+from app.services.teaching import backfill_teaching
+from app.services.access import start_write
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -35,9 +37,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             app.state.system_clock = SystemClock()
             app.state.clock = DemoClock() if settings.demo_mode else app.state.system_clock
             with sessions.begin() as db:
+                start_write(db)
                 import_bank(db, read_seed())
                 if settings.demo_mode:
                     seed_demo(db, app.state.system_clock.now())
+                backfill_teaching(db)
             with model_http(settings) as http:
                 client, app.state.document_models = model_clients(http, settings)
                 app.state.gateway = LLMGateway(client, settings, sessions)

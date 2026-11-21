@@ -131,6 +131,8 @@ textarea:focus-visible,
 }
 .nv-class {
   display: flex;
+  min-width: 0;
+  max-width: min(52vw, 400px);
   align-items: center;
   padding: 9px 12px;
   gap: 8px;
@@ -139,6 +141,8 @@ textarea:focus-visible,
 }
 .nv-class select {
   appearance: none;
+  min-width: 0;
+  text-overflow: ellipsis;
   font-weight: 600;
   font-size: 14px;
   border: 0;

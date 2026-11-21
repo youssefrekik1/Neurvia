@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const sessionCookie = "neurvia_session";
 const allowed = new Set(["auth", "me", "classrooms", "institutions", "taxonomy", "lessons",
-  "quizzes", "attempts", "bank", "groups", "interventions", "demo"]);
+  "quizzes", "attempts", "bank", "groups", "interventions", "demo", "registration", "subjects"]);
 const noCache = { "Cache-Control": "no-store" };
 
 function error(status: number, code: string, message: string) {

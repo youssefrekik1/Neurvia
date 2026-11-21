@@ -18,7 +18,7 @@ from app.models.enums import LessonStatus, QuestionRole, QuizStatus, Source
 from app.routers.lessons import current_quiz
 from app.routers.quizzes import quiz_view
 from app.schemas.documents import (
-    Brief, BriefUpdate, ConversationView, GroundedQuizRequest, MessageRequest, MessageView,
+    Brief, BriefUpdate, ConversationView, DocumentSelection, GroundedQuizRequest, MessageRequest, MessageView,
     SearchRequest, SearchView, VariantRequest,
 )
 from app.schemas.learning import TeacherQuiz, VariantResult
@@ -31,7 +31,7 @@ router = APIRouter(prefix="/lessons/{lesson_id}/course-assistant", tags=["Assist
                    responses=documented_errors(401, 403, 404, 409, 422, 429, 503))
 STALE_CHAT = "La conversation a changé. Actualisez avant de poursuivre."
 # Per-teacher calls per minute. One local GPU serializes model work, so these bound queueing, not quality.
-LIMITS = {"search": 60, "chat": 12, "brief": 10, "quiz": 12}
+LIMITS = {"search": 60, "chat": 12, "brief": 10, "quiz": 12, "taxonomy": 6}
 
 
 def throttle(request, user, action):
@@ -124,6 +124,30 @@ def search(lesson_id: UUID, body: SearchRequest, user: Teacher, db: Db, request:
     return {"mode": result.mode, "hits": [
         {"source": hit.source(hit.content[:500]), "score": hit.score} for hit in result.hits
     ]}
+
+
+@router.post("/taxonomy/suggest", response_model=list[generation.TaxonomySuggestion])
+def suggest_taxonomy(lesson_id: UUID, body: DocumentSelection, user: Teacher, db: Db, request: Request):
+    throttle(request, user, "taxonomy")
+    scope = scope_for(db, user, lesson_id)
+    lesson = db.get(Lesson, lesson_id)
+    if lesson.status != LessonStatus.draft or current_quiz(db, lesson_id):
+        raise error(409, "LESSON_IMMUTABLE", "Proposez les notions avant de préparer le quiz.")
+    settings = request.app.state.settings
+    if not settings.llm_enabled:
+        raise error(503, "COURSE_MODEL_DISABLED", "Activez Gemini pour proposer des notions.")
+    title = lesson.title
+    result = retrieve(db, request.app.state.document_models, settings, scope, body.document_ids, title)
+    db.rollback()
+    if not result.hits:
+        return []
+    proposed = generation.suggest_taxonomy(request.app.state.gateway, result.hits, title)
+    if proposed is None:
+        raise error(503, "TAXONOMY_MODEL_UNAVAILABLE", "La proposition de notions est indisponible.")
+    scope = scope_for(db, user, lesson_id, create=True)
+    require_fresh(db, [source for _, sources in proposed for source in sources], scope)
+    return [generation.TaxonomySuggestion(label=concept.label, misconceptions=concept.misconceptions,
+            sources=[hit.source(quote) for hit, quote in sources]) for concept, sources in proposed]
 
 
 @router.post("/{id}/messages", response_model=ConversationView)

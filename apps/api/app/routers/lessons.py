@@ -10,6 +10,7 @@ from app.documents.access import classroom_institution, scope_for
 from app.documents.taxonomy import visible_concepts
 from app.models import Attempt, Concept, Lesson, LessonConcept, Misconception, MisconceptionConcept, Quiz, QuizQuestion
 from app.models.documents import InstitutionConcept
+from app.models.teaching import AcademicYear, Cohort, TeachingAssignment
 from app.models.enums import AttemptStatus, LessonStatus, QuestionRole, Role
 from app.routers.identity import get_classroom
 from app.schemas.common import ConceptView, MisconceptionView
@@ -52,7 +53,7 @@ def lesson_view(db, row, classroom, teacher):
         content_text=row.content_text if teacher or row.status != LessonStatus.draft else None,
         focus_brief=row.focus_brief_json if teacher else None,
         quiz_id=quiz.id if quiz else None, quiz_status=quiz.status if quiz else None,
-        submitted_count=submitted, created_at=row.created_at,
+        submitted_count=submitted, created_at=row.created_at, taught_on=row.taught_on,
         question_count=db.scalar(select(func.count()).select_from(QuizQuestion).where(QuizQuestion.quiz_id == quiz.id))
         if quiz else 0,
     )
@@ -70,9 +71,17 @@ def resolve_concepts(db, data, classroom, user):
 
 @router.post("/classrooms/{id}/lessons", response_model=LessonView, status_code=201)
 def create_lesson(id: UUID, data: LessonCreate, user: Teacher, db: Db):
+    start_write(db)
     classroom = get_classroom(id, user, db, teacher_only=True)
+    cohort, year = db.execute(select(Cohort, AcademicYear).join(AcademicYear)
+        .join(TeachingAssignment, TeachingAssignment.cohort_id == Cohort.id)
+        .where(TeachingAssignment.classroom_id == id)).one()
+    if not cohort.active or not year.active:
+        raise error(409, "INACTIVE_ASSIGNMENT", "Cette affectation n’accepte plus de nouvelles séances.")
+    if data.taught_on is None and (not cohort.legacy or not data.content_text):
+        raise error(422, "TEACHING_DATE_REQUIRED", "Choisissez la date de la séance.")
     concepts = resolve_concepts(db, data, classroom, user)
-    row = Lesson(classroom_id=id, title=data.title, content_text=data.content_text,
+    row = Lesson(classroom_id=id, title=data.title, content_text=data.content_text, taught_on=data.taught_on,
                  focus_brief_json=data.focus_brief.model_dump(), status=LessonStatus.draft)
     db.add(row)
     db.flush()
@@ -84,7 +93,8 @@ def create_lesson(id: UUID, data: LessonCreate, user: Teacher, db: Db):
 @router.get("/classrooms/{id}/lessons", response_model=list[LessonView])
 def list_lessons(id: UUID, user: CurrentUser, db: Db):
     classroom = get_classroom(id, user, db)
-    query = select(Lesson).where(Lesson.classroom_id == id).order_by(Lesson.created_at.desc())
+    query = select(Lesson).where(Lesson.classroom_id == id).order_by(
+        Lesson.taught_on.desc().nulls_last(), Lesson.created_at.desc())
     teacher = user.role == Role.teacher
     if not teacher:
         query = query.where(Lesson.status != LessonStatus.draft)
@@ -154,14 +164,21 @@ def edit_lesson(id: UUID, data: LessonCreate, user: Teacher, db: Db):
     row, classroom = lesson_access(db, user, id, teacher=True, lock=True)
     if row.status != LessonStatus.draft:
         raise error(409, "LESSON_IMMUTABLE", "Cette séance est déjà publiée.")
-    concepts = resolve_concepts(db, data, classroom, user)
-    quiz = current_quiz(db, row.id)
-    if quiz and set(data.concept_codes) != {c.code for c in lesson_concepts(db, row.id)}:
-        raise error(409, "QUIZ_EXISTS", "Conservez les concepts du quiz déjà préparé.")
+    if "concept_codes" in data.model_fields_set:
+        concepts = resolve_concepts(db, data, classroom, user)
+        quiz = current_quiz(db, row.id)
+        if quiz and set(data.concept_codes) != {c.code for c in lesson_concepts(db, row.id)}:
+            raise error(409, "QUIZ_EXISTS", "Conservez les concepts du quiz déjà préparé.")
+        db.execute(delete(LessonConcept).where(LessonConcept.lesson_id == id))
+        db.add_all(LessonConcept(lesson_id=id, concept_id=concept.id) for concept in concepts)
     row.title = data.title
-    row.content_text = data.content_text
-    row.focus_brief_json = data.focus_brief.model_dump()
-    db.execute(delete(LessonConcept).where(LessonConcept.lesson_id == id))
-    db.add_all(LessonConcept(lesson_id=id, concept_id=concept.id) for concept in concepts)
+    if "taught_on" in data.model_fields_set:
+        if data.taught_on is None and row.taught_on is not None:
+            raise error(422, "TEACHING_DATE_REQUIRED", "Choisissez la date de la séance.")
+        row.taught_on = data.taught_on
+    if "content_text" in data.model_fields_set:
+        row.content_text = data.content_text
+    if "focus_brief" in data.model_fields_set:
+        row.focus_brief_json = data.focus_brief.model_dump()
     db.commit()
     return lesson_view(db, row, classroom, True)

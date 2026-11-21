@@ -130,6 +130,11 @@ class FakeGateway:
     def course_brief(self, payload):
         return {**payload["existing"], "focus_topics": ["last valid index", "IndexError"], "question_count": 1}
 
+    def course_taxonomy(self, payload):
+        return {"concepts": [{"label": "Dernier indice", "misconceptions": [
+            {"label": "Confond longueur et indice", "remediation_hint": "Comparer les positions à la longueur."},
+        ], "citations": [self.quote(payload)]}]}
+
     def course_question(self, payload):
         codes = sorted(payload["taxonomy"])
         target = payload.get("target_misconception", {}).get("code")
@@ -384,6 +389,37 @@ def ready_lesson(env, name):
     drain(env)
     chat = call(env, "POST", f"/lessons/{lesson_id}/course-assistant", teacher)
     return teacher, room, lesson_id, doc["id"], chat
+
+
+def test_pdf_first_lesson_waits_for_review_and_keeps_explicit_quiz_approval(env):
+    teacher = register(env, "pdf-first-teacher", "teacher")
+    room = call(env, "POST", "/classrooms", teacher, {"name": "PDF d’abord"}, 201)
+    lesson = call(env, "POST", f"/classrooms/{room['id']}/lessons", teacher, {
+        "title": "Python last valid index", "taught_on": "2026-11-22",
+    }, 201)
+    assert not lesson["content_text"] and not lesson["concept_codes"]
+    lesson_id = lesson["id"]
+    doc = upload(env, teacher, lesson_id, "cours.pdf", indexing_pdf())
+    root = f"/lessons/{lesson_id}/course-assistant"
+    selection = {"document_ids": [doc["id"]]}
+    call(env, "POST", root + "/taxonomy/suggest", teacher, selection, 409)
+    drain(env)
+    proposals = call(env, "POST", root + "/taxonomy/suggest", teacher, selection)
+    assert len(proposals) == 1 and proposals[0]["sources"][0]["page"] == 2
+    assert call(env, "GET", f"/lessons/{lesson_id}", teacher)["concept_codes"] == []
+    approval = {key: proposals[0][key] for key in ("label", "misconceptions")}
+    call(env, "POST", f"/lessons/{lesson_id}/taxonomy", teacher, approval | {"validated": False}, 409)
+    call(env, "POST", f"/lessons/{lesson_id}/taxonomy", teacher, approval | {"validated": True}, 201)
+    chat = call(env, "POST", root, teacher)
+    quiz = call(env, "POST", root + "/quiz", teacher, selection | {
+        "conversation_id": chat["id"], "brief_revision": chat["brief_revision"], "question_count": 1,
+    })
+    assert quiz["status"] == "draft" and quiz["questions"][0]["source_pages"]
+    publish_path = f"/quizzes/{quiz['id']}/publish"
+    call(env, "POST", publish_path, teacher, {"validated": False}, 409)
+    published = call(env, "POST", publish_path, teacher, {"validated": True})
+    assert published["status"] == "published"
+    assert call(env, "GET", f"/lessons/{lesson_id}", teacher)["taught_on"] == "2026-11-22"
 
 
 def test_chat_keeps_only_verified_citations(env):
