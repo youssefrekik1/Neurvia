@@ -113,7 +113,8 @@ class FakeGateway:
 
     def quote(self, payload):
         passages = payload["passages"]
-        passage = next((item for item in passages if "last valid index" in item["passage"]), passages[0])
+        passage = next((item for item in passages
+                        if "last valid non-negative index" in " ".join(item["passage"].split())), passages[0])
         if self.fabricate:
             return {"source": passage["source"], "quote": "an invented sentence absent from every page"}
         return {"source": passage["source"], "quote": " ".join(passage["passage"].split()[:9])}
