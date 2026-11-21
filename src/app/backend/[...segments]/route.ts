@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const sessionCookie = "neurvia_session";
-const allowed = new Set(["auth", "me", "classrooms", "taxonomy", "lessons",
+const allowed = new Set(["auth", "me", "classrooms", "institutions", "taxonomy", "lessons",
   "quizzes", "attempts", "bank", "groups", "interventions", "demo"]);
 const noCache = { "Cache-Control": "no-store" };
 
@@ -27,13 +27,18 @@ async function proxy(request: NextRequest, context: { params: Promise<{ segments
   const headers = new Headers();
   const token = request.cookies.get(sessionCookie)?.value;
   if (token) headers.set("Authorization", "Bearer " + token);
-  const body = request.method === "GET" ? undefined : await request.text();
-  if (body) headers.set("Content-Type", "application/json");
+  const body = request.body ?? undefined;
+  const contentType = request.headers.get("Content-Type");
+  if (body && contentType) headers.set("Content-Type", contentType);
+  const length = Number(request.headers.get("Content-Length"));
+  if (length > 65 * 1024 * 1024)
+    return error(413, "PAYLOAD_TOO_LARGE", "Le fichier est trop volumineux.");
   try {
-    const upstream = await fetch(base + "/" + path + request.nextUrl.search, {
-      method: request.method, headers, body: body || undefined, cache: "no-store",
-      redirect: "error",
-    });
+    const options: RequestInit & { duplex?: "half" } = {
+      method: request.method, headers, body, cache: "no-store", redirect: "error",
+      ...(body && { duplex: "half" }),
+    };
+    const upstream = await fetch(base + "/" + path + request.nextUrl.search, options);
     if (path === "auth/login" && upstream.ok) {
       const result = await upstream.json() as { access_token: string; expires_in: number };
       const response = NextResponse.json({ signed_in: true }, { headers: noCache });
@@ -44,10 +49,12 @@ async function proxy(request: NextRequest, context: { params: Promise<{ segments
       });
       return response;
     }
-    const response = new NextResponse(upstream.body, {
-      status: upstream.status,
-      headers: { ...noCache, "Content-Type": upstream.headers.get("Content-Type") ?? "application/json" },
-    });
+    const outgoing = new Headers(noCache);
+    for (const name of ["Content-Type", "Content-Disposition", "X-Content-Type-Options"]) {
+      const value = upstream.headers.get(name);
+      if (value) outgoing.set(name, value);
+    }
+    const response = new NextResponse(upstream.body, { status: upstream.status, headers: outgoing });
     if (upstream.status === 401) response.cookies.delete(sessionCookie);
     return response;
   } catch {
