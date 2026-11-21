@@ -137,14 +137,10 @@
 }
 .nl-intro {
   min-width: 0;
-  position: relative;
-  align-self: stretch;
-  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(16px, 2vw, 28px);
   padding: calc(47 * var(--nl-unit)) 0 0 2%;
-}
-.nl-intro-copy {
-  position: relative;
-  z-index: 1;
 }
 .nl-intro h1 {
   font-size: clamp(44px, calc(61 * var(--nl-unit)), 64px);
@@ -200,14 +196,9 @@
 }
 .nl-illustration {
   display: block;
-  position: absolute;
-  left: -14%;
-  bottom: calc(-30 * var(--nl-unit));
-  width: 120%;
+  align-self: center;
+  width: min(100%, 480px);
   height: auto;
-  max-width: none;
-  z-index: 0;
-  pointer-events: none;
 }
 .nl-card {
   align-self: center;
@@ -477,14 +468,6 @@
     flex: 0 0 auto;
     margin: auto 0;
   }
-  .nl-illustration {
-    bottom: 0;
-  }
-}
-@media (min-width: 851px) and (min-aspect-ratio: 17/10) {
-  .nl-illustration {
-    width: min(112%, calc(680 * var(--nl-unit)));
-  }
 }
 @media (max-width: 1000px) {
   .nl-header-inner {
@@ -496,10 +479,6 @@
   }
   .nl-intro {
     padding-left: 0;
-  }
-  .nl-illustration {
-    left: -7%;
-    width: 110%;
   }
   .nl-card {
     padding-left: 23px;
@@ -566,10 +545,8 @@
   }
   .nl-illustration {
     grid-row: 5;
-    position: static;
     width: min(100%, 430px);
     justify-self: center;
-    margin-top: -30px;
   }
   .nl-card {
     grid-row: 3;
@@ -604,13 +581,5 @@
   }
   .nl-footer nav button {
     padding: 0 7px;
-  }
-}
-
-@media (min-width: 981px) {
-  .nl-illustration {
-    width: 110%;
-    left: -9%;
-    bottom: -25px;
   }
 }
