@@ -1,0 +1,581 @@
+{
+  "professeur": {
+    "nom": "Ben Salem",
+    "prenom": "Amel",
+    "matiere": "Algorithmique",
+    "identifiant": "amel.bensalem.prof@neurvia.demo",
+    "mot_de_passe": "Algo-Prof-2026!"
+  },
+  "classes": [
+    {
+      "nom": "Algorithmique A",
+      "code": "ALGOCLASSA26"
+    },
+    {
+      "nom": "Algorithmique B",
+      "code": "ALGOCLASSB26"
+    }
+  ],
+  "eleves": [
+    {
+      "nom": "Ben Ali",
+      "prenom": "Adam",
+      "classe": "Algorithmique A",
+      "identifiant": "adam.01.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-01-2026"
+    },
+    {
+      "nom": "Mabrouk",
+      "prenom": "Nour",
+      "classe": "Algorithmique A",
+      "identifiant": "nour.02.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-02-2026"
+    },
+    {
+      "nom": "Riahi",
+      "prenom": "Marwan",
+      "classe": "Algorithmique A",
+      "identifiant": "marwan.03.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-03-2026"
+    },
+    {
+      "nom": "Guesmi",
+      "prenom": "Mariam",
+      "classe": "Algorithmique A",
+      "identifiant": "mariam.04.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-04-2026"
+    },
+    {
+      "nom": "Karray",
+      "prenom": "Salma",
+      "classe": "Algorithmique A",
+      "identifiant": "salma.05.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-05-2026"
+    },
+    {
+      "nom": "Oueslati",
+      "prenom": "Sirine",
+      "classe": "Algorithmique A",
+      "identifiant": "sirine.06.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-06-2026"
+    },
+    {
+      "nom": "Kotti",
+      "prenom": "Amine",
+      "classe": "Algorithmique A",
+      "identifiant": "amine.07.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-07-2026"
+    },
+    {
+      "nom": "Ben Amor",
+      "prenom": "Anis",
+      "classe": "Algorithmique A",
+      "identifiant": "anis.08.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-08-2026"
+    },
+    {
+      "nom": "Dridi",
+      "prenom": "Taha",
+      "classe": "Algorithmique A",
+      "identifiant": "taha.09.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-09-2026"
+    },
+    {
+      "nom": "Ben Fredj",
+      "prenom": "Sarra",
+      "classe": "Algorithmique A",
+      "identifiant": "sarra.10.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-10-2026"
+    },
+    {
+      "nom": "Ayari",
+      "prenom": "Dorra",
+      "classe": "Algorithmique A",
+      "identifiant": "dorra.11.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-11-2026"
+    },
+    {
+      "nom": "Abid",
+      "prenom": "Leila",
+      "classe": "Algorithmique A",
+      "identifiant": "leila.12.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-12-2026"
+    },
+    {
+      "nom": "Mejri",
+      "prenom": "Ilyes",
+      "classe": "Algorithmique A",
+      "identifiant": "ilyes.13.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-13-2026"
+    },
+    {
+      "nom": "Chaabane",
+      "prenom": "Walid",
+      "classe": "Algorithmique A",
+      "identifiant": "walid.14.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-14-2026"
+    },
+    {
+      "nom": "Mami",
+      "prenom": "Zied",
+      "classe": "Algorithmique A",
+      "identifiant": "zied.15.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-15-2026"
+    },
+    {
+      "nom": "Boughanmi",
+      "prenom": "Yasmine",
+      "classe": "Algorithmique A",
+      "identifiant": "yasmine.16.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-16-2026"
+    },
+    {
+      "nom": "Bouzid",
+      "prenom": "Hana",
+      "classe": "Algorithmique A",
+      "identifiant": "hana.17.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-17-2026"
+    },
+    {
+      "nom": "Khlifi",
+      "prenom": "Nadia",
+      "classe": "Algorithmique A",
+      "identifiant": "nadia.18.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-18-2026"
+    },
+    {
+      "nom": "Chaari",
+      "prenom": "Rayan",
+      "classe": "Algorithmique A",
+      "identifiant": "rayan.19.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-19-2026"
+    },
+    {
+      "nom": "Khalfallah",
+      "prenom": "Aymen",
+      "classe": "Algorithmique A",
+      "identifiant": "aymen.20.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-20-2026"
+    },
+    {
+      "nom": "Zouari",
+      "prenom": "Lina",
+      "classe": "Algorithmique A",
+      "identifiant": "lina.21.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-21-2026"
+    },
+    {
+      "nom": "Brahmi",
+      "prenom": "Nour",
+      "classe": "Algorithmique A",
+      "identifiant": "nour.22.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-22-2026"
+    },
+    {
+      "nom": "Saidi",
+      "prenom": "Maya",
+      "classe": "Algorithmique A",
+      "identifiant": "maya.23.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-23-2026"
+    },
+    {
+      "nom": "Fakhfakh",
+      "prenom": "Yanis",
+      "classe": "Algorithmique A",
+      "identifiant": "yanis.24.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-24-2026"
+    },
+    {
+      "nom": "Tlili",
+      "prenom": "Youssef",
+      "classe": "Algorithmique A",
+      "identifiant": "youssef.25.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-25-2026"
+    },
+    {
+      "nom": "Jebali",
+      "prenom": "Bilel",
+      "classe": "Algorithmique A",
+      "identifiant": "bilel.26.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-26-2026"
+    },
+    {
+      "nom": "Dali",
+      "prenom": "Ines",
+      "classe": "Algorithmique A",
+      "identifiant": "ines.27.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-27-2026"
+    },
+    {
+      "nom": "Rekik",
+      "prenom": "Amira",
+      "classe": "Algorithmique A",
+      "identifiant": "amira.28.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-28-2026"
+    },
+    {
+      "nom": "Gharbi",
+      "prenom": "Fatma",
+      "classe": "Algorithmique A",
+      "identifiant": "fatma.29.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-29-2026"
+    },
+    {
+      "nom": "Ben Salem",
+      "prenom": "Mehdi",
+      "classe": "Algorithmique A",
+      "identifiant": "mehdi.30.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-30-2026"
+    },
+    {
+      "nom": "Ben Youssef",
+      "prenom": "Karim",
+      "classe": "Algorithmique A",
+      "identifiant": "karim.31.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-31-2026"
+    },
+    {
+      "nom": "Haddad",
+      "prenom": "Omar",
+      "classe": "Algorithmique A",
+      "identifiant": "omar.32.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-32-2026"
+    },
+    {
+      "nom": "Baccar",
+      "prenom": "Aya",
+      "classe": "Algorithmique A",
+      "identifiant": "aya.33.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-33-2026"
+    },
+    {
+      "nom": "Masmoudi",
+      "prenom": "Rim",
+      "classe": "Algorithmique A",
+      "identifiant": "rim.34.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-34-2026"
+    },
+    {
+      "nom": "Mansour",
+      "prenom": "Farah",
+      "classe": "Algorithmique A",
+      "identifiant": "farah.35.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-35-2026"
+    },
+    {
+      "nom": "Khemiri",
+      "prenom": "Sami",
+      "classe": "Algorithmique A",
+      "identifiant": "sami.36.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-36-2026"
+    },
+    {
+      "nom": "Jaziri",
+      "prenom": "Fares",
+      "classe": "Algorithmique A",
+      "identifiant": "fares.37.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-37-2026"
+    },
+    {
+      "nom": "Trabelsi",
+      "prenom": "Mourad",
+      "classe": "Algorithmique A",
+      "identifiant": "mourad.38.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-38-2026"
+    },
+    {
+      "nom": "Hamdi",
+      "prenom": "Rania",
+      "classe": "Algorithmique A",
+      "identifiant": "rania.39.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-39-2026"
+    },
+    {
+      "nom": "Sassi",
+      "prenom": "Nesrine",
+      "classe": "Algorithmique A",
+      "identifiant": "nesrine.40.a@neurvia.demo",
+      "mot_de_passe": "Algo-A-40-2026"
+    },
+    {
+      "nom": "Ben Salem",
+      "prenom": "Walid",
+      "classe": "Algorithmique B",
+      "identifiant": "walid.01.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-01-2026"
+    },
+    {
+      "nom": "Ben Youssef",
+      "prenom": "Zied",
+      "classe": "Algorithmique B",
+      "identifiant": "zied.02.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-02-2026"
+    },
+    {
+      "nom": "Haddad",
+      "prenom": "Yasmine",
+      "classe": "Algorithmique B",
+      "identifiant": "yasmine.03.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-03-2026"
+    },
+    {
+      "nom": "Baccar",
+      "prenom": "Hana",
+      "classe": "Algorithmique B",
+      "identifiant": "hana.04.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-04-2026"
+    },
+    {
+      "nom": "Masmoudi",
+      "prenom": "Nadia",
+      "classe": "Algorithmique B",
+      "identifiant": "nadia.05.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-05-2026"
+    },
+    {
+      "nom": "Mansour",
+      "prenom": "Rayan",
+      "classe": "Algorithmique B",
+      "identifiant": "rayan.06.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-06-2026"
+    },
+    {
+      "nom": "Khemiri",
+      "prenom": "Aymen",
+      "classe": "Algorithmique B",
+      "identifiant": "aymen.07.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-07-2026"
+    },
+    {
+      "nom": "Jaziri",
+      "prenom": "Lina",
+      "classe": "Algorithmique B",
+      "identifiant": "lina.08.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-08-2026"
+    },
+    {
+      "nom": "Trabelsi",
+      "prenom": "Nour",
+      "classe": "Algorithmique B",
+      "identifiant": "nour.09.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-09-2026"
+    },
+    {
+      "nom": "Hamdi",
+      "prenom": "Maya",
+      "classe": "Algorithmique B",
+      "identifiant": "maya.10.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-10-2026"
+    },
+    {
+      "nom": "Sassi",
+      "prenom": "Yanis",
+      "classe": "Algorithmique B",
+      "identifiant": "yanis.11.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-11-2026"
+    },
+    {
+      "nom": "Ben Ali",
+      "prenom": "Youssef",
+      "classe": "Algorithmique B",
+      "identifiant": "youssef.12.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-12-2026"
+    },
+    {
+      "nom": "Mabrouk",
+      "prenom": "Bilel",
+      "classe": "Algorithmique B",
+      "identifiant": "bilel.13.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-13-2026"
+    },
+    {
+      "nom": "Riahi",
+      "prenom": "Ines",
+      "classe": "Algorithmique B",
+      "identifiant": "ines.14.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-14-2026"
+    },
+    {
+      "nom": "Guesmi",
+      "prenom": "Amira",
+      "classe": "Algorithmique B",
+      "identifiant": "amira.15.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-15-2026"
+    },
+    {
+      "nom": "Karray",
+      "prenom": "Fatma",
+      "classe": "Algorithmique B",
+      "identifiant": "fatma.16.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-16-2026"
+    },
+    {
+      "nom": "Oueslati",
+      "prenom": "Mehdi",
+      "classe": "Algorithmique B",
+      "identifiant": "mehdi.17.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-17-2026"
+    },
+    {
+      "nom": "Kotti",
+      "prenom": "Karim",
+      "classe": "Algorithmique B",
+      "identifiant": "karim.18.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-18-2026"
+    },
+    {
+      "nom": "Ben Amor",
+      "prenom": "Omar",
+      "classe": "Algorithmique B",
+      "identifiant": "omar.19.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-19-2026"
+    },
+    {
+      "nom": "Dridi",
+      "prenom": "Aya",
+      "classe": "Algorithmique B",
+      "identifiant": "aya.20.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-20-2026"
+    },
+    {
+      "nom": "Ben Fredj",
+      "prenom": "Rim",
+      "classe": "Algorithmique B",
+      "identifiant": "rim.21.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-21-2026"
+    },
+    {
+      "nom": "Ayari",
+      "prenom": "Farah",
+      "classe": "Algorithmique B",
+      "identifiant": "farah.22.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-22-2026"
+    },
+    {
+      "nom": "Abid",
+      "prenom": "Sami",
+      "classe": "Algorithmique B",
+      "identifiant": "sami.23.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-23-2026"
+    },
+    {
+      "nom": "Mejri",
+      "prenom": "Fares",
+      "classe": "Algorithmique B",
+      "identifiant": "fares.24.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-24-2026"
+    },
+    {
+      "nom": "Chaabane",
+      "prenom": "Mourad",
+      "classe": "Algorithmique B",
+      "identifiant": "mourad.25.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-25-2026"
+    },
+    {
+      "nom": "Mami",
+      "prenom": "Rania",
+      "classe": "Algorithmique B",
+      "identifiant": "rania.26.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-26-2026"
+    },
+    {
+      "nom": "Boughanmi",
+      "prenom": "Nesrine",
+      "classe": "Algorithmique B",
+      "identifiant": "nesrine.27.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-27-2026"
+    },
+    {
+      "nom": "Bouzid",
+      "prenom": "Adam",
+      "classe": "Algorithmique B",
+      "identifiant": "adam.28.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-28-2026"
+    },
+    {
+      "nom": "Khlifi",
+      "prenom": "Nour",
+      "classe": "Algorithmique B",
+      "identifiant": "nour.29.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-29-2026"
+    },
+    {
+      "nom": "Chaari",
+      "prenom": "Marwan",
+      "classe": "Algorithmique B",
+      "identifiant": "marwan.30.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-30-2026"
+    },
+    {
+      "nom": "Khalfallah",
+      "prenom": "Mariam",
+      "classe": "Algorithmique B",
+      "identifiant": "mariam.31.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-31-2026"
+    },
+    {
+      "nom": "Zouari",
+      "prenom": "Salma",
+      "classe": "Algorithmique B",
+      "identifiant": "salma.32.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-32-2026"
+    },
+    {
+      "nom": "Brahmi",
+      "prenom": "Sirine",
+      "classe": "Algorithmique B",
+      "identifiant": "sirine.33.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-33-2026"
+    },
+    {
+      "nom": "Saidi",
+      "prenom": "Amine",
+      "classe": "Algorithmique B",
+      "identifiant": "amine.34.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-34-2026"
+    },
+    {
+      "nom": "Fakhfakh",
+      "prenom": "Anis",
+      "classe": "Algorithmique B",
+      "identifiant": "anis.35.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-35-2026"
+    },
+    {
+      "nom": "Tlili",
+      "prenom": "Taha",
+      "classe": "Algorithmique B",
+      "identifiant": "taha.36.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-36-2026"
+    },
+    {
+      "nom": "Jebali",
+      "prenom": "Sarra",
+      "classe": "Algorithmique B",
+      "identifiant": "sarra.37.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-37-2026"
+    },
+    {
+      "nom": "Dali",
+      "prenom": "Dorra",
+      "classe": "Algorithmique B",
+      "identifiant": "dorra.38.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-38-2026"
+    },
+    {
+      "nom": "Rekik",
+      "prenom": "Leila",
+      "classe": "Algorithmique B",
+      "identifiant": "leila.39.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-39-2026"
+    },
+    {
+      "nom": "Gharbi",
+      "prenom": "Ilyes",
+      "classe": "Algorithmique B",
+      "identifiant": "ilyes.40.b@neurvia.demo",
+      "mot_de_passe": "Algo-B-40-2026"
+    }
+  ]
+}

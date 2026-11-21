@@ -17,6 +17,7 @@ from app.routers.lessons import current_quiz
 from app.schemas.common import Approval
 from app.schemas.learning import FocusBrief, QuestionDraft, QuestionRegenerate, QuizGenerate, TeacherQuestion, TeacherQuiz
 from app.services.access import lesson_access, quiz_access, start_write
+from app.services.demo_answers import answer_demo_quiz
 from app.services.questions import (
     allowed_codes, approve_question, bank_items, create_question, fingerprint, lesson_concepts,
     question_input, quiz_items, teacher_view,
@@ -270,6 +271,8 @@ def publish(id: UUID, data: Approval, request: Request, user: Teacher, db: Db):
     lesson.status = LessonStatus.published
     db.add(TeacherDecision(teacher_id=user.id, entity_type="quiz", entity_id=id, action="publish",
                            before_json={"status": "draft"}, after_json={"status": "published"}))
+    if request.app.state.settings.demo_mode:
+        answer_demo_quiz(db, quiz, classroom, now)
     db.commit()
     return quiz_view(db, quiz, classroom)
 

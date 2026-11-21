@@ -64,6 +64,14 @@ Exécutez `./start-demo.ps1` ou définissez `DEMO_MODE=true` avant de démarrer 
 - Mot de passe des comptes fictifs `FAHM-demo-2026`.
 - Comme professeur fictif, utilisez **Simuler J+7** après une soumission de retest. La date simulée est signalée dans l’interface. Pour un scénario sans Ollama, définissez `LLM_ENABLED=false` ou utilisez `./start-demo.ps1 -Offline`.
 
+### Classes de d?monstration d?algorithmique
+
+En mode d?mo, la base `fahm-demo.db` re?oit deux classes de 40 ?l?ves nomm?s, rattach?es au m?me professeur. Le fichier [data/demo_classrooms.json](data/demo_classrooms.json) contient les noms, identifiants et mots de passe synth?tiques; chaque entr?e comprend sa classe. Les identifiants peuvent se connecter comme ?l?ve, et le professeur voit les 2 classes dans son espace. Les codes de lien sont `ALGOCLASSA26` et `ALGOCLASSB26` (liens `/join/ALGOCLASSA26` et `/join/ALGOCLASSB26`).
+
+- Professeur : `amel.bensalem.prof@neurvia.demo` / `Algo-Prof-2026!`
+- Les mots de passe individuels des 80 ?l?ves sont dans le fichier dataset.
+- Ces comptes sont fictifs et ne sont charg?s que dans la base isol?e du mode d?mo.
+
 ## Documents de cours
 
 L’import de PDF, l’OCR avec relecture, l’assistant de cours et les quiz fondés sur les sources demandent PostgreSQL, un stockage S3 privé et un worker. `docker compose -f compose.documents.yml up -d --build` démarre ces services en local. Le déploiement, la sécurité, les sauvegardes et l’évaluation sont décrits dans [docs/DOCUMENTS.md](docs/DOCUMENTS.md).
