@@ -64,6 +64,25 @@ Pour un frontend de développement hors conteneur, lancez `npm run dev` avec `BA
 | `RAG_RERANK` | `true` | Reclassement lexical après fusion |
 | `DOCUMENT_JOB_RETRIES` | `3` (1–8) | Tentatives avant l’échec définitif d’un travail |
 | `LLM_ENABLED`, `LLM_MODEL`, `LLM_NUM_CTX`, `LLM_TIMEOUT_S` | voir `README.md` | Chat, brief et génération |
+| `MODEL_BACKEND` | `ollama` | `ollama` (API native) ou `openai` (serveur compatible OpenAI : vLLM, llama.cpp server, TGI…) |
+| `LLM_BASE_URL` | `http://127.0.0.1:11434` | Adresse du serveur de modèles, sans le suffixe `/v1` |
+| `MODEL_API_KEY` | vide | Jeton Bearer envoyé au serveur de modèles (par exemple `vllm serve --api-key`) |
+| `EMBEDDING_REVISION` | vide | Backend `openai` : version des poids d’embedding servis, enregistrée avec chaque index |
+
+## Serveur de modèles
+
+Le backend dépend de deux interfaces, `LLMClient` (génération structurée) et `DocumentModels` (embeddings et transcription). `app/ai/serving.py` choisit leur implémentation selon `MODEL_BACKEND`. Le cache, la recherche, le worker et les prompts ne dépendent pas du serveur.
+
+Par défaut, Qwen et les embeddings restent locaux dans Ollama. Pour un serveur dédié avec vLLM, par exemple :
+
+```bash
+vllm serve Qwen/Qwen3.5-9B --api-key "$MODEL_API_KEY"                         # génération et vision
+vllm serve Qwen/Qwen3-Embedding-0.6B --task embed --api-key "$MODEL_API_KEY"  # embeddings
+```
+
+Définissez ensuite `MODEL_BACKEND=openai`, `LLM_BASE_URL`, `LLM_MODEL`, `DOCUMENT_VISION_MODEL`, `EMBEDDING_MODEL` (noms servis), `MODEL_API_KEY` et `EMBEDDING_REVISION`. Les deux modèles doivent être joignables à la même adresse, directement ou via une passerelle. La génération structurée utilise `response_format` avec un schéma JSON. Ces serveurs n’exposent pas d’empreinte des poids : changez `EMBEDDING_REVISION` à chaque changement de poids, puis réindexez.
+
+Le backend `openai` a été vérifié en direct contre l’API `/v1` compatible OpenAI d’Ollama : génération structurée, embeddings en 1024 dimensions et transcription d’une page manuscrite. Il n’a pas été exécuté contre vLLM.
 
 ## Secrets et production
 
@@ -104,7 +123,14 @@ L’outil exige PostgreSQL et des comptes professeurs non fictifs. Il est idempo
 
 - Chaque correction de bloc incrémente la révision de la version. Les travaux et les modifications concurrentes portant une révision obsolète sont rejetés (`409 DOCUMENT_CHANGED`). Le texte extrait d’origine reste consultable à côté de la correction.
 - **Réindexer** relance l’indexation d’un document prêt avec une nouvelle révision. Pendant ce temps, le document n’est plus sélectionnable pour l’assistant ni pour le quiz (`409 DOCUMENT_NOT_INDEXED`). La nouvelle révision est publiée de façon atomique à la fin du travail.
-- La version du modèle d’embedding est enregistrée sous la forme `tag@digest` d’Ollama. Après un changement de modèle, les documents indexés avec l’ancien modèle restent consultables en recherche lexicale seule (`mode: lexical`) pour éviter de comparer deux espaces vectoriels. Réindexez-les pour revenir au mode hybride.
+- La version du modèle d’embedding est enregistrée sous la forme `tag@digest` avec Ollama, ou `openai:<modèle>@<EMBEDDING_REVISION>` avec un serveur compatible OpenAI. Après un changement de modèle, les documents indexés avec l’ancien modèle restent consultables en recherche lexicale seule (`mode: lexical`) pour éviter de comparer deux espaces vectoriels. Réindexez-les pour revenir au mode hybride.
+- Pour réindexer en lot après un changement de modèle, utilisez l’outil ci-dessous. Chaque document mis en file sort de la recherche jusqu’à la fin de son indexation, d’où le traitement par lots :
+
+  ```powershell
+  .\.venv\Scripts\python.exe -m tools.reindex_documents --dry-run     # compter les documents à réindexer
+  .\.venv\Scripts\python.exe -m tools.reindex_documents --limit 50    # relancer jusqu’à « queued now: 0 »
+  .\.venv\Scripts\python.exe -m tools.reindex_documents --all         # tout réindexer, par exemple après un changement d’extraction
+  ```
 - Une question publiée garde ses citations. La publication et la modification d’un item fondé exigent que les sources n’aient pas changé depuis la génération (`409 COURSE_SOURCES_CHANGED`).
 
 ## Worker : reprise et erreurs
@@ -176,6 +202,7 @@ Les mots-outils (anglais et français) dominaient le classement lexical avec la 
 
 - Le matériel validé est un GPU portable GeForce RTX 4060 avec 8 Go. Qwen3.5-9B et l’embedding partagent cette mémoire, et Ollama sérialise les requêtes. Chaque réponse de chat demande deux appels au modèle (réponse puis vérification), et chaque question générée en demande au moins deux. Les durées dépendent du nombre de passages et de l’état du cache de modèles d’Ollama. Aucune charge concurrente n’a été mesurée. Prévoyez une file d’attente perceptible au-delà d’un ou deux professeurs actifs en même temps, ou un serveur d’inférence dédié.
 - Le worker Compose est limité à 2 CPU et 2 Go. La vision est l’étape la plus lente d’un scan : elle traite une page à la fois.
+- Les transactions d’écriture qui vérifient puis modifient (tentatives, réponses, publication, travaux du worker) sont sérialisées sur PostgreSQL par un verrou consultatif de transaction, comme `BEGIN IMMEDIATE` le faisait sur SQLite. Les appels aux modèles et les traitements de PDF restent hors de ces transactions. Ce choix garantit le comportement existant des parcours F1–F5. Si le débit d’écriture devient un goulot d’étranglement, remplacez ce verrou global par des verrous de ligne, route par route.
 - La transcription manuscrite n’a été vérifiée que sur un tracé synthétique. Elle n’établit pas la qualité sur une écriture réelle quelconque, d’où la relecture obligatoire.
 - L’OCR couvre l’anglais, le français et l’arabe. La recherche plein texte utilise la configuration `simple`, sans racinisation, pour traiter ces langues avec un seul index.
 

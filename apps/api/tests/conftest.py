@@ -1,14 +1,57 @@
+import os
+import subprocess
+import sys
+from pathlib import Path
+from uuid import uuid4
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.core.config import Settings
 from app.main import create_app
 
+# Set NEURVIA_TEST_POSTGRES to a PostgreSQL URL whose user may create databases to run the whole suite
+# against PostgreSQL. Each test then gets a fresh database cloned from an Alembic-migrated template.
+POSTGRES = os.environ.get("NEURVIA_TEST_POSTGRES")
+TEMPLATE = "neurvia_test_template"
+
+
+def admin(statement):
+    import psycopg
+    with psycopg.connect(POSTGRES.replace("postgresql+psycopg://", "postgresql://", 1), autocommit=True) as conn:
+        conn.execute(statement)
+
+
+def database(name):
+    return POSTGRES.rsplit("/", 1)[0] + "/" + name
+
+
+@pytest.fixture(scope="session")
+def postgres_template():
+    admin(f'DROP DATABASE IF EXISTS "{TEMPLATE}" WITH (FORCE)')
+    admin(f'CREATE DATABASE "{TEMPLATE}"')
+    subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], check=True, capture_output=True,
+                   cwd=Path(__file__).resolve().parents[1], env={**os.environ, "DATABASE_URL": database(TEMPLATE)})
+    yield TEMPLATE
+    admin(f'DROP DATABASE IF EXISTS "{TEMPLATE}" WITH (FORCE)')
+
 
 @pytest.fixture
-def settings(tmp_path):
-    return Settings(_env_file=None, database_url=f"sqlite:///{(tmp_path / 'test.db').as_posix()}",
-                    llm_enabled=False)
+def database_url(tmp_path, request):
+    if not POSTGRES:
+        yield f"sqlite:///{(tmp_path / 'test.db').as_posix()}"
+        return
+    name = "neurvia_test_" + uuid4().hex[:12]
+    admin(f'CREATE DATABASE "{name}" TEMPLATE "{request.getfixturevalue("postgres_template")}"')
+    try:
+        yield database(name)
+    finally:
+        admin(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
+
+
+@pytest.fixture
+def settings(database_url):
+    return Settings(_env_file=None, database_url=database_url, llm_enabled=False)
 
 
 @pytest.fixture

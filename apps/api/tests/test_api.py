@@ -194,8 +194,8 @@ def test_real_workflow_persists_after_restart(settings):
             assert db.scalar(select(func.count()).select_from(MisconceptionObservation)) == 8
 
 
-def test_demo_uses_real_analytics_and_protected_clock(tmp_path):
-    settings = Settings(_env_file=None, database_url=f"sqlite:///{(tmp_path / 'demo.db').as_posix()}",
+def test_demo_uses_real_analytics_and_protected_clock(database_url):
+    settings = Settings(_env_file=None, database_url=database_url,
                         demo_mode=True, demo_admin_secret="test-advance", llm_enabled=False)
     with TestClient(create_app(settings)) as client:
         teacher = login(client, "prof.fahm@example.com", DEMO_PASSWORD)

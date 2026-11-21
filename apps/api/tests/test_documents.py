@@ -141,8 +141,8 @@ class FakeGateway:
 
 
 @pytest.fixture
-def env(tmp_path):
-    settings = Settings(_env_file=None, database_url=f"sqlite:///{(tmp_path / 'documents.db').as_posix()}",
+def env(database_url):
+    settings = Settings(_env_file=None, database_url=database_url,
                         llm_enabled=True, document_tesseract="neurvia-missing-tesseract",
                         document_max_upload_mb=8)
     with TestClient(create_app(settings)) as client:
@@ -467,3 +467,27 @@ def test_teacher_taxonomy_is_private_to_its_institution_and_published_lessons(en
     call(env, "PATCH", f"/lessons/{outsider_lesson}", outsider, {
         "title": "Classe externe", "content_text": "PrÃ©paration", "concept_codes": [hidden],
     }, 422)
+
+
+def test_reindex_tool_requeues_only_documents_from_another_model_revision(env):
+    from tools.reindex_documents import reindex
+    teacher = register(env, "reindex-teacher", "teacher")
+    _, lesson_id = classroom_lesson(env, teacher)
+    first = upload(env, teacher, lesson_id, "cours.pdf", indexing_pdf())
+    drain(env)
+    models = env.app.state.document_models
+    sessions = env.app.state.sessions
+    assert reindex(sessions, models.revision()) == (0, 0)
+
+    models.profile = "fake-embedding@2"
+    second = upload(env, teacher, lesson_id, "boucles.pdf", digital_pdf("Loops", ["A while loop repeats."]))
+    drain(env)
+    assert reindex(sessions, models.revision(), dry_run=True) == (1, 0)
+    assert reindex(sessions, models.revision()) == (1, 1)
+    path = f"/lessons/{lesson_id}/documents/"
+    assert call(env, "GET", path + first["id"], teacher)["state"] == "queued"
+    assert call(env, "GET", path + second["id"], teacher)["state"] == "ready"
+    drain(env)
+    state = call(env, "GET", path + first["id"], teacher)
+    assert state["state"] == "ready" and state["model_revision"] == "fake-embedding@2"
+    assert search(env, teacher, lesson_id, [first["id"], second["id"]], "last valid index")["mode"] == "hybrid"
