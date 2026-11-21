@@ -1,8 +1,9 @@
-import { api, type Schema } from "../lib/api";
+import { api, clearResourceCache, type Schema } from "../lib/api";
 
 export type Role = Schema["Role"];
 
 export async function login(email: string, password: string, remember: boolean) {
+  clearResourceCache();
   await api("/auth/login" + (remember ? "?remember=1" : ""), "POST", { email, password });
   return api<Schema["Profile"]>("/me");
 }
@@ -12,5 +13,7 @@ export async function register(data: Schema["Register"]) {
 }
 
 export async function logout() {
-  return api("/auth/logout", "POST");
+  const result = await api("/auth/logout", "POST");
+  clearResourceCache();
+  return result;
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -18,10 +19,10 @@ import { api, errorMessage, refresh, type Schema, useGet } from "../lib/api";
 import "./dashboard.css";
 function Go({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <a className="nd-go" href={href}>
+    <Link className="nd-go" href={href}>
       {children}
       <ArrowRight size={15} />
-    </a>
+    </Link>
   );
 }
 function Heading({ title, sub }: { title: string; sub: string }) {
@@ -80,11 +81,11 @@ export function Dashboard({
           <section className="nd-card">
             <h2>Mes cours</h2>
             {!summary.lessons.length && <p>Aucun cours disponible.</p>}
-            {summary.recentLessons[0] && <a className="nd-course" href="/student/courses?course=python">
+            {summary.recentLessons[0] && <Link className="nd-course" href="/student/courses?course=python">
               <i><Braces size={19} /></i>
               <div><strong>{summary.recentLessons[0].subject}</strong><p>{summary.recentLessons[0].title}</p></div>
               <span>Ouvrir →</span>
-            </a>}
+            </Link>}
           </section>
           <section className="nd-card">
             <h2>Ma progression</h2>
@@ -103,9 +104,9 @@ export function Dashboard({
                   Une question de vérification permet de préciser une difficulté
                   possible.
                 </p>
-                <a href={summary.verificationHref || "/student/progress"}>
+                <Link href={summary.verificationHref || "/student/progress"}>
                   Faire la vérification →
-                </a>
+                </Link>
               </div>
             ) : (
               <p>Aucune vérification en attente.</p>
@@ -174,11 +175,11 @@ export function Dashboard({
               "/teacher/groups?view=plan",
             ],
           ].map(([title, url]) => (
-            <a href={url} key={url}>
+            <Link href={url} key={url}>
               <span />
               {title}
               <ChevronRight size={15} />
-            </a>
+            </Link>
           ))}
         </section>
       </div>
@@ -236,7 +237,7 @@ export function Dashboard({
               {summary.recentLessons.slice(0, 5).map((s) => (
                 <tr key={s.id}>
                   <td>
-                    <a href={"/teacher/lessons/" + s.id}>{s.title}</a>
+                    <Link href={"/teacher/lessons/" + s.id}>{s.title}</Link>
                   </td>
                   <td>{dayLabel(s.date)}</td>
                   <td>

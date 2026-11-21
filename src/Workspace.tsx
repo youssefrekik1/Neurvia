@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Home,
   School,
@@ -132,20 +133,20 @@ export default function Workspace({ path }: { path: string }) {
         />
       )}
       <aside className={"nv-side " + (drawer ? "open" : "")}>
-        <a className="nv-brand" href={"/" + appRole + "/dashboard"}>
+        <Link className="nv-brand" href={"/" + appRole + "/dashboard"}>
           <img src="/logo.svg" alt="" />
           Neurvia
-        </a>
+        </Link>
         <nav aria-label="Navigation principale">
           {links.map(({ slug, label, icon: Icon }) => (
-            <a
+            <Link
               key={slug}
               href={"/" + appRole + "/" + slug}
               aria-current={page === slug ? "page" : undefined}
             >
               <Icon size={18} />
               {label}
-            </a>
+            </Link>
           ))}
         </nav>
       </aside>
@@ -202,9 +203,9 @@ export default function Workspace({ path }: { path: string }) {
                 <>
                   <strong>Notifications</strong>
                   <p>Retrouvez vos activités dans votre espace.</p>
-                  <a href={teacher ? "/teacher/groups" : "/student/tasks"}>
+                  <Link href={teacher ? "/teacher/groups" : "/student/tasks"}>
                     {teacher ? "Examiner les groupes" : "Voir mes tâches"} →
-                  </a>
+                  </Link>
                 </>
               ) : (
                 <>
