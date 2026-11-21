@@ -20,14 +20,18 @@ class Settings(BaseSettings):
     llm_enabled: bool = False
     llm_base_url: str = "http://127.0.0.1:11434"
     llm_model: str = "qwen3.5:9b"
-    llm_fallback_model: str = "qwen3.5:4b"
+    llm_fallback_model: str | None = None
     llm_think: bool = False
     llm_temperature: float = Field(0.6, ge=0, le=2)
     llm_top_p: float = Field(0.9, gt=0, le=1)
     llm_top_k: int = Field(20, ge=1)
     llm_num_ctx: int = Field(8192, ge=512)
-    llm_timeout_s: float = Field(90, gt=0, le=300)
+    llm_timeout_s: float = Field(120, gt=0, le=300)
     llm_max_retries: int = Field(1, ge=0, le=3)
+
+    confident_wrong_weight: float = Field(0.5, ge=0, le=5)
+    group_similarity: float = Field(0.5, gt=0, le=1)
+    group_min_size: int = Field(3, ge=2, le=20)
 
     demo_mode: bool = False
     demo_admin_secret: SecretStr | None = None

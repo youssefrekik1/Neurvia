@@ -9,6 +9,7 @@ from app.models import Concept, Misconception, Question, QuestionOption
 from app.models.enums import QuestionRole, QuestionStatus
 from app.schemas.analytics import RemediationPlan
 from app.schemas.learning import FocusBrief, QuestionDraft
+from app.services.questions import fingerprint
 
 SYSTEM = (
     "Tu prépares un brouillon pédagogique en français sous revue du professeur. "
@@ -50,7 +51,7 @@ def bank_candidates(
 
     results = []
     for row in rows:
-        if (row.stem, row.code or "") in excluded_stems:
+        if fingerprint(row.stem, row.code) in excluded_stems:
             continue
         try:
             value = QuestionDraft(
@@ -71,7 +72,7 @@ def generate_question(
 ) -> Generation[QuestionDraft] | None:
     def check(value: QuestionDraft) -> None:
         value.check_taxonomy(concept_code, allowed_codes)
-        if (value.stem, value.code or "") in excluded_stems:
+        if fingerprint(value.stem, value.code) in excluded_stems:
             raise ValueError("Question déjà utilisée.")
 
     def fallback() -> QuestionDraft | None:
@@ -104,6 +105,7 @@ def generic_plan(label: str, hint: str) -> RemediationPlan:
         ],
         example="Tracer un exemple correct choisi dans le cours par le professeur.",
         counter_example="Modifier une ligne pour illustrer l'erreur, puis expliquer la différence.",
+        explanation=("Comparer un cas correct et un cas qui illustre l’erreur. " + hint)[:400],
         check_question="Quelle règle permet de choisir le comportement correct dans ce nouvel exemple ?",
     )
 

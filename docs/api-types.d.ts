@@ -107,6 +107,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/classrooms/{id}/join-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rotate Join Code */
+        post: operations["rotate_join_code_api_v1_classrooms__id__join_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/classrooms/{id}/members": {
         parameters: {
             query?: never;
@@ -148,7 +165,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List Lessons */
+        get: operations["list_lessons_api_v1_classrooms__id__lessons_get"];
         put?: never;
         /** Create Lesson */
         post: operations["create_lesson_api_v1_classrooms__id__lessons_post"];
@@ -169,6 +187,42 @@ export interface paths {
         get: operations["read_lesson_api_v1_lessons__id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit Lesson */
+        patch: operations["edit_lesson_api_v1_lessons__id__patch"];
+        trace?: never;
+    };
+    "/api/v1/bank/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Questions */
+        get: operations["list_questions_api_v1_bank_questions_get"];
+        put?: never;
+        /** Add Question */
+        post: operations["add_question_api_v1_bank_questions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bank/questions/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve */
+        post: operations["approve_api_v1_bank_questions__id__approve_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -209,6 +263,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/quizzes/{id}/questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Item */
+        post: operations["add_item_api_v1_quizzes__id__questions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/quizzes/{id}/questions/{qid}": {
         parameters: {
             query?: never;
@@ -219,12 +290,12 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Remove Question */
-        delete: operations["remove_question_api_v1_quizzes__id__questions__qid__delete"];
+        /** Remove Item */
+        delete: operations["remove_item_api_v1_quizzes__id__questions__qid__delete"];
         options?: never;
         head?: never;
-        /** Edit Question */
-        patch: operations["edit_question_api_v1_quizzes__id__questions__qid__patch"];
+        /** Edit Item */
+        patch: operations["edit_item_api_v1_quizzes__id__questions__qid__patch"];
         trace?: never;
     };
     "/api/v1/quizzes/{id}/questions/{qid}/regenerate": {
@@ -236,25 +307,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Regenerate Question */
-        post: operations["regenerate_question_api_v1_quizzes__id__questions__qid__regenerate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/quizzes/{id}/questions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Add Question */
-        post: operations["add_question_api_v1_quizzes__id__questions_post"];
+        /** Regenerate Item */
+        post: operations["regenerate_item_api_v1_quizzes__id__questions__qid__regenerate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -295,6 +349,160 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/quizzes/{id}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Attempt */
+        post: operations["start_attempt_api_v1_quizzes__id__attempts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attempts/{id}/answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record Answer */
+        post: operations["record_answer_api_v1_attempts__id__answers_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attempts/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit */
+        post: operations["submit_api_v1_attempts__id__submit_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attempts/{id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Feedback */
+        get: operations["feedback_api_v1_attempts__id__feedback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/attempts/{id}/confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Confirmation */
+        get: operations["get_confirmation_api_v1_attempts__id__confirmation_get"];
+        put?: never;
+        /** Answer Confirmation */
+        post: operations["answer_confirmation_api_v1_attempts__id__confirmation_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tasks */
+        get: operations["tasks_api_v1_me_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/retests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Retests */
+        get: operations["retests_api_v1_me_retests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History */
+        get: operations["history_api_v1_me_feedback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/interventions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Assigned Interventions */
+        get: operations["assigned_interventions_api_v1_me_interventions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lessons/{id}/dashboard": {
         parameters: {
             query?: never;
@@ -329,6 +537,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lessons/{id}/groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Groups */
+        get: operations["list_groups_api_v1_lessons__id__groups_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lessons/{id}/groups/suggest": {
         parameters: {
             query?: never;
@@ -340,23 +565,6 @@ export interface paths {
         put?: never;
         /** Suggest Groups */
         post: operations["suggest_groups_api_v1_lessons__id__groups_suggest_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/lessons/{id}/groups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Groups */
-        get: operations["groups_api_v1_lessons__id__groups_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -448,6 +656,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lessons/{id}/j7/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Schedule J7 */
+        post: operations["schedule_j7_api_v1_lessons__id__j7_schedule_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lessons/{id}/before-after": {
         parameters: {
             query?: never;
@@ -465,143 +690,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/lessons/{id}/j7/schedule": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** J7 */
-        post: operations["j7_api_v1_lessons__id__j7_schedule_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/me/tasks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Tasks */
-        get: operations["tasks_api_v1_me_tasks_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/quizzes/{id}/attempts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Start Attempt */
-        post: operations["start_attempt_api_v1_quizzes__id__attempts_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/attempts/{id}/answers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Save Answer */
-        post: operations["save_answer_api_v1_attempts__id__answers_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/attempts/{id}/submit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Submit Attempt */
-        post: operations["submit_attempt_api_v1_attempts__id__submit_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/attempts/{id}/feedback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Feedback */
-        get: operations["feedback_api_v1_attempts__id__feedback_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/attempts/{id}/confirmation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Confirmation */
-        get: operations["confirmation_api_v1_attempts__id__confirmation_get"];
-        put?: never;
-        /** Answer Confirmation */
-        post: operations["answer_confirmation_api_v1_attempts__id__confirmation_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/me/retests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Retests */
-        get: operations["retests_api_v1_me_retests_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/dev/seed": {
         parameters: {
             query?: never;
@@ -611,8 +699,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reset Demo */
-        post: operations["reset_demo_api_v1_dev_seed_post"];
+        /** Load Demo */
+        post: operations["load_demo_api_v1_dev_seed_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -653,6 +741,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/demo/advance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Simulate Next Week */
+        post: operations["simulate_next_week_api_v1_demo_advance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -674,6 +779,12 @@ export interface components {
             correct_option_id: string;
             /** Explanation */
             explanation: string;
+            /**
+             * Selected Option Id
+             * Format: uuid
+             */
+            selected_option_id: string;
+            confidence: components["schemas"]["Confidence"];
         };
         /** AnswerInput */
         AnswerInput: {
@@ -714,6 +825,29 @@ export interface components {
             /** Validated */
             validated: boolean;
         };
+        /** AssignedPlan */
+        AssignedPlan: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lesson Id
+             * Format: uuid
+             */
+            lesson_id: string;
+            /** Lesson Title */
+            lesson_title: string;
+            plan: components["schemas"]["RemediationPlan"];
+            /**
+             * Assigned At
+             * Format: date-time
+             */
+            assigned_at: string;
+            /** Is Synthetic */
+            is_synthetic: boolean;
+        };
         /**
          * AttemptStatus
          * @enum {string}
@@ -743,6 +877,28 @@ export interface components {
             /** Is Synthetic */
             is_synthetic: boolean;
         };
+        /** BankQuestionCreate */
+        BankQuestionCreate: {
+            /** Concept Code */
+            concept_code: string;
+            /** Stem */
+            stem: string;
+            /** Code */
+            code?: string | null;
+            /**
+             * Difficulty
+             * @default 1
+             */
+            difficulty: number;
+            /** Options */
+            options: components["schemas"]["OptionDraft"][];
+            /** Explanation */
+            explanation: string;
+            /** @default initial */
+            role: components["schemas"]["QuestionRole"];
+            /** Target Misconception Code */
+            target_misconception_code?: string | null;
+        };
         /** BeforeAfter */
         BeforeAfter: {
             /**
@@ -754,6 +910,11 @@ export interface components {
             concepts: components["schemas"]["ConceptComparison"][];
             /** Is Synthetic */
             is_synthetic: boolean;
+            /**
+             * Error Counts
+             * @default []
+             */
+            error_counts: components["schemas"]["ErrorComparison"][];
         };
         /** ClassroomCreate */
         ClassroomCreate: {
@@ -925,6 +1086,19 @@ export interface components {
          * @enum {string}
          */
         DiagnosisStatus: "suspected" | "corroborated" | "contradicted_or_transient" | "insufficient";
+        /** ErrorComparison */
+        ErrorComparison: {
+            /**
+             * Group Id
+             * Format: uuid
+             */
+            group_id: string;
+            /** Misconception Code */
+            misconception_code: string;
+            initial: components["schemas"]["Counts"];
+            immediate: components["schemas"]["Counts"];
+            j7: components["schemas"]["Counts"];
+        };
         /** ErrorDetail */
         ErrorDetail: {
             /** Code */
@@ -962,6 +1136,24 @@ export interface components {
             confirmation_available: boolean;
             /** Is Synthetic */
             is_synthetic: boolean;
+            /**
+             * Submitted At
+             * Format: date-time
+             */
+            submitted_at: string;
+            /**
+             * Lesson Id
+             * Format: uuid
+             */
+            lesson_id: string;
+            /**
+             * Classroom Id
+             * Format: uuid
+             */
+            classroom_id: string;
+            kind: components["schemas"]["QuestionRole"];
+            /** Questions */
+            questions: components["schemas"]["StudentQuestion"][];
         };
         /** FocusBrief */
         FocusBrief: {
@@ -1027,6 +1219,30 @@ export interface components {
             diagnosis_quality: components["schemas"]["DiagnosisStatus"] | "no_observed_error";
             /** Is Synthetic */
             is_synthetic: boolean;
+            /** Percent Correct */
+            percent_correct?: number | null;
+            /**
+             * Correct Count
+             * @default 0
+             */
+            correct_count: number;
+            /**
+             * Answered Count
+             * @default 0
+             */
+            answered_count: number;
+            /**
+             * Concept Rates
+             * @default {}
+             */
+            concept_rates: {
+                [key: string]: number;
+            };
+            /**
+             * Misconception Codes
+             * @default []
+             */
+            misconception_codes: string[];
         };
         /**
          * GroupConfidence
@@ -1071,6 +1287,7 @@ export interface components {
             avg_similarity: number;
             /** Is Synthetic */
             is_synthetic: boolean;
+            intervention?: components["schemas"]["InterventionView"] | null;
         };
         /** Health */
         Health: {
@@ -1134,6 +1351,14 @@ export interface components {
             /** Is Synthetic */
             is_synthetic: boolean;
         };
+        /** JoinRotate */
+        JoinRotate: {
+            /**
+             * Join Ttl Hours
+             * @default 72
+             */
+            join_ttl_hours: number;
+        };
         /** LessonCreate */
         LessonCreate: {
             /** Title */
@@ -1171,6 +1396,24 @@ export interface components {
             /** Content Text */
             content_text?: string | null;
             focus_brief?: components["schemas"]["FocusBrief"] | null;
+            /** Quiz Id */
+            quiz_id?: string | null;
+            quiz_status?: components["schemas"]["QuizStatus"] | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Submitted Count
+             * @default 0
+             */
+            submitted_count: number;
+            /**
+             * Question Count
+             * @default 0
+             */
+            question_count: number;
         };
         /** Login */
         Login: {
@@ -1311,6 +1554,11 @@ export interface components {
         QuizGenerate: {
             /** Question Count */
             question_count?: number | null;
+            /**
+             * Use Seed Drafts
+             * @default false
+             */
+            use_seed_drafts: boolean;
         };
         /**
          * QuizStatus
@@ -1351,6 +1599,8 @@ export interface components {
             example: string;
             /** Counter Example */
             counter_example: string;
+            /** Explanation */
+            explanation: string;
             /** Check Question */
             check_question: string;
         };
@@ -1514,6 +1764,8 @@ export interface components {
             validated_by?: string | null;
             /** Validated At */
             validated_at?: string | null;
+            /** Target Misconception Code */
+            target_misconception_code?: string | null;
         };
         /** TeacherQuiz */
         TeacherQuiz: {
@@ -1582,11 +1834,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "status": "ok"
-                     *     }
-                     */
                     "application/json": components["schemas"]["Health"];
                 };
             };
@@ -1601,14 +1848,6 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "email": "exemple.fahm@example.com",
-                 *       "full_name": "Compte Exemple",
-                 *       "password": "example-only-2026",
-                 *       "role": "teacher"
-                 *     }
-                 */
                 "application/json": components["schemas"]["Register"];
             };
         };
@@ -1619,15 +1858,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "f3b9ee5b-f0bc-4ecc-85bf-23a1e80e8712",
-                     *       "email": "exemple.fahm@example.com",
-                     *       "full_name": "Compte Exemple",
-                     *       "role": "teacher",
-                     *       "is_synthetic": false
-                     *     }
-                     */
                     "application/json": components["schemas"]["Profile"];
                 };
             };
@@ -1693,12 +1923,6 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "email": "prof.fahm@example.com",
-                 *       "password": "FAHM-demo-2026"
-                 *     }
-                 */
                 "application/json": components["schemas"]["Login"];
             };
         };
@@ -1709,13 +1933,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "access_token": "eyJ...example",
-                     *       "token_type": "bearer",
-                     *       "expires_in": 7200
-                     *     }
-                     */
                     "application/json": components["schemas"]["Token"];
                 };
             };
@@ -1787,15 +2004,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "fdf688e9-d6de-533e-979c-f57a51300b95",
-                     *       "email": "prof.fahm@example.com",
-                     *       "full_name": "Professeur Démo",
-                     *       "role": "teacher",
-                     *       "is_synthetic": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["Profile"];
                 };
             };
@@ -1833,19 +2041,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example [
-                     *       {
-                     *         "id": "f35fe51b-ad2b-585d-8948-b45b1098ee24",
-                     *         "name": "Algorithmique — classe fictive",
-                     *         "subject": "python_intro",
-                     *         "is_synthetic": true,
-                     *         "join_code": "FAHMDEMO24",
-                     *         "join_path": "/join/FAHMDEMO24",
-                     *         "join_expires_at": "2026-12-21T16:08:48.752724Z"
-                     *       }
-                     *     ]
-                     */
                     "application/json": components["schemas"]["ClassroomView"][];
                 };
             };
@@ -1877,13 +2072,6 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "name": "TD Python",
-                 *       "subject": "python_intro",
-                 *       "join_ttl_hours": 72
-                 *     }
-                 */
                 "application/json": components["schemas"]["ClassroomCreate"];
             };
         };
@@ -1894,17 +2082,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "f94e81d9-0878-44bc-864f-c3db82df2c87",
-                     *       "name": "TD Python",
-                     *       "subject": "python_intro",
-                     *       "is_synthetic": true,
-                     *       "join_code": "077066928A683B6D68D3",
-                     *       "join_path": "/join/077066928A683B6D68D3",
-                     *       "join_expires_at": "2026-11-24T16:08:49.380930Z"
-                     *     }
-                     */
                     "application/json": components["schemas"]["ClassroomView"];
                 };
             };
@@ -1970,12 +2147,6 @@ export interface operations {
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "code": "077066928A683B6D68D3",
-                 *       "pseudonym": "Étudiant 01"
-                 *     }
-                 */
                 "application/json": components["schemas"]["ClassroomJoin"];
             };
         };
@@ -1986,17 +2157,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "f94e81d9-0878-44bc-864f-c3db82df2c87",
-                     *       "name": "TD Python",
-                     *       "subject": "python_intro",
-                     *       "is_synthetic": true,
-                     *       "join_code": null,
-                     *       "join_path": null,
-                     *       "join_expires_at": null
-                     *     }
-                     */
                     "application/json": components["schemas"]["ClassroomView"];
                 };
             };
@@ -2087,12 +2247,105 @@ export interface operations {
             };
         };
     };
+    rotate_join_code_api_v1_classrooms__id__join_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JoinRotate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClassroomView"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_members_api_v1_classrooms__id__members_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @example f94e81d9-0878-44bc-864f-c3db82df2c87 */
                 id: string;
             };
             cookie?: never;
@@ -2105,15 +2358,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example [
-                     *       {
-                     *         "id": "aa8034c7-d0a1-42c8-a66f-4b929d68d838",
-                     *         "pseudonym": "Étudiant 01",
-                     *         "is_synthetic": true
-                     *       }
-                     *     ]
-                     */
                     "application/json": components["schemas"]["Member"][];
                 };
             };
@@ -2202,106 +2446,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example [
-                     *       {
-                     *         "code": "C_CONDITIONS",
-                     *         "label_fr": "Conditions",
-                     *         "misconceptions": [
-                     *           {
-                     *             "code": "M_ASSIGN_EQ",
-                     *             "label_fr": "Confond affectation (=) et comparaison (==)"
-                     *           },
-                     *           {
-                     *             "code": "M_COND_LOGIC",
-                     *             "label_fr": "Mauvaise combinaison logique (and / or)"
-                     *           },
-                     *           {
-                     *             "code": "M_OFF_BY_ONE",
-                     *             "label_fr": "Décalage d'un (indices ou bornes)"
-                     *           },
-                     *           {
-                     *             "code": "M_TRACE",
-                     *             "label_fr": "Difficulté à suivre l'exécution pas à pas"
-                     *           }
-                     *         ]
-                     *       },
-                     *       {
-                     *         "code": "C_INDEXING",
-                     *         "label_fr": "Indices et listes",
-                     *         "misconceptions": [
-                     *           {
-                     *             "code": "M_OFF_BY_ONE",
-                     *             "label_fr": "Décalage d'un (indices ou bornes)"
-                     *           },
-                     *           {
-                     *             "code": "M_TRACE",
-                     *             "label_fr": "Difficulté à suivre l'exécution pas à pas"
-                     *           }
-                     *         ]
-                     *       },
-                     *       {
-                     *         "code": "C_LOOPS",
-                     *         "label_fr": "Boucles",
-                     *         "misconceptions": [
-                     *           {
-                     *             "code": "M_LOOP_STOP",
-                     *             "label_fr": "Oublie la mise à jour ou la condition d'arrêt de la boucle"
-                     *           },
-                     *           {
-                     *             "code": "M_OFF_BY_ONE",
-                     *             "label_fr": "Décalage d'un (indices ou bornes)"
-                     *           },
-                     *           {
-                     *             "code": "M_TRACE",
-                     *             "label_fr": "Difficulté à suivre l'exécution pas à pas"
-                     *           }
-                     *         ]
-                     *       },
-                     *       {
-                     *         "code": "C_MUTABILITY",
-                     *         "label_fr": "Mutabilité et références",
-                     *         "misconceptions": [
-                     *           {
-                     *             "code": "M_MUTABLE_ALIAS",
-                     *             "label_fr": "Croit qu'une affectation de liste crée une copie"
-                     *           },
-                     *           {
-                     *             "code": "M_TRACE",
-                     *             "label_fr": "Difficulté à suivre l'exécution pas à pas"
-                     *           }
-                     *         ]
-                     *       },
-                     *       {
-                     *         "code": "C_SCOPE",
-                     *         "label_fr": "Portée des variables",
-                     *         "misconceptions": [
-                     *           {
-                     *             "code": "M_SCOPE",
-                     *             "label_fr": "Confond variable locale et variable globale"
-                     *           },
-                     *           {
-                     *             "code": "M_TRACE",
-                     *             "label_fr": "Difficulté à suivre l'exécution pas à pas"
-                     *           }
-                     *         ]
-                     *       },
-                     *       {
-                     *         "code": "C_TYPES",
-                     *         "label_fr": "Types et conversions",
-                     *         "misconceptions": [
-                     *           {
-                     *             "code": "M_TRACE",
-                     *             "label_fr": "Difficulté à suivre l'exécution pas à pas"
-                     *           },
-                     *           {
-                     *             "code": "M_TYPE_INPUT",
-                     *             "label_fr": "Oublie que input() renvoie une chaîne"
-                     *           }
-                     *         ]
-                     *       }
-                     *     ]
-                     */
                     "application/json": components["schemas"]["ConceptView"][];
                 };
             };
@@ -2322,6 +2466,181 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_lessons_api_v1_classrooms__id__lessons_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonView"][];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
         };
     };
     create_lesson_api_v1_classrooms__id__lessons_post: {
@@ -2329,29 +2648,12 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example f94e81d9-0878-44bc-864f-c3db82df2c87 */
                 id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "title": "Indices Python",
-                 *       "content_text": "Les indices positifs d’une liste commencent à zéro.",
-                 *       "concept_codes": [
-                 *         "C_INDEXING"
-                 *       ],
-                 *       "focus_brief": {
-                 *         "difficulty": 1,
-                 *         "question_count": 4,
-                 *         "pitfalls": [
-                 *           "Dernier indice"
-                 *         ]
-                 *       }
-                 *     }
-                 */
                 "application/json": components["schemas"]["LessonCreate"];
             };
         };
@@ -2362,27 +2664,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "686e0ce7-c458-4798-8bf4-7c2d9a9653e2",
-                     *       "classroom_id": "f94e81d9-0878-44bc-864f-c3db82df2c87",
-                     *       "title": "Indices Python",
-                     *       "concept_codes": [
-                     *         "C_INDEXING"
-                     *       ],
-                     *       "status": "draft",
-                     *       "is_synthetic": true,
-                     *       "content_text": "Les indices positifs d’une liste commencent à zéro.",
-                     *       "focus_brief": {
-                     *         "pitfalls": [
-                     *           "Dernier indice"
-                     *         ],
-                     *         "difficulty": 1,
-                     *         "question_count": 4,
-                     *         "instructions": ""
-                     *       }
-                     *     }
-                     */
                     "application/json": components["schemas"]["LessonView"];
                 };
             };
@@ -2431,6 +2712,23 @@ export interface operations {
                      *       "error": {
                      *         "code": "RESOURCE_NOT_FOUND",
                      *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
                      *       }
                      *     }
                      */
@@ -2461,7 +2759,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example 686e0ce7-c458-4798-8bf4-7c2d9a9653e2 */
                 id: string;
             };
             cookie?: never;
@@ -2474,27 +2771,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "686e0ce7-c458-4798-8bf4-7c2d9a9653e2",
-                     *       "classroom_id": "f94e81d9-0878-44bc-864f-c3db82df2c87",
-                     *       "title": "Indices Python",
-                     *       "concept_codes": [
-                     *         "C_INDEXING"
-                     *       ],
-                     *       "status": "draft",
-                     *       "is_synthetic": true,
-                     *       "content_text": "Les indices positifs d’une liste commencent à zéro.",
-                     *       "focus_brief": {
-                     *         "pitfalls": [
-                     *           "Dernier indice"
-                     *         ],
-                     *         "difficulty": 1,
-                     *         "question_count": 4,
-                     *         "instructions": ""
-                     *       }
-                     *     }
-                     */
                     "application/json": components["schemas"]["LessonView"];
                 };
             };
@@ -2515,6 +2791,23 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
             /** @description Ressource introuvable. */
             404: {
                 headers: {
@@ -2526,6 +2819,459 @@ export interface operations {
                      *       "error": {
                      *         "code": "RESOURCE_NOT_FOUND",
                      *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    edit_lesson_api_v1_lessons__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LessonCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LessonView"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_questions_api_v1_bank_questions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherQuestion"][];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_question_api_v1_bank_questions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BankQuestionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherQuestion"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    approve_api_v1_bank_questions__id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Approval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherQuestion"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
                      *       }
                      *     }
                      */
@@ -2556,18 +3302,12 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example 73f54f29-9287-5537-8238-74f7d1cd3959 */
                 id: string;
             };
             cookie?: never;
         };
         requestBody?: {
             content: {
-                /**
-                 * @example {
-                 *       "question_count": 2
-                 *     }
-                 */
                 "application/json": components["schemas"]["QuizGenerate"] | null;
             };
         };
@@ -2578,101 +3318,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "983e81cc-f3d4-567d-a778-bad9aaec49c7",
-                     *       "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *       "status": "draft",
-                     *       "kind": "initial",
-                     *       "generation_mode": "fixture",
-                     *       "used_fallback": false,
-                     *       "validated_by": null,
-                     *       "validated_at": null,
-                     *       "questions": [
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Pour cette liste, quel est l’indice du dernier élément ?",
-                     *           "code": "couleurs = ['vert', 'bleu', 'rouge', 'gris']",
-                     *           "difficulty": 1,
-                     *           "options": [
-                     *             {
-                     *               "text": "3",
-                     *               "is_correct": true,
-                     *               "misconception_code": null,
-                     *               "id": "672894f3-f1e6-486d-8620-571775442d29"
-                     *             },
-                     *             {
-                     *               "text": "4",
-                     *               "is_correct": false,
-                     *               "misconception_code": "M_OFF_BY_ONE",
-                     *               "id": "5e2abede-a8d0-4267-adce-3ab4b517acc3"
-                     *             },
-                     *             {
-                     *               "text": "1",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "45823f0f-1304-4a1d-973a-f51f9d0956ac"
-                     *             },
-                     *             {
-                     *               "text": "-4",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "07732d06-1041-448e-8f4a-6822d74e5e5b"
-                     *             }
-                     *           ],
-                     *           "explanation": "Avec quatre éléments, les indices positifs utilisables vont de 0 à 3.",
-                     *           "id": "20d8084e-62b1-4431-b978-0f8dba441d26",
-                     *           "source": "teacher",
-                     *           "status": "draft",
-                     *           "role": "initial",
-                     *           "version": 1,
-                     *           "validated_by": null,
-                     *           "validated_at": null
-                     *         },
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Que renvoie len sur la liste ci-dessous ?",
-                     *           "code": "len(['un', 'deux', 'trois'])",
-                     *           "difficulty": 1,
-                     *           "options": [
-                     *             {
-                     *               "text": "3",
-                     *               "is_correct": true,
-                     *               "misconception_code": null,
-                     *               "id": "606c572a-0c5c-4902-ad1a-5a2910c4419e"
-                     *             },
-                     *             {
-                     *               "text": "2",
-                     *               "is_correct": false,
-                     *               "misconception_code": "M_OFF_BY_ONE",
-                     *               "id": "a282d912-5f40-4d44-a03f-67ff37d17821"
-                     *             },
-                     *             {
-                     *               "text": "0",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "86d20882-4b4d-4a32-ab1e-213eb6adce90"
-                     *             },
-                     *             {
-                     *               "text": "4",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "37f1b10e-47a6-4dad-a6bc-b52c2a8c5250"
-                     *             }
-                     *           ],
-                     *           "explanation": "len donne le nombre d’éléments dans la liste.",
-                     *           "id": "3e31548c-73bd-40e8-b2a6-3a8699a4989d",
-                     *           "source": "teacher",
-                     *           "status": "draft",
-                     *           "role": "initial",
-                     *           "version": 1,
-                     *           "validated_by": null,
-                     *           "validated_at": null
-                     *         }
-                     *       ],
-                     *       "is_synthetic": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["TeacherQuiz"];
                 };
             };
@@ -2755,23 +3400,6 @@ export interface operations {
                      *       "error": {
                      *         "code": "INVALID_INPUT",
                      *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
                      *       }
                      *     }
                      */
@@ -2785,7 +3413,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example 983e81cc-f3d4-567d-a778-bad9aaec49c7 */
                 id: string;
             };
             cookie?: never;
@@ -2798,101 +3425,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "983e81cc-f3d4-567d-a778-bad9aaec49c7",
-                     *       "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *       "status": "draft",
-                     *       "kind": "initial",
-                     *       "generation_mode": "fixture",
-                     *       "used_fallback": false,
-                     *       "validated_by": null,
-                     *       "validated_at": null,
-                     *       "questions": [
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Pour cette liste, quel est l’indice du dernier élément ?",
-                     *           "code": "couleurs = ['vert', 'bleu', 'rouge', 'gris']",
-                     *           "difficulty": 1,
-                     *           "options": [
-                     *             {
-                     *               "text": "3",
-                     *               "is_correct": true,
-                     *               "misconception_code": null,
-                     *               "id": "672894f3-f1e6-486d-8620-571775442d29"
-                     *             },
-                     *             {
-                     *               "text": "4",
-                     *               "is_correct": false,
-                     *               "misconception_code": "M_OFF_BY_ONE",
-                     *               "id": "5e2abede-a8d0-4267-adce-3ab4b517acc3"
-                     *             },
-                     *             {
-                     *               "text": "1",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "45823f0f-1304-4a1d-973a-f51f9d0956ac"
-                     *             },
-                     *             {
-                     *               "text": "-4",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "07732d06-1041-448e-8f4a-6822d74e5e5b"
-                     *             }
-                     *           ],
-                     *           "explanation": "Avec quatre éléments, les indices positifs utilisables vont de 0 à 3.",
-                     *           "id": "20d8084e-62b1-4431-b978-0f8dba441d26",
-                     *           "source": "teacher",
-                     *           "status": "draft",
-                     *           "role": "initial",
-                     *           "version": 1,
-                     *           "validated_by": null,
-                     *           "validated_at": null
-                     *         },
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Que renvoie len sur la liste ci-dessous ?",
-                     *           "code": "len(['un', 'deux', 'trois'])",
-                     *           "difficulty": 1,
-                     *           "options": [
-                     *             {
-                     *               "text": "3",
-                     *               "is_correct": true,
-                     *               "misconception_code": null,
-                     *               "id": "606c572a-0c5c-4902-ad1a-5a2910c4419e"
-                     *             },
-                     *             {
-                     *               "text": "2",
-                     *               "is_correct": false,
-                     *               "misconception_code": "M_OFF_BY_ONE",
-                     *               "id": "a282d912-5f40-4d44-a03f-67ff37d17821"
-                     *             },
-                     *             {
-                     *               "text": "0",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "86d20882-4b4d-4a32-ab1e-213eb6adce90"
-                     *             },
-                     *             {
-                     *               "text": "4",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "37f1b10e-47a6-4dad-a6bc-b52c2a8c5250"
-                     *             }
-                     *           ],
-                     *           "explanation": "len donne le nombre d’éléments dans la liste.",
-                     *           "id": "3e31548c-73bd-40e8-b2a6-3a8699a4989d",
-                     *           "source": "teacher",
-                     *           "status": "draft",
-                     *           "role": "initial",
-                     *           "version": 1,
-                     *           "validated_by": null,
-                     *           "validated_at": null
-                     *         }
-                     *       ],
-                     *       "is_synthetic": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["TeacherQuiz"];
                 };
             };
@@ -2981,672 +3513,19 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
         };
     };
-    remove_question_api_v1_quizzes__id__questions__qid__delete: {
+    add_item_api_v1_quizzes__id__questions_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @example 983e81cc-f3d4-567d-a778-bad9aaec49c7 */
-                id: string;
-                /** @example e760caa9-5716-4a4a-9ded-ae5862ef82bf */
-                qid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "id": "983e81cc-f3d4-567d-a778-bad9aaec49c7",
-                     *       "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *       "status": "draft",
-                     *       "kind": "initial",
-                     *       "generation_mode": "fixture",
-                     *       "used_fallback": false,
-                     *       "validated_by": null,
-                     *       "validated_at": null,
-                     *       "questions": [
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Quel résultat donne cette expression Python ?",
-                     *           "code": "['pomme', 'poire', 'orange'][0]",
-                     *           "difficulty": 1,
-                     *           "options": [
-                     *             {
-                     *               "text": "pomme",
-                     *               "is_correct": true,
-                     *               "misconception_code": null,
-                     *               "id": "aa9292a9-3705-4a8b-850d-f84ddcfe74cc"
-                     *             },
-                     *             {
-                     *               "text": "poire",
-                     *               "is_correct": false,
-                     *               "misconception_code": "M_OFF_BY_ONE",
-                     *               "id": "cb802631-dea3-45f5-b943-dd7b22f2d9d3"
-                     *             },
-                     *             {
-                     *               "text": "orange",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "9e6d1d1c-5f64-47ef-824b-9842c1ec3e5d"
-                     *             },
-                     *             {
-                     *               "text": "IndexError",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "ecab7c2d-8723-4914-a816-56b121611cab"
-                     *             }
-                     *           ],
-                     *           "explanation": "L’indice zéro désigne le premier élément.",
-                     *           "id": "5f005db8-cd99-4bf4-b1b5-f6da007fdfa4",
-                     *           "source": "teacher",
-                     *           "status": "draft",
-                     *           "role": "initial",
-                     *           "version": 3,
-                     *           "validated_by": null,
-                     *           "validated_at": null
-                     *         },
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Que renvoie len sur la liste ci-dessous ?",
-                     *           "code": "len(['un', 'deux', 'trois'])",
-                     *           "difficulty": 1,
-                     *           "options": [
-                     *             {
-                     *               "text": "3",
-                     *               "is_correct": true,
-                     *               "misconception_code": null,
-                     *               "id": "606c572a-0c5c-4902-ad1a-5a2910c4419e"
-                     *             },
-                     *             {
-                     *               "text": "2",
-                     *               "is_correct": false,
-                     *               "misconception_code": "M_OFF_BY_ONE",
-                     *               "id": "a282d912-5f40-4d44-a03f-67ff37d17821"
-                     *             },
-                     *             {
-                     *               "text": "0",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "86d20882-4b4d-4a32-ab1e-213eb6adce90"
-                     *             },
-                     *             {
-                     *               "text": "4",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "37f1b10e-47a6-4dad-a6bc-b52c2a8c5250"
-                     *             }
-                     *           ],
-                     *           "explanation": "len donne le nombre d’éléments dans la liste.",
-                     *           "id": "3e31548c-73bd-40e8-b2a6-3a8699a4989d",
-                     *           "source": "teacher",
-                     *           "status": "draft",
-                     *           "role": "initial",
-                     *           "version": 1,
-                     *           "validated_by": null,
-                     *           "validated_at": null
-                     *         }
-                     *       ],
-                     *       "is_synthetic": true
-                     *     }
-                     */
-                    "application/json": components["schemas"]["TeacherQuiz"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    edit_question_api_v1_quizzes__id__questions__qid__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 983e81cc-f3d4-567d-a778-bad9aaec49c7 */
-                id: string;
-                /** @example 5f005db8-cd99-4bf4-b1b5-f6da007fdfa4 */
-                qid: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                /**
-                 * @example {
-                 *       "concept_code": "C_INDEXING",
-                 *       "stem": "Quel résultat donne cette expression Python ?",
-                 *       "code": "['pomme', 'poire', 'orange'][0]",
-                 *       "difficulty": 1,
-                 *       "explanation": "L’indice zéro désigne le premier élément.",
-                 *       "options": [
-                 *         {
-                 *           "text": "pomme",
-                 *           "is_correct": true,
-                 *           "misconception_code": null
-                 *         },
-                 *         {
-                 *           "text": "poire",
-                 *           "is_correct": false,
-                 *           "misconception_code": "M_OFF_BY_ONE"
-                 *         },
-                 *         {
-                 *           "text": "orange",
-                 *           "is_correct": false,
-                 *           "misconception_code": null
-                 *         },
-                 *         {
-                 *           "text": "IndexError",
-                 *           "is_correct": false,
-                 *           "misconception_code": null
-                 *         }
-                 *       ]
-                 *     }
-                 */
-                "application/json": components["schemas"]["QuestionDraft"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "concept_code": "C_INDEXING",
-                     *       "stem": "Quel résultat donne cette expression Python ?",
-                     *       "code": "['pomme', 'poire', 'orange'][0]",
-                     *       "difficulty": 1,
-                     *       "options": [
-                     *         {
-                     *           "text": "pomme",
-                     *           "is_correct": true,
-                     *           "misconception_code": null,
-                     *           "id": "aa9292a9-3705-4a8b-850d-f84ddcfe74cc"
-                     *         },
-                     *         {
-                     *           "text": "poire",
-                     *           "is_correct": false,
-                     *           "misconception_code": "M_OFF_BY_ONE",
-                     *           "id": "cb802631-dea3-45f5-b943-dd7b22f2d9d3"
-                     *         },
-                     *         {
-                     *           "text": "orange",
-                     *           "is_correct": false,
-                     *           "misconception_code": null,
-                     *           "id": "9e6d1d1c-5f64-47ef-824b-9842c1ec3e5d"
-                     *         },
-                     *         {
-                     *           "text": "IndexError",
-                     *           "is_correct": false,
-                     *           "misconception_code": null,
-                     *           "id": "ecab7c2d-8723-4914-a816-56b121611cab"
-                     *         }
-                     *       ],
-                     *       "explanation": "L’indice zéro désigne le premier élément.",
-                     *       "id": "5f005db8-cd99-4bf4-b1b5-f6da007fdfa4",
-                     *       "source": "teacher",
-                     *       "status": "draft",
-                     *       "role": "initial",
-                     *       "version": 3,
-                     *       "validated_by": null,
-                     *       "validated_at": null
-                     *     }
-                     */
-                    "application/json": components["schemas"]["TeacherQuestion"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    regenerate_question_api_v1_quizzes__id__questions__qid__regenerate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 983e81cc-f3d4-567d-a778-bad9aaec49c7 */
-                id: string;
-                /** @example 20d8084e-62b1-4431-b978-0f8dba441d26 */
-                qid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                /**
-                 * @example {
-                 *       "instructions": "Privilégier une expression courte."
-                 *     }
-                 */
-                "application/json": components["schemas"]["QuestionRegenerate"] | null;
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "concept_code": "C_INDEXING",
-                     *       "stem": "Quel élément est lu par l’expression suivante ?",
-                     *       "code": "['pomme', 'poire', 'orange'][0]",
-                     *       "difficulty": 1,
-                     *       "options": [
-                     *         {
-                     *           "text": "pomme",
-                     *           "is_correct": true,
-                     *           "misconception_code": null,
-                     *           "id": "d8839288-7e62-413a-9949-0c81cca78be4"
-                     *         },
-                     *         {
-                     *           "text": "poire",
-                     *           "is_correct": false,
-                     *           "misconception_code": "M_OFF_BY_ONE",
-                     *           "id": "d0fac42d-eea3-4df8-a73a-08b0b7a8e18c"
-                     *         },
-                     *         {
-                     *           "text": "orange",
-                     *           "is_correct": false,
-                     *           "misconception_code": null,
-                     *           "id": "88bcb1b2-3f33-4b30-85b0-30f2e7c83391"
-                     *         },
-                     *         {
-                     *           "text": "IndexError",
-                     *           "is_correct": false,
-                     *           "misconception_code": null,
-                     *           "id": "98cce1e3-990d-44b3-b9c7-cf96500d38a7"
-                     *         }
-                     *       ],
-                     *       "explanation": "L’indice zéro désigne le premier élément.",
-                     *       "id": "5f005db8-cd99-4bf4-b1b5-f6da007fdfa4",
-                     *       "source": "teacher",
-                     *       "status": "draft",
-                     *       "role": "initial",
-                     *       "version": 2,
-                     *       "validated_by": null,
-                     *       "validated_at": null
-                     *     }
-                     */
-                    "application/json": components["schemas"]["TeacherQuestion"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    add_question_api_v1_quizzes__id__questions_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 983e81cc-f3d4-567d-a778-bad9aaec49c7 */
                 id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "concept_code": "C_INDEXING",
-                 *       "stem": "Quel est le résultat de cet autre exemple Python ?",
-                 *       "code": "['pomme', 'poire', 'orange'][0]",
-                 *       "difficulty": 1,
-                 *       "explanation": "L’indice zéro désigne le premier élément.",
-                 *       "options": [
-                 *         {
-                 *           "text": "pomme",
-                 *           "is_correct": true,
-                 *           "misconception_code": null
-                 *         },
-                 *         {
-                 *           "text": "poire",
-                 *           "is_correct": false,
-                 *           "misconception_code": "M_OFF_BY_ONE"
-                 *         },
-                 *         {
-                 *           "text": "orange",
-                 *           "is_correct": false,
-                 *           "misconception_code": null
-                 *         },
-                 *         {
-                 *           "text": "IndexError",
-                 *           "is_correct": false,
-                 *           "misconception_code": null
-                 *         }
-                 *       ]
-                 *     }
-                 */
                 "application/json": components["schemas"]["QuestionDraft"];
             };
         };
@@ -3657,48 +3536,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "concept_code": "C_INDEXING",
-                     *       "stem": "Quel est le résultat de cet autre exemple Python ?",
-                     *       "code": "['pomme', 'poire', 'orange'][0]",
-                     *       "difficulty": 1,
-                     *       "options": [
-                     *         {
-                     *           "text": "pomme",
-                     *           "is_correct": true,
-                     *           "misconception_code": null,
-                     *           "id": "690f75ee-6f93-403a-a2ae-3ef05469a6dc"
-                     *         },
-                     *         {
-                     *           "text": "poire",
-                     *           "is_correct": false,
-                     *           "misconception_code": "M_OFF_BY_ONE",
-                     *           "id": "0358f5da-6868-447e-a8f3-361beef295c1"
-                     *         },
-                     *         {
-                     *           "text": "orange",
-                     *           "is_correct": false,
-                     *           "misconception_code": null,
-                     *           "id": "99c2aaba-4156-4cd1-8e38-c502f05dc16f"
-                     *         },
-                     *         {
-                     *           "text": "IndexError",
-                     *           "is_correct": false,
-                     *           "misconception_code": null,
-                     *           "id": "5e621667-3dc9-4cbe-b23a-5a470920a0c3"
-                     *         }
-                     *       ],
-                     *       "explanation": "L’indice zéro désigne le premier élément.",
-                     *       "id": "e760caa9-5716-4a4a-9ded-ae5862ef82bf",
-                     *       "source": "teacher",
-                     *       "status": "draft",
-                     *       "role": "initial",
-                     *       "version": 1,
-                     *       "validated_by": null,
-                     *       "validated_at": null
-                     *     }
-                     */
                     "application/json": components["schemas"]["TeacherQuestion"];
                 };
             };
@@ -3787,8 +3624,31 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
+        };
+    };
+    remove_item_api_v1_quizzes__id__questions__qid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                qid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherQuiz"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3796,8 +3656,300 @@ export interface operations {
                     /**
                      * @example {
                      *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    edit_item_api_v1_quizzes__id__questions__qid__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                qid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuestionDraft"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherQuestion"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    regenerate_item_api_v1_quizzes__id__questions__qid__regenerate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                qid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["QuestionRegenerate"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeacherQuestion"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
                      *       }
                      *     }
                      */
@@ -3811,18 +3963,12 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example 983e81cc-f3d4-567d-a778-bad9aaec49c7 */
                 id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "validated": true
-                 *     }
-                 */
                 "application/json": components["schemas"]["Approval"];
             };
         };
@@ -3833,101 +3979,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "983e81cc-f3d4-567d-a778-bad9aaec49c7",
-                     *       "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *       "status": "published",
-                     *       "kind": "initial",
-                     *       "generation_mode": "fixture",
-                     *       "used_fallback": false,
-                     *       "validated_by": "fdf688e9-d6de-533e-979c-f57a51300b95",
-                     *       "validated_at": "2026-11-21T16:08:48.724769Z",
-                     *       "questions": [
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Quel résultat donne cette expression Python ?",
-                     *           "code": "['pomme', 'poire', 'orange'][0]",
-                     *           "difficulty": 1,
-                     *           "options": [
-                     *             {
-                     *               "text": "pomme",
-                     *               "is_correct": true,
-                     *               "misconception_code": null,
-                     *               "id": "aa9292a9-3705-4a8b-850d-f84ddcfe74cc"
-                     *             },
-                     *             {
-                     *               "text": "poire",
-                     *               "is_correct": false,
-                     *               "misconception_code": "M_OFF_BY_ONE",
-                     *               "id": "cb802631-dea3-45f5-b943-dd7b22f2d9d3"
-                     *             },
-                     *             {
-                     *               "text": "orange",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "9e6d1d1c-5f64-47ef-824b-9842c1ec3e5d"
-                     *             },
-                     *             {
-                     *               "text": "IndexError",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "ecab7c2d-8723-4914-a816-56b121611cab"
-                     *             }
-                     *           ],
-                     *           "explanation": "L’indice zéro désigne le premier élément.",
-                     *           "id": "5f005db8-cd99-4bf4-b1b5-f6da007fdfa4",
-                     *           "source": "teacher",
-                     *           "status": "validated",
-                     *           "role": "initial",
-                     *           "version": 3,
-                     *           "validated_by": "fdf688e9-d6de-533e-979c-f57a51300b95",
-                     *           "validated_at": "2026-11-21T16:08:48.724769Z"
-                     *         },
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Que renvoie len sur la liste ci-dessous ?",
-                     *           "code": "len(['un', 'deux', 'trois'])",
-                     *           "difficulty": 1,
-                     *           "options": [
-                     *             {
-                     *               "text": "3",
-                     *               "is_correct": true,
-                     *               "misconception_code": null,
-                     *               "id": "606c572a-0c5c-4902-ad1a-5a2910c4419e"
-                     *             },
-                     *             {
-                     *               "text": "2",
-                     *               "is_correct": false,
-                     *               "misconception_code": "M_OFF_BY_ONE",
-                     *               "id": "a282d912-5f40-4d44-a03f-67ff37d17821"
-                     *             },
-                     *             {
-                     *               "text": "0",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "86d20882-4b4d-4a32-ab1e-213eb6adce90"
-                     *             },
-                     *             {
-                     *               "text": "4",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "37f1b10e-47a6-4dad-a6bc-b52c2a8c5250"
-                     *             }
-                     *           ],
-                     *           "explanation": "len donne le nombre d’éléments dans la liste.",
-                     *           "id": "3e31548c-73bd-40e8-b2a6-3a8699a4989d",
-                     *           "source": "teacher",
-                     *           "status": "validated",
-                     *           "role": "initial",
-                     *           "version": 1,
-                     *           "validated_by": "fdf688e9-d6de-533e-979c-f57a51300b95",
-                     *           "validated_at": "2026-11-21T16:08:48.724769Z"
-                     *         }
-                     *       ],
-                     *       "is_synthetic": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["TeacherQuiz"];
                 };
             };
@@ -4010,23 +4061,6 @@ export interface operations {
                      *       "error": {
                      *         "code": "INVALID_INPUT",
                      *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
                      *       }
                      *     }
                      */
@@ -4040,7 +4074,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example 983e81cc-f3d4-567d-a778-bad9aaec49c7 */
                 id: string;
             };
             cookie?: never;
@@ -4053,101 +4086,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "983e81cc-f3d4-567d-a778-bad9aaec49c7",
-                     *       "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *       "status": "closed",
-                     *       "kind": "initial",
-                     *       "generation_mode": "fixture",
-                     *       "used_fallback": false,
-                     *       "validated_by": "fdf688e9-d6de-533e-979c-f57a51300b95",
-                     *       "validated_at": "2026-11-21T16:08:48.724769Z",
-                     *       "questions": [
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Quel résultat donne cette expression Python ?",
-                     *           "code": "['pomme', 'poire', 'orange'][0]",
-                     *           "difficulty": 1,
-                     *           "options": [
-                     *             {
-                     *               "text": "pomme",
-                     *               "is_correct": true,
-                     *               "misconception_code": null,
-                     *               "id": "aa9292a9-3705-4a8b-850d-f84ddcfe74cc"
-                     *             },
-                     *             {
-                     *               "text": "poire",
-                     *               "is_correct": false,
-                     *               "misconception_code": "M_OFF_BY_ONE",
-                     *               "id": "cb802631-dea3-45f5-b943-dd7b22f2d9d3"
-                     *             },
-                     *             {
-                     *               "text": "orange",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "9e6d1d1c-5f64-47ef-824b-9842c1ec3e5d"
-                     *             },
-                     *             {
-                     *               "text": "IndexError",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "ecab7c2d-8723-4914-a816-56b121611cab"
-                     *             }
-                     *           ],
-                     *           "explanation": "L’indice zéro désigne le premier élément.",
-                     *           "id": "5f005db8-cd99-4bf4-b1b5-f6da007fdfa4",
-                     *           "source": "teacher",
-                     *           "status": "validated",
-                     *           "role": "initial",
-                     *           "version": 3,
-                     *           "validated_by": "fdf688e9-d6de-533e-979c-f57a51300b95",
-                     *           "validated_at": "2026-11-21T16:08:48.724769Z"
-                     *         },
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Que renvoie len sur la liste ci-dessous ?",
-                     *           "code": "len(['un', 'deux', 'trois'])",
-                     *           "difficulty": 1,
-                     *           "options": [
-                     *             {
-                     *               "text": "3",
-                     *               "is_correct": true,
-                     *               "misconception_code": null,
-                     *               "id": "606c572a-0c5c-4902-ad1a-5a2910c4419e"
-                     *             },
-                     *             {
-                     *               "text": "2",
-                     *               "is_correct": false,
-                     *               "misconception_code": "M_OFF_BY_ONE",
-                     *               "id": "a282d912-5f40-4d44-a03f-67ff37d17821"
-                     *             },
-                     *             {
-                     *               "text": "0",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "86d20882-4b4d-4a32-ab1e-213eb6adce90"
-                     *             },
-                     *             {
-                     *               "text": "4",
-                     *               "is_correct": false,
-                     *               "misconception_code": null,
-                     *               "id": "37f1b10e-47a6-4dad-a6bc-b52c2a8c5250"
-                     *             }
-                     *           ],
-                     *           "explanation": "len donne le nombre d’éléments dans la liste.",
-                     *           "id": "3e31548c-73bd-40e8-b2a6-3a8699a4989d",
-                     *           "source": "teacher",
-                     *           "status": "validated",
-                     *           "role": "initial",
-                     *           "version": 1,
-                     *           "validated_by": "fdf688e9-d6de-533e-979c-f57a51300b95",
-                     *           "validated_at": "2026-11-21T16:08:48.724769Z"
-                     *         }
-                     *       ],
-                     *       "is_synthetic": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["TeacherQuiz"];
                 };
             };
@@ -4236,1950 +4174,6 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    dashboard_api_v1_lessons__id__dashboard_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 73f54f29-9287-5537-8238-74f7d1cd3959 */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *       "priorities": [
-                     *         {
-                     *           "misconception_code": "M_OFF_BY_ONE",
-                     *           "label": "Indices et bornes",
-                     *           "affected_students": 3,
-                     *           "observed_count": 4,
-                     *           "corroborated_students": 1,
-                     *           "confident_wrong_share": 0.5,
-                     *           "priority_score": 3.75
-                     *         }
-                     *       ],
-                     *       "participation": {
-                     *         "enrolled_count": 3,
-                     *         "submitted_count": 3,
-                     *         "insufficient_count": 0
-                     *       },
-                     *       "insights": [
-                     *         {
-                     *           "kind": "different_scores_shared_error",
-                     *           "labels": [
-                     *             "Étudiant 01",
-                     *             "Étudiant 02"
-                     *           ],
-                     *           "scores": [
-                     *             2,
-                     *             3
-                     *           ],
-                     *           "misconception_codes": [
-                     *             "M_OFF_BY_ONE"
-                     *           ]
-                     *         }
-                     *       ],
-                     *       "is_synthetic": true
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Dashboard"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    graph_api_v1_lessons__id__graph_get: {
-        parameters: {
-            query?: {
-                /** @example 0.4 */
-                tau?: number;
-            };
-            header?: never;
-            path: {
-                /** @example 73f54f29-9287-5537-8238-74f7d1cd3959 */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "nodes": [
-                     *         {
-                     *           "id": "be2c92e0-66cc-590e-9d60-5cea0499f96e",
-                     *           "label": "Étudiant 01",
-                     *           "diagnosis_quality": "suspected",
-                     *           "is_synthetic": true
-                     *         },
-                     *         {
-                     *           "id": "ef792ddb-32aa-5c79-ad47-a3d2f93627d1",
-                     *           "label": "Étudiant 02",
-                     *           "diagnosis_quality": "suspected",
-                     *           "is_synthetic": true
-                     *         },
-                     *         {
-                     *           "id": "44cb7384-b222-5c53-816d-2e1e6eecd2bd",
-                     *           "label": "Étudiant 03",
-                     *           "diagnosis_quality": "suspected",
-                     *           "is_synthetic": true
-                     *         }
-                     *       ],
-                     *       "edges": [
-                     *         {
-                     *           "source": "be2c92e0-66cc-590e-9d60-5cea0499f96e",
-                     *           "target": "ef792ddb-32aa-5c79-ad47-a3d2f93627d1",
-                     *           "similarity": 0.67,
-                     *           "provisional": true
-                     *         },
-                     *         {
-                     *           "source": "be2c92e0-66cc-590e-9d60-5cea0499f96e",
-                     *           "target": "44cb7384-b222-5c53-816d-2e1e6eecd2bd",
-                     *           "similarity": 0.67,
-                     *           "provisional": true
-                     *         }
-                     *       ],
-                     *       "groups": [
-                     *         {
-                     *           "id": "fc4f8a17-cd66-53c5-9632-47b8f70b2c6b",
-                     *           "label": "Indices et bornes",
-                     *           "student_ids": [
-                     *             "be2c92e0-66cc-590e-9d60-5cea0499f96e",
-                     *             "ef792ddb-32aa-5c79-ad47-a3d2f93627d1",
-                     *             "44cb7384-b222-5c53-816d-2e1e6eecd2bd"
-                     *           ],
-                     *           "main_misconception_code": "M_OFF_BY_ONE",
-                     *           "status": "suggested",
-                     *           "confidence_label": "provisional",
-                     *           "evidence_summary": "Trois profils fictifs partagent un distracteur lié aux indices.",
-                     *           "avg_similarity": 0.67,
-                     *           "is_synthetic": true
-                     *         }
-                     *       ],
-                     *       "is_synthetic": true
-                     *     }
-                     */
-                    "application/json": components["schemas"]["Graph"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    suggest_groups_api_v1_lessons__id__groups_suggest_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 73f54f29-9287-5537-8238-74f7d1cd3959 */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example [
-                     *       {
-                     *         "id": "fc4f8a17-cd66-53c5-9632-47b8f70b2c6b",
-                     *         "label": "Indices et bornes",
-                     *         "student_ids": [
-                     *           "be2c92e0-66cc-590e-9d60-5cea0499f96e",
-                     *           "ef792ddb-32aa-5c79-ad47-a3d2f93627d1",
-                     *           "44cb7384-b222-5c53-816d-2e1e6eecd2bd"
-                     *         ],
-                     *         "main_misconception_code": "M_OFF_BY_ONE",
-                     *         "status": "suggested",
-                     *         "confidence_label": "provisional",
-                     *         "evidence_summary": "Trois profils fictifs partagent un distracteur lié aux indices.",
-                     *         "avg_similarity": 0.67,
-                     *         "is_synthetic": true
-                     *       }
-                     *     ]
-                     */
-                    "application/json": components["schemas"]["GroupView"][];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    groups_api_v1_lessons__id__groups_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 73f54f29-9287-5537-8238-74f7d1cd3959 */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example [
-                     *       {
-                     *         "id": "fc4f8a17-cd66-53c5-9632-47b8f70b2c6b",
-                     *         "label": "Indices et bornes",
-                     *         "student_ids": [
-                     *           "be2c92e0-66cc-590e-9d60-5cea0499f96e",
-                     *           "ef792ddb-32aa-5c79-ad47-a3d2f93627d1",
-                     *           "44cb7384-b222-5c53-816d-2e1e6eecd2bd"
-                     *         ],
-                     *         "main_misconception_code": "M_OFF_BY_ONE",
-                     *         "status": "suggested",
-                     *         "confidence_label": "provisional",
-                     *         "evidence_summary": "Trois profils fictifs partagent un distracteur lié aux indices.",
-                     *         "avg_similarity": 0.67,
-                     *         "is_synthetic": true
-                     *       }
-                     *     ]
-                     */
-                    "application/json": components["schemas"]["GroupView"][];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    update_group_api_v1_groups__id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example fc4f8a17-cd66-53c5-9632-47b8f70b2c6b */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                /**
-                 * @example {
-                 *       "action": "accept"
-                 *     }
-                 */
-                "application/json": components["schemas"]["GroupUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "id": "fc4f8a17-cd66-53c5-9632-47b8f70b2c6b",
-                     *       "label": "Indices et bornes",
-                     *       "student_ids": [
-                     *         "be2c92e0-66cc-590e-9d60-5cea0499f96e",
-                     *         "ef792ddb-32aa-5c79-ad47-a3d2f93627d1",
-                     *         "44cb7384-b222-5c53-816d-2e1e6eecd2bd"
-                     *       ],
-                     *       "main_misconception_code": "M_OFF_BY_ONE",
-                     *       "status": "accepted",
-                     *       "confidence_label": "provisional",
-                     *       "evidence_summary": "Trois profils fictifs partagent un distracteur lié aux indices.",
-                     *       "avg_similarity": 0.67,
-                     *       "is_synthetic": true
-                     *     }
-                     */
-                    "application/json": components["schemas"]["GroupView"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    generate_plan_api_v1_groups__id__remediation_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example fc4f8a17-cd66-53c5-9632-47b8f70b2c6b */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "id": "35ca7329-1111-5db5-8093-427dcb82f117",
-                     *       "group_id": "fc4f8a17-cd66-53c5-9632-47b8f70b2c6b",
-                     *       "plan": {
-                     *         "title": "Revoir : Indices et bornes",
-                     *         "objective": "Repérer et corriger cette erreur : Indices et bornes",
-                     *         "duration_min": 10,
-                     *         "steps": [
-                     *           {
-                     *             "start_min": 0,
-                     *             "end_min": 2,
-                     *             "action": "Présenter la règle avec un extrait du cours."
-                     *           },
-                     *           {
-                     *             "start_min": 2,
-                     *             "end_min": 5,
-                     *             "action": "Tracer les indices de trois listes de longueurs différentes."
-                     *           },
-                     *           {
-                     *             "start_min": 5,
-                     *             "end_min": 8,
-                     *             "action": "Comparer les deux raisonnements en binômes."
-                     *           },
-                     *           {
-                     *             "start_min": 8,
-                     *             "end_min": 10,
-                     *             "action": "Faire répondre individuellement à la question de contrôle."
-                     *           }
-                     *         ],
-                     *         "example": "Tracer un exemple correct choisi dans le cours par le professeur.",
-                     *         "counter_example": "Modifier une ligne pour illustrer l'erreur, puis expliquer la différence.",
-                     *         "check_question": "Quelle règle permet de choisir le comportement correct dans ce nouvel exemple ?"
-                     *       },
-                     *       "status": "draft",
-                     *       "source": "fixture",
-                     *       "used_fallback": false,
-                     *       "is_synthetic": true
-                     *     }
-                     */
-                    "application/json": components["schemas"]["InterventionView"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    edit_plan_api_v1_interventions__id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 35ca7329-1111-5db5-8093-427dcb82f117 */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                /**
-                 * @example {
-                 *       "plan": {
-                 *         "title": "Revoir : Indices et bornes",
-                 *         "objective": "Repérer et corriger cette erreur : Indices et bornes",
-                 *         "duration_min": 10,
-                 *         "steps": [
-                 *           {
-                 *             "start_min": 0,
-                 *             "end_min": 2,
-                 *             "action": "Présenter la règle avec un extrait du cours."
-                 *           },
-                 *           {
-                 *             "start_min": 2,
-                 *             "end_min": 5,
-                 *             "action": "Tracer les indices de trois listes de longueurs différentes."
-                 *           },
-                 *           {
-                 *             "start_min": 5,
-                 *             "end_min": 8,
-                 *             "action": "Comparer les deux raisonnements en binômes."
-                 *           },
-                 *           {
-                 *             "start_min": 8,
-                 *             "end_min": 10,
-                 *             "action": "Faire répondre individuellement à la question de contrôle."
-                 *           }
-                 *         ],
-                 *         "example": "Tracer un exemple correct choisi dans le cours par le professeur.",
-                 *         "counter_example": "Modifier une ligne pour illustrer l'erreur, puis expliquer la différence.",
-                 *         "check_question": "Quelle règle permet de choisir le comportement correct dans ce nouvel exemple ?"
-                 *       }
-                 *     }
-                 */
-                "application/json": components["schemas"]["InterventionUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "id": "35ca7329-1111-5db5-8093-427dcb82f117",
-                     *       "group_id": "fc4f8a17-cd66-53c5-9632-47b8f70b2c6b",
-                     *       "plan": {
-                     *         "title": "Revoir : Indices et bornes",
-                     *         "objective": "Repérer et corriger cette erreur : Indices et bornes",
-                     *         "duration_min": 10,
-                     *         "steps": [
-                     *           {
-                     *             "start_min": 0,
-                     *             "end_min": 2,
-                     *             "action": "Présenter la règle avec un extrait du cours."
-                     *           },
-                     *           {
-                     *             "start_min": 2,
-                     *             "end_min": 5,
-                     *             "action": "Tracer les indices de trois listes de longueurs différentes."
-                     *           },
-                     *           {
-                     *             "start_min": 5,
-                     *             "end_min": 8,
-                     *             "action": "Comparer les deux raisonnements en binômes."
-                     *           },
-                     *           {
-                     *             "start_min": 8,
-                     *             "end_min": 10,
-                     *             "action": "Faire répondre individuellement à la question de contrôle."
-                     *           }
-                     *         ],
-                     *         "example": "Tracer un exemple correct choisi dans le cours par le professeur.",
-                     *         "counter_example": "Modifier une ligne pour illustrer l'erreur, puis expliquer la différence.",
-                     *         "check_question": "Quelle règle permet de choisir le comportement correct dans ce nouvel exemple ?"
-                     *       },
-                     *       "status": "draft",
-                     *       "source": "teacher",
-                     *       "used_fallback": false,
-                     *       "is_synthetic": true
-                     *     }
-                     */
-                    "application/json": components["schemas"]["InterventionView"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    assign_plan_api_v1_interventions__id__assign_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 35ca7329-1111-5db5-8093-427dcb82f117 */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                /**
-                 * @example {
-                 *       "validated": true
-                 *     }
-                 */
-                "application/json": components["schemas"]["Approval"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "id": "35ca7329-1111-5db5-8093-427dcb82f117",
-                     *       "group_id": "fc4f8a17-cd66-53c5-9632-47b8f70b2c6b",
-                     *       "plan": {
-                     *         "title": "Revoir : Indices et bornes",
-                     *         "objective": "Repérer et corriger cette erreur : Indices et bornes",
-                     *         "duration_min": 10,
-                     *         "steps": [
-                     *           {
-                     *             "start_min": 0,
-                     *             "end_min": 2,
-                     *             "action": "Présenter la règle avec un extrait du cours."
-                     *           },
-                     *           {
-                     *             "start_min": 2,
-                     *             "end_min": 5,
-                     *             "action": "Tracer les indices de trois listes de longueurs différentes."
-                     *           },
-                     *           {
-                     *             "start_min": 5,
-                     *             "end_min": 8,
-                     *             "action": "Comparer les deux raisonnements en binômes."
-                     *           },
-                     *           {
-                     *             "start_min": 8,
-                     *             "end_min": 10,
-                     *             "action": "Faire répondre individuellement à la question de contrôle."
-                     *           }
-                     *         ],
-                     *         "example": "Tracer un exemple correct choisi dans le cours par le professeur.",
-                     *         "counter_example": "Modifier une ligne pour illustrer l'erreur, puis expliquer la différence.",
-                     *         "check_question": "Quelle règle permet de choisir le comportement correct dans ce nouvel exemple ?"
-                     *       },
-                     *       "status": "assigned",
-                     *       "source": "teacher",
-                     *       "used_fallback": false,
-                     *       "is_synthetic": true
-                     *     }
-                     */
-                    "application/json": components["schemas"]["InterventionView"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    retest_api_v1_lessons__id__retest_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 73f54f29-9287-5537-8238-74f7d1cd3959 */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                /**
-                 * @example {
-                 *       "intervention_id": "35ca7329-1111-5db5-8093-427dcb82f117"
-                 *     }
-                 */
-                "application/json": components["schemas"]["RetestCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *       "schedules": [
-                     *         {
-                     *           "id": "d7e8a839-66cb-5bcd-bf19-4291aacde7eb",
-                     *           "concept_code": "C_INDEXING",
-                     *           "kind": "immediate",
-                     *           "status": "available",
-                     *           "due_at": "2026-11-21T16:08:48.724769Z",
-                     *           "quiz_id": "751bf284-da01-5e24-b10b-6d46b687c5b1"
-                     *         },
-                     *         {
-                     *           "id": "971e6735-3dac-52a1-8453-9c48a97b309f",
-                     *           "concept_code": "C_INDEXING",
-                     *           "kind": "immediate",
-                     *           "status": "available",
-                     *           "due_at": "2026-11-21T16:08:48.724769Z",
-                     *           "quiz_id": "751bf284-da01-5e24-b10b-6d46b687c5b1"
-                     *         },
-                     *         {
-                     *           "id": "c0c3b949-0ed3-5ed8-bd59-7d0b6aba4ebb",
-                     *           "concept_code": "C_INDEXING",
-                     *           "kind": "immediate",
-                     *           "status": "available",
-                     *           "due_at": "2026-11-21T16:08:48.724769Z",
-                     *           "quiz_id": "751bf284-da01-5e24-b10b-6d46b687c5b1"
-                     *         }
-                     *       ],
-                     *       "is_synthetic": true
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ScheduleResult"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    before_after_api_v1_lessons__id__before_after_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 73f54f29-9287-5537-8238-74f7d1cd3959 */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *       "concepts": [
-                     *         {
-                     *           "concept_code": "C_INDEXING",
-                     *           "initial": {
-                     *             "correct": 2,
-                     *             "attempts": 4,
-                     *             "rate": 0.5
-                     *           },
-                     *           "immediate": {
-                     *             "correct": 2,
-                     *             "attempts": 3,
-                     *             "rate": 0.6666666666666666
-                     *           },
-                     *           "j7": {
-                     *             "correct": 0,
-                     *             "attempts": 0,
-                     *             "rate": null
-                     *           }
-                     *         }
-                     *       ],
-                     *       "is_synthetic": true
-                     *     }
-                     */
-                    "application/json": components["schemas"]["BeforeAfter"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    j7_api_v1_lessons__id__j7_schedule_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @example 73f54f29-9287-5537-8238-74f7d1cd3959 */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *       "schedules": [
-                     *         {
-                     *           "id": "87a01ff0-9568-55c9-89a8-9a1168c72d6a",
-                     *           "concept_code": "C_INDEXING",
-                     *           "kind": "j7",
-                     *           "status": "pending",
-                     *           "due_at": "2026-11-28T16:08:48.724769Z",
-                     *           "quiz_id": "7a21744d-c3ea-5b2e-a9bb-08a2b727374d"
-                     *         }
-                     *       ],
-                     *       "is_synthetic": true
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ScheduleResult"];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    tasks_api_v1_me_tasks_get: {
-        parameters: {
-            query?: {
-                /** @example f35fe51b-ad2b-585d-8948-b45b1098ee24 */
-                classroom_id?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example [
-                     *       {
-                     *         "id": "56106437-17bf-5c20-b8da-49adfadfb183",
-                     *         "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *         "classroom_id": "f35fe51b-ad2b-585d-8948-b45b1098ee24",
-                     *         "title": "Boucles et indices Python",
-                     *         "kind": "initial",
-                     *         "status": "available",
-                     *         "quiz_id": "56106437-17bf-5c20-b8da-49adfadfb183",
-                     *         "attempt_id": null,
-                     *         "due_at": null,
-                     *         "is_synthetic": true
-                     *       }
-                     *     ]
-                     */
-                    "application/json": components["schemas"]["StudentTask"][];
-                };
-            };
-            /** @description Authentification requise. */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHENTICATED",
-                     *         "message": "Authentification requise."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Accès refusé à cette ressource. */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "UNAUTHORIZED_RESOURCE",
-                     *         "message": "Accès refusé à cette ressource."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Ressource introuvable. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "RESOURCE_NOT_FOUND",
-                     *         "message": "Ressource introuvable."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Action impossible dans l'état actuel. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "CONFLICT",
-                     *         "message": "Action impossible dans l'état actuel."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Les données envoyées sont invalides. */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "INVALID_INPUT",
-                     *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
         };
     };
     start_attempt_api_v1_quizzes__id__attempts_post: {
@@ -6187,7 +4181,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example 56106437-17bf-5c20-b8da-49adfadfb183 */
                 id: string;
             };
             cookie?: never;
@@ -6200,114 +4193,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "id": "8510a002-aeda-51c6-a424-b938c8e9ba07",
-                     *       "quiz_id": "56106437-17bf-5c20-b8da-49adfadfb183",
-                     *       "status": "in_progress",
-                     *       "kind": "initial",
-                     *       "questions": [
-                     *         {
-                     *           "id": "7679081d-6a9b-5906-8e1c-a146025ce315",
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Pour cette liste, quel est l’indice du dernier élément ?",
-                     *           "code": "couleurs = ['vert', 'bleu', 'rouge', 'gris']",
-                     *           "options": [
-                     *             {
-                     *               "id": "488d6142-0581-5c16-a6d2-50b05720953d",
-                     *               "text": "3"
-                     *             },
-                     *             {
-                     *               "id": "e3f3471c-a3b9-5a9f-b506-42c4108ebee6",
-                     *               "text": "4"
-                     *             },
-                     *             {
-                     *               "id": "704a1766-23ed-5467-9e5e-3f9555589df2",
-                     *               "text": "1"
-                     *             },
-                     *             {
-                     *               "id": "762656aa-d057-59ed-bf8e-d4ba4e50dac3",
-                     *               "text": "-4"
-                     *             }
-                     *           ]
-                     *         },
-                     *         {
-                     *           "id": "b5217db3-881b-5f0c-a0bb-d8b178abcab5",
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Que renvoie len sur la liste ci-dessous ?",
-                     *           "code": "len(['un', 'deux', 'trois'])",
-                     *           "options": [
-                     *             {
-                     *               "id": "732f31e1-0e2f-5982-b792-b0b9756e8625",
-                     *               "text": "3"
-                     *             },
-                     *             {
-                     *               "id": "0e652d5d-abea-5def-821e-e3937ee7bc73",
-                     *               "text": "2"
-                     *             },
-                     *             {
-                     *               "id": "c306a603-a7f3-5fc9-bfc3-1ac83e1aa6af",
-                     *               "text": "0"
-                     *             },
-                     *             {
-                     *               "id": "2474a2e1-0213-5fa8-a7d1-4508990320e1",
-                     *               "text": "4"
-                     *             }
-                     *           ]
-                     *         },
-                     *         {
-                     *           "id": "243c2647-eea1-54e3-975b-9b186b558158",
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Quel élément est lu par l’expression suivante ?",
-                     *           "code": "['pomme', 'poire', 'orange'][0]",
-                     *           "options": [
-                     *             {
-                     *               "id": "ef85e441-41da-592c-bfbd-dba6abee0e14",
-                     *               "text": "pomme"
-                     *             },
-                     *             {
-                     *               "id": "0b143f46-54a0-5ea0-8a01-39cbb6e9cf72",
-                     *               "text": "poire"
-                     *             },
-                     *             {
-                     *               "id": "dbe615f4-32bc-57d2-b197-46ea100172bb",
-                     *               "text": "orange"
-                     *             },
-                     *             {
-                     *               "id": "42a81c4f-d890-5ee6-b763-2c2c915b9ed9",
-                     *               "text": "IndexError"
-                     *             }
-                     *           ]
-                     *         },
-                     *         {
-                     *           "id": "54a6df0e-0ba5-50d7-83d4-e19e081a3e56",
-                     *           "concept_code": "C_INDEXING",
-                     *           "stem": "Quels indices non négatifs sont accessibles dans cette liste ?",
-                     *           "code": "fruits = ['kiwi', 'figue']",
-                     *           "options": [
-                     *             {
-                     *               "id": "befd331f-2213-56a0-b921-f069ea70dd33",
-                     *               "text": "0 et 1"
-                     *             },
-                     *             {
-                     *               "id": "2ac838cb-5427-52ba-a53b-373dcfb6f6ed",
-                     *               "text": "1 et 2"
-                     *             },
-                     *             {
-                     *               "id": "c2a7b24b-379d-5a32-b14a-59190dccc2c4",
-                     *               "text": "0 et 2"
-                     *             },
-                     *             {
-                     *               "id": "9d1e607c-f059-5861-8ec6-228040821ce7",
-                     *               "text": "2 et 3"
-                     *             }
-                     *           ]
-                     *         }
-                     *       ],
-                     *       "saved_answers": [],
-                     *       "is_synthetic": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["AttemptView"];
                 };
             };
@@ -6396,44 +4281,19 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
         };
     };
-    save_answer_api_v1_attempts__id__answers_post: {
+    record_answer_api_v1_attempts__id__answers_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @example 8510a002-aeda-51c6-a424-b938c8e9ba07 */
                 id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "question_id": "7679081d-6a9b-5906-8e1c-a146025ce315",
-                 *       "option_id": "e3f3471c-a3b9-5a9f-b506-42c4108ebee6",
-                 *       "confidence": "sure"
-                 *     }
-                 */
                 "application/json": components["schemas"]["AnswerInput"];
             };
         };
@@ -6444,14 +4304,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "question_id": "7679081d-6a9b-5906-8e1c-a146025ce315",
-                     *       "option_id": "e3f3471c-a3b9-5a9f-b506-42c4108ebee6",
-                     *       "confidence": "sure",
-                     *       "saved": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["AnswerSaved"];
                 };
             };
@@ -6540,31 +4392,13 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
         };
     };
-    submit_attempt_api_v1_attempts__id__submit_post: {
+    submit_api_v1_attempts__id__submit_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @example 8510a002-aeda-51c6-a424-b938c8e9ba07 */
                 id: string;
             };
             cookie?: never;
@@ -6577,56 +4411,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "attempt_id": "8510a002-aeda-51c6-a424-b938c8e9ba07",
-                     *       "correct_count": 3,
-                     *       "answered_count": 4,
-                     *       "total_questions": 4,
-                     *       "diagnosis_quality": "sufficient",
-                     *       "answers": [
-                     *         {
-                     *           "question_id": "7679081d-6a9b-5906-8e1c-a146025ce315",
-                     *           "is_correct": false,
-                     *           "quadrant": "misconception",
-                     *           "correct_option_id": "488d6142-0581-5c16-a6d2-50b05720953d",
-                     *           "explanation": "Avec quatre éléments, les indices positifs utilisables vont de 0 à 3."
-                     *         },
-                     *         {
-                     *           "question_id": "b5217db3-881b-5f0c-a0bb-d8b178abcab5",
-                     *           "is_correct": true,
-                     *           "quadrant": "acquired",
-                     *           "correct_option_id": "732f31e1-0e2f-5982-b792-b0b9756e8625",
-                     *           "explanation": "len donne le nombre d’éléments dans la liste."
-                     *         },
-                     *         {
-                     *           "question_id": "243c2647-eea1-54e3-975b-9b186b558158",
-                     *           "is_correct": true,
-                     *           "quadrant": "acquired",
-                     *           "correct_option_id": "ef85e441-41da-592c-bfbd-dba6abee0e14",
-                     *           "explanation": "L’indice zéro désigne le premier élément."
-                     *         },
-                     *         {
-                     *           "question_id": "54a6df0e-0ba5-50d7-83d4-e19e081a3e56",
-                     *           "is_correct": true,
-                     *           "quadrant": "acquired",
-                     *           "correct_option_id": "befd331f-2213-56a0-b921-f069ea70dd33",
-                     *           "explanation": "Les deux indices positifs utilisables sont 0 et 1."
-                     *         }
-                     *       ],
-                     *       "suspected_difficulties": [
-                     *         {
-                     *           "misconception_code": "M_OFF_BY_ONE",
-                     *           "status": "suspected",
-                     *           "message": "Difficulté possible sur les indices.",
-                     *           "evidence_count": 1,
-                     *           "distinct_questions_count": 1
-                     *         }
-                     *       ],
-                     *       "confirmation_available": true,
-                     *       "is_synthetic": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["Feedback"];
                 };
             };
@@ -6709,23 +4493,6 @@ export interface operations {
                      *       "error": {
                      *         "code": "INVALID_INPUT",
                      *         "message": "Les données envoyées sont invalides."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
                      *       }
                      *     }
                      */
@@ -6739,7 +4506,6 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example 8510a002-aeda-51c6-a424-b938c8e9ba07 */
                 id: string;
             };
             cookie?: never;
@@ -6752,56 +4518,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "attempt_id": "8510a002-aeda-51c6-a424-b938c8e9ba07",
-                     *       "correct_count": 3,
-                     *       "answered_count": 4,
-                     *       "total_questions": 4,
-                     *       "diagnosis_quality": "sufficient",
-                     *       "answers": [
-                     *         {
-                     *           "question_id": "7679081d-6a9b-5906-8e1c-a146025ce315",
-                     *           "is_correct": false,
-                     *           "quadrant": "misconception",
-                     *           "correct_option_id": "488d6142-0581-5c16-a6d2-50b05720953d",
-                     *           "explanation": "Avec quatre éléments, les indices positifs utilisables vont de 0 à 3."
-                     *         },
-                     *         {
-                     *           "question_id": "b5217db3-881b-5f0c-a0bb-d8b178abcab5",
-                     *           "is_correct": true,
-                     *           "quadrant": "acquired",
-                     *           "correct_option_id": "732f31e1-0e2f-5982-b792-b0b9756e8625",
-                     *           "explanation": "len donne le nombre d’éléments dans la liste."
-                     *         },
-                     *         {
-                     *           "question_id": "243c2647-eea1-54e3-975b-9b186b558158",
-                     *           "is_correct": true,
-                     *           "quadrant": "acquired",
-                     *           "correct_option_id": "ef85e441-41da-592c-bfbd-dba6abee0e14",
-                     *           "explanation": "L’indice zéro désigne le premier élément."
-                     *         },
-                     *         {
-                     *           "question_id": "54a6df0e-0ba5-50d7-83d4-e19e081a3e56",
-                     *           "is_correct": true,
-                     *           "quadrant": "acquired",
-                     *           "correct_option_id": "befd331f-2213-56a0-b921-f069ea70dd33",
-                     *           "explanation": "Les deux indices positifs utilisables sont 0 et 1."
-                     *         }
-                     *       ],
-                     *       "suspected_difficulties": [
-                     *         {
-                     *           "misconception_code": "M_OFF_BY_ONE",
-                     *           "status": "suspected",
-                     *           "message": "Difficulté possible sur les indices.",
-                     *           "evidence_count": 1,
-                     *           "distinct_questions_count": 1
-                     *         }
-                     *       ],
-                     *       "confirmation_available": true,
-                     *       "is_synthetic": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["Feedback"];
                 };
             };
@@ -6890,31 +4606,13 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
         };
     };
-    confirmation_api_v1_attempts__id__confirmation_get: {
+    get_confirmation_api_v1_attempts__id__confirmation_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @example 8510a002-aeda-51c6-a424-b938c8e9ba07 */
                 id: string;
             };
             cookie?: never;
@@ -6927,36 +4625,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "question": {
-                     *         "id": "a9edc740-d1f8-5bc9-accc-114b5596787c",
-                     *         "concept_code": "C_INDEXING",
-                     *         "stem": "Quelle expression lit le dernier élément d’une liste non vide ?",
-                     *         "code": null,
-                     *         "options": [
-                     *           {
-                     *             "id": "aab245a6-e9c7-5a28-85b2-6b285c983546",
-                     *             "text": "liste[len(liste) - 1]"
-                     *           },
-                     *           {
-                     *             "id": "f63236e3-fcd6-5b65-9507-042726a7354b",
-                     *             "text": "liste[len(liste)]"
-                     *           },
-                     *           {
-                     *             "id": "e480d963-8d00-5044-b2c1-1366cf754c97",
-                     *             "text": "liste[0]"
-                     *           },
-                     *           {
-                     *             "id": "a810b529-c35d-56a0-b844-0391f27a6b1c",
-                     *             "text": "liste[len(liste) + 1]"
-                     *           }
-                     *         ]
-                     *       },
-                     *       "misconception_code": "M_OFF_BY_ONE",
-                     *       "is_synthetic": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["Confirmation"] | null;
                 };
             };
@@ -7045,23 +4713,6 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
         };
     };
     answer_confirmation_api_v1_attempts__id__confirmation_post: {
@@ -7069,20 +4720,12 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                /** @example 8510a002-aeda-51c6-a424-b938c8e9ba07 */
                 id: string;
             };
             cookie?: never;
         };
         requestBody: {
             content: {
-                /**
-                 * @example {
-                 *       "question_id": "a9edc740-d1f8-5bc9-accc-114b5596787c",
-                 *       "option_id": "f63236e3-fcd6-5b65-9507-042726a7354b",
-                 *       "confidence": "sure"
-                 *     }
-                 */
                 "application/json": components["schemas"]["AnswerInput"];
             };
         };
@@ -7093,56 +4736,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "attempt_id": "8510a002-aeda-51c6-a424-b938c8e9ba07",
-                     *       "correct_count": 3,
-                     *       "answered_count": 4,
-                     *       "total_questions": 4,
-                     *       "diagnosis_quality": "sufficient",
-                     *       "answers": [
-                     *         {
-                     *           "question_id": "7679081d-6a9b-5906-8e1c-a146025ce315",
-                     *           "is_correct": false,
-                     *           "quadrant": "misconception",
-                     *           "correct_option_id": "488d6142-0581-5c16-a6d2-50b05720953d",
-                     *           "explanation": "Avec quatre éléments, les indices positifs utilisables vont de 0 à 3."
-                     *         },
-                     *         {
-                     *           "question_id": "b5217db3-881b-5f0c-a0bb-d8b178abcab5",
-                     *           "is_correct": true,
-                     *           "quadrant": "acquired",
-                     *           "correct_option_id": "732f31e1-0e2f-5982-b792-b0b9756e8625",
-                     *           "explanation": "len donne le nombre d’éléments dans la liste."
-                     *         },
-                     *         {
-                     *           "question_id": "243c2647-eea1-54e3-975b-9b186b558158",
-                     *           "is_correct": true,
-                     *           "quadrant": "acquired",
-                     *           "correct_option_id": "ef85e441-41da-592c-bfbd-dba6abee0e14",
-                     *           "explanation": "L’indice zéro désigne le premier élément."
-                     *         },
-                     *         {
-                     *           "question_id": "54a6df0e-0ba5-50d7-83d4-e19e081a3e56",
-                     *           "is_correct": true,
-                     *           "quadrant": "acquired",
-                     *           "correct_option_id": "befd331f-2213-56a0-b921-f069ea70dd33",
-                     *           "explanation": "Les deux indices positifs utilisables sont 0 et 1."
-                     *         }
-                     *       ],
-                     *       "suspected_difficulties": [
-                     *         {
-                     *           "misconception_code": "M_OFF_BY_ONE",
-                     *           "status": "corroborated",
-                     *           "message": "Deux réponses sur des questions différentes appuient cette hypothèse.",
-                     *           "evidence_count": 2,
-                     *           "distinct_questions_count": 2
-                     *         }
-                     *       ],
-                     *       "confirmation_available": false,
-                     *       "is_synthetic": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["Feedback"];
                 };
             };
@@ -7231,28 +4824,14 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
         };
     };
-    retests_api_v1_me_retests_get: {
+    tasks_api_v1_me_tasks_get: {
         parameters: {
-            query?: never;
+            query?: {
+                classroom_id?: string | null;
+                include_upcoming?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -7265,22 +4844,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example [
-                     *       {
-                     *         "id": "751bf284-da01-5e24-b10b-6d46b687c5b1",
-                     *         "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *         "classroom_id": "f35fe51b-ad2b-585d-8948-b45b1098ee24",
-                     *         "title": "Boucles et indices Python",
-                     *         "kind": "immediate_retest",
-                     *         "status": "available",
-                     *         "quiz_id": "751bf284-da01-5e24-b10b-6d46b687c5b1",
-                     *         "attempt_id": null,
-                     *         "due_at": "2026-11-21T16:08:48.724769Z",
-                     *         "is_synthetic": true
-                     *       }
-                     *     ]
-                     */
                     "application/json": components["schemas"]["StudentTask"][];
                 };
             };
@@ -7369,26 +4932,9 @@ export interface operations {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
-            /** @description Disponible en mode démonstration uniquement. */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "error": {
-                     *         "code": "PHASE_NOT_IMPLEMENTED",
-                     *         "message": "Disponible en mode démonstration uniquement."
-                     *       }
-                     *     }
-                     */
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
         };
     };
-    reset_demo_api_v1_dev_seed_post: {
+    retests_api_v1_me_retests_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -7403,16 +4949,1520 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": components["schemas"]["StudentTask"][];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     /**
                      * @example {
-                     *       "now": "2026-11-21T16:08:48.724769Z",
-                     *       "is_simulated": true,
-                     *       "teacher_id": "fdf688e9-d6de-533e-979c-f57a51300b95",
-                     *       "lesson_id": "73f54f29-9287-5537-8238-74f7d1cd3959",
-                     *       "classroom_id": "f35fe51b-ad2b-585d-8948-b45b1098ee24",
-                     *       "is_synthetic": true
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
                      *     }
                      */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    history_api_v1_me_feedback_get: {
+        parameters: {
+            query: {
+                classroom_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Feedback"][];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assigned_interventions_api_v1_me_interventions_get: {
+        parameters: {
+            query: {
+                classroom_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignedPlan"][];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    dashboard_api_v1_lessons__id__dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Dashboard"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    graph_api_v1_lessons__id__graph_get: {
+        parameters: {
+            query?: {
+                tau?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Graph"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_groups_api_v1_lessons__id__groups_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupView"][];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    suggest_groups_api_v1_lessons__id__groups_suggest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupView"][];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_group_api_v1_groups__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GroupUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupView"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    generate_plan_api_v1_groups__id__remediation_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterventionView"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    edit_plan_api_v1_interventions__id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterventionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterventionView"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    assign_plan_api_v1_interventions__id__assign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Approval"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterventionView"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    retest_api_v1_lessons__id__retest_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetestCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleResult"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    schedule_j7_api_v1_lessons__id__j7_schedule_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleResult"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    before_after_api_v1_lessons__id__before_after_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BeforeAfter"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    load_demo_api_v1_dev_seed_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["DemoSeedView"];
                 };
             };
@@ -7461,11 +6511,6 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                /**
-                 * @example {
-                 *       "days": 7
-                 *     }
-                 */
                 "application/json": components["schemas"]["DemoAdvance"] | null;
             };
         };
@@ -7476,12 +6521,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "now": "2026-11-28T16:08:48.724769Z",
-                     *       "is_simulated": true
-                     *     }
-                     */
                     "application/json": components["schemas"]["DemoClockView"];
                 };
             };
@@ -7553,13 +6592,78 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": components["schemas"]["DemoClockView"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     /**
                      * @example {
-                     *       "now": "2026-11-21T16:08:48.724769Z",
-                     *       "is_simulated": true
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
                      *     }
                      */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    simulate_next_week_api_v1_demo_advance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["DemoClockView"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Accès refusé à cette ressource. */

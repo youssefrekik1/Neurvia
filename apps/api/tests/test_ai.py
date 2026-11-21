@@ -10,24 +10,30 @@ from app.core.config import Settings
 from app.models import Question
 from app.models.enums import QuestionStatus
 from app.schemas.learning import FocusBrief, QuestionDraft
-from app.services.demo_examples import question
-from app.services.demo_seed import TEACHER_ID
+from app.models import User
+from conftest import register
 
 PRIMARY, SECONDARY = "qwen3.5:9b", "qwen3.5:4b"
 ALLOWED = {"M_OFF_BY_ONE", "M_TRACE"}
 
 
 def draft():
-    item = question("initial-1")
-    return item.model_dump(
-        include={"concept_code", "stem", "code", "difficulty", "options", "explanation"},
-        exclude={"options": {"__all__": {"id"}}},
-    )
+    from test_api import make_question
+
+    payload = make_question("la génération", mapped=True)
+    return {key: value for key, value in payload.items() if key not in {"role", "target_misconception_code"}}
 
 
 def make_gateway(api, handler, *, demo=False, enabled=True):
-    settings = Settings(_env_file=None, llm_enabled=enabled, demo_mode=demo, llm_max_retries=1)
-    http = httpx.Client(base_url=settings.llm_base_url, transport=httpx.MockTransport(handler))
+    settings = Settings(_env_file=None, llm_enabled=enabled, demo_mode=demo,
+                        llm_fallback_model=SECONDARY, llm_max_retries=1)
+
+    def transport(request):
+        if request.url.path == "/api/tags":
+            return httpx.Response(200, json={"models": [{"name": SECONDARY}]})
+        return handler(request)
+
+    http = httpx.Client(base_url=settings.llm_base_url, transport=httpx.MockTransport(transport))
     return LLMGateway(OllamaClient(http, settings), settings, api.app.state.sessions), http
 
 
@@ -77,10 +83,12 @@ def test_failed_model_uses_only_approved_bank(api, failure):
             data["options"][2]["text"] = data["options"][0]["text"]
         return httpx.Response(200, json={"message": {"content": json.dumps(data)}})
 
+    register(api, 'bank-reviewer', 'teacher')
     with api.app.state.sessions.begin() as db:
+        teacher_id = db.scalar(select(User.id).where(User.email == 'bank-reviewer@example.com'))
         assert bank_candidates(db, "C_INDEXING", ALLOWED, set()) == []
         row = db.scalar(select(Question).where(Question.seed_key == "Q2"))
-        row.status, row.validated_by = QuestionStatus.validated, TEACHER_ID
+        row.status, row.validated_by = QuestionStatus.validated, teacher_id
         row.validated_at = api.app.state.system_clock.now()
     with api.app.state.sessions() as db:
         approved = bank_candidates(db, "C_INDEXING", ALLOWED, set())

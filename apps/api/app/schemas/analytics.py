@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
@@ -47,6 +49,11 @@ class GraphNode(View):
     label: str
     diagnosis_quality: e.DiagnosisStatus | Literal["no_observed_error"]
     is_synthetic: bool
+    percent_correct: Ratio | None = None
+    correct_count: int = 0
+    answered_count: int = 0
+    concept_rates: dict[str, Ratio] = {}
+    misconception_codes: list[str] = []
 
 
 class GraphEdge(View):
@@ -66,6 +73,7 @@ class GroupView(View):
     evidence_summary: str
     avg_similarity: Ratio
     is_synthetic: bool
+    intervention: InterventionView | None = None
 
 
 class Graph(View):
@@ -102,6 +110,7 @@ class RemediationPlan(Input):
     steps: Annotated[list[PlanStep], Field(min_length=1, max_length=10)]
     example: ShortText
     counter_example: ShortText
+    explanation: ShortText
     check_question: ShortText
 
     @model_validator(mode="after")
@@ -127,6 +136,18 @@ class InterventionView(View):
     status: e.InterventionStatus
     source: Literal["llm", "fixture", "template", "teacher"]
     used_fallback: bool
+    is_synthetic: bool
+
+
+GroupView.model_rebuild()
+
+
+class AssignedPlan(View):
+    id: UUID
+    lesson_id: UUID
+    lesson_title: str
+    plan: RemediationPlan
+    assigned_at: datetime
     is_synthetic: bool
 
 
@@ -162,7 +183,16 @@ class ConceptComparison(View):
     j7: Counts
 
 
+class ErrorComparison(View):
+    group_id: UUID
+    misconception_code: str
+    initial: Counts
+    immediate: Counts
+    j7: Counts
+
+
 class BeforeAfter(View):
     lesson_id: UUID
     concepts: list[ConceptComparison]
     is_synthetic: bool
+    error_counts: list[ErrorComparison] = []

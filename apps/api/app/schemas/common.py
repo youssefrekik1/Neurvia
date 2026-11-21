@@ -60,6 +60,10 @@ class ClassroomCreate(Input):
     join_ttl_hours: Annotated[int, Field(ge=1, le=720)] = 72
 
 
+class JoinRotate(Input):
+    join_ttl_hours: Annotated[int, Field(ge=1, le=720)] = 72
+
+
 class ClassroomView(View):
     id: UUID
     name: str

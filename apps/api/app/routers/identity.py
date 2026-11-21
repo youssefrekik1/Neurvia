@@ -12,7 +12,7 @@ from app.db.session import Db
 from app.models import Classroom, Membership, User
 from app.models.enums import Role
 from app.schemas.common import (
-    ClassroomCreate, ClassroomJoin, ClassroomView, Login, Member, Profile, Register, Token,
+    ClassroomCreate, ClassroomJoin, ClassroomView, JoinRotate, Login, Member, Profile, Register, Token,
 )
 
 router = APIRouter(tags=["Identité et classes"])
@@ -124,6 +124,16 @@ def get_classroom(id: UUID, user: User, db: Db, *, teacher_only: bool = False) -
     )) is None:
         raise error(404)
     return classroom
+
+
+@router.post("/classrooms/{id}/join-code", response_model=ClassroomView,
+             responses=documented_errors(401, 403, 404, 422))
+def rotate_join_code(id: UUID, data: JoinRotate, request: Request, user: Teacher, db: Db):
+    row = get_classroom(id, user, db, teacher_only=True)
+    row.join_code = token_hex(10).upper()
+    row.join_expires_at = request.app.state.system_clock.now() + timedelta(hours=data.join_ttl_hours)
+    db.commit()
+    return classroom_view(row, teacher=True)
 
 
 @router.get("/classrooms/{id}/members", response_model=list[Member],

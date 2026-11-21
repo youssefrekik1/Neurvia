@@ -102,6 +102,8 @@ class Question(Record):
 
     concept_id: Mapped[UUID] = fk("concepts")
     seed_key: Mapped[str | None] = mapped_column(String(60), unique=True)
+    bank_owner_id: Mapped[UUID | None] = fk("users")
+    target_misconception_id: Mapped[UUID | None] = fk("misconceptions")
     stem: Mapped[str] = mapped_column(Text)
     code: Mapped[str | None] = mapped_column(Text)
     explanation: Mapped[str] = mapped_column(Text)
@@ -143,6 +145,9 @@ class Quiz(Record):
 
     lesson_id: Mapped[UUID] = fk("lessons")
     parent_quiz_id: Mapped[UUID | None] = fk("quizzes")
+    recipient_id: Mapped[UUID | None] = fk("users")
+    generation_mode: Mapped[str] = mapped_column(String(20), default="teacher")
+    used_fallback: Mapped[bool] = mapped_column(default=False)
     kind: Mapped[e.QuestionRole] = mapped_column(enum_column(e.QuestionRole))
     status: Mapped[e.QuizStatus] = mapped_column(enum_column(e.QuizStatus), index=True)
     validated_by: Mapped[UUID | None] = fk("users")
@@ -171,6 +176,15 @@ class Attempt(Record):
     status: Mapped[e.AttemptStatus] = mapped_column(enum_column(e.AttemptStatus), index=True)
     started_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     submitted_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+
+
+class ConfirmationAssignment(Record):
+    __tablename__ = "confirmation_assignments"
+    __table_args__ = (UniqueConstraint("initial_attempt_id"), UniqueConstraint("quiz_id"))
+
+    initial_attempt_id: Mapped[UUID] = fk("attempts")
+    quiz_id: Mapped[UUID] = fk("quizzes")
+    misconception_id: Mapped[UUID] = fk("misconceptions")
 
 
 class Answer(Record):
@@ -259,6 +273,7 @@ class RetestSchedule(Record):
     lesson_id: Mapped[UUID] = fk("lessons")
     concept_id: Mapped[UUID] = fk("concepts")
     kind: Mapped[e.RetestKind] = mapped_column(enum_column(e.RetestKind))
+    target_misconception_id: Mapped[UUID | None] = fk("misconceptions")
     due_at: Mapped[datetime] = mapped_column(UTCDateTime(), index=True)
     quiz_id: Mapped[UUID | None] = fk("quizzes")
     status: Mapped[e.ScheduleStatus] = mapped_column(enum_column(e.ScheduleStatus), index=True)

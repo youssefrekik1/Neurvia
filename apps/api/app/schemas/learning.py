@@ -43,10 +43,16 @@ class LessonView(View):
     is_synthetic: bool
     content_text: str | None = None
     focus_brief: FocusBrief | None = None
+    quiz_id: UUID | None = None
+    quiz_status: e.QuizStatus | None = None
+    created_at: datetime
+    submitted_count: int = 0
+    question_count: int = 0
 
 
 class QuizGenerate(Input):
     question_count: QuestionCount | None = None
+    use_seed_drafts: bool = False
 
 
 class QuestionRegenerate(Input):
@@ -110,6 +116,12 @@ class TeacherQuestion(QuestionDraft):
     version: int
     validated_by: UUID | None = None
     validated_at: datetime | None = None
+    target_misconception_code: str | None = None
+
+
+class BankQuestionCreate(QuestionDraft):
+    role: e.QuestionRole = e.QuestionRole.initial
+    target_misconception_code: Code | None = None
 
 
 class TeacherQuiz(View):
@@ -162,6 +174,8 @@ class AnswerFeedback(View):
     quadrant: e.Quadrant
     correct_option_id: UUID
     explanation: str
+    selected_option_id: UUID
+    confidence: e.Confidence
 
 
 class Feedback(View):
@@ -174,6 +188,11 @@ class Feedback(View):
     suspected_difficulties: list[Diagnosis]
     confirmation_available: bool
     is_synthetic: bool
+    submitted_at: datetime
+    lesson_id: UUID
+    classroom_id: UUID
+    kind: e.QuestionRole
+    questions: list[StudentQuestion]
 
 
 class Confirmation(View):

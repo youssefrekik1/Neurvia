@@ -1,12 +1,10 @@
-from pydantic import SecretStr
-
-from tools.export_contract import DEMO_KEY, exercise_contract
-
-
-def test_every_operation_has_an_exercised_example(api):
-    api.app.state.settings.demo_admin_secret = SecretStr(DEMO_KEY)
-    spec = exercise_contract(api)
-    assert "/api/v1/lessons/{id}/before-after" in spec["paths"]
-    assert spec["paths"]["/api/v1/auth/login"]["post"]["responses"]["200"]["content"][
+def test_openapi_contract_is_live(api):
+    assert api.get("/health").json() == {"status": "ok"}
+    spec = api.get("/openapi.json").json()
+    assert spec["paths"]["/api/v1/me"]["get"]["security"] == [{"BearerAuth": []}]
+    assert spec["paths"]["/api/v1/dev/seed"]["post"]["security"] == [{"DemoAdmin": []}]
+    assert spec["paths"]["/api/v1/attempts/{id}/answers"]["post"]["responses"]["422"]["content"][
         "application/json"
-    ]["example"]["access_token"] == "eyJ...example"
+    ]["schema"]["$ref"].endswith("/ErrorResponse")
+    assert all("mock" not in str(operation.get("tags", []))
+               for path in spec["paths"].values() for operation in path.values())

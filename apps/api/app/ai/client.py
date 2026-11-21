@@ -17,7 +17,7 @@ from app.models import LLMCache
 T = TypeVar("T", bound=BaseModel)
 Task = Literal["generate_questions", "generate_remediation_plan"]
 Messages = list[dict[str, str]]
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error").getChild("fahm.ai")
 
 
 @dataclass(frozen=True)
@@ -28,6 +28,8 @@ class Generation(Generic[T]):
 
 
 class LLMClient(Protocol):
+    def available(self, model: str) -> bool: ...
+
     def generate_json(
         self, model: str, messages: Messages, schema: dict,
     ) -> str: ...
@@ -37,6 +39,14 @@ class OllamaClient:
     def __init__(self, http: httpx.Client, settings: Settings):
         self.http = http
         self.settings = settings
+
+    def available(self, model: str) -> bool:
+        try:
+            response = self.http.get("/api/tags", timeout=3.0)
+            response.raise_for_status()
+            return any(item.get("name") == model for item in response.json().get("models", []))
+        except (ValueError, AttributeError, httpx.HTTPError):
+            return False
 
     def generate_json(self, model: str, messages: Messages, schema: dict) -> str:
         settings = self.settings
@@ -56,8 +66,10 @@ class OllamaClient:
                 raise ValueError("Incomplete structured output")
         except (KeyError, TypeError):
             raise ValueError("Malformed Ollama response") from None
-        logger.info("ollama model=%s completion_tokens=%s", model, payload.get("eval_count")
-                    if isinstance(payload.get("eval_count"), int) else None)
+        duration = payload.get("total_duration")
+        logger.info("ollama model=%s prompt_tokens=%s completion_tokens=%s inference_ms=%s",
+                    model, payload.get("prompt_eval_count"), payload.get("eval_count"),
+                    round(duration / 1_000_000) if isinstance(duration, int) else None)
         return content
 
 
@@ -86,9 +98,11 @@ class LLMGateway:
                 logger.warning("Invalid demo fixture for %s", task)
 
         if self.settings.llm_enabled:
-            models = dict.fromkeys([self.settings.llm_model, self.settings.llm_fallback_model])
+            models = list(dict.fromkeys(filter(None, [self.settings.llm_model, self.settings.llm_fallback_model])))
             json_schema = schema.model_json_schema()
             for model in models:
+                if model != self.settings.llm_model and not self.client.available(model):
+                    continue
                 key = {
                     "task": task, "model": model,
                     "schema_version": digest(json_schema),
