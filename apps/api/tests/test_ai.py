@@ -25,7 +25,7 @@ def draft():
 
 
 def make_gateway(api, handler, *, demo=False, enabled=True):
-    settings = Settings(_env_file=None, llm_enabled=enabled, demo_mode=demo,
+    settings = Settings(_env_file=None, llm_enabled=enabled, demo_mode=demo, model_backend="ollama",
                         llm_fallback_model=SECONDARY, llm_max_retries=1)
 
     def transport(request):

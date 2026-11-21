@@ -59,7 +59,10 @@ $backend = Start-Job -ArgumentList $api,$python,$database,[bool]$Offline -Script
   Set-Location -LiteralPath $apiDir
   $env:DEMO_MODE = 'true'
   $env:DATABASE_URL = $databaseUrl
-  if ($offlineMode) { $env:LLM_ENABLED = 'false' }
+  if ($offlineMode) {
+    $env:LLM_ENABLED = 'false'
+    $env:DOCUMENT_VISION_ENABLED = 'false'
+  }
   & $pythonExe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 }
 try {

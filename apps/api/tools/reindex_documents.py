@@ -1,27 +1,31 @@
 """Queue re-indexing for documents embedded with another model revision (or all ready documents).
 
-Each queued document leaves retrieval until its new index is published, so large collections can be
-processed in batches with --limit. Run it again until it reports nothing left to queue.
+Existing chunks and citations remain available while the worker builds new embeddings.
 """
 
 import argparse
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import exists, func, or_, select
 
 from app.ai.serving import model_clients, model_http
 from app.core.config import Settings
 from app.db.migrate import initialize_schema
+from app.db.base import utcnow
 from app.db.session import build_database
 from app.documents.worker import enqueue
-from app.models.documents import DocumentVersion
+from app.models.documents import DocumentJob, DocumentVersion
 from app.services.access import start_write
 
 
 def stale_filter(current, everything):
     ready = DocumentVersion.state == "ready"
+    idle = ~exists().where(
+        DocumentJob.version_id == DocumentVersion.id, DocumentJob.revision == DocumentVersion.revision,
+        DocumentJob.kind == "reindex", DocumentJob.state.in_(["queued", "processing"]),
+    )
     if everything:
-        return (ready,)
-    return (ready, or_(DocumentVersion.model_revision.is_(None), DocumentVersion.model_revision != current))
+        return (ready, idle)
+    return (ready, idle, or_(DocumentVersion.model_revision.is_(None), DocumentVersion.model_revision != current))
 
 
 def reindex(sessions, current, *, everything=False, limit=None, dry_run=False):
@@ -39,9 +43,10 @@ def reindex(sessions, current, *, everything=False, limit=None, dry_run=False):
             db.rollback()
             return total, 0
         for version in rows:
-            version.revision += 1
-            version.state, version.failure = "queued", None
-            enqueue(db, version, "index")
+            job = enqueue(db, version, "reindex")
+            job.state, job.attempts, job.progress = "queued", 0, 0
+            job.available_at, job.locked_until, job.lease_token = utcnow(), None, None
+            job.error_code, job.elapsed_ms = None, None
         return total, len(rows)
 
 

@@ -13,12 +13,12 @@ Ce guide décrit le déploiement et l’exploitation du pipeline documentaire : 
 | `worker` | File de travaux durable : extraction, OCR, vision, embeddings | idem, système de fichiers en lecture seule |
 | `web` (profil `web`) | Next.js et le proxy `/backend` | `Dockerfile.documents.web` |
 
-Ollama tourne sur l’hôte (`host.docker.internal:11434`). Il sert `qwen3-embedding:0.6b` pour les embeddings et `qwen3.5:9b` pour la vision, le chat, l’extraction du brief et la génération.
+Gemini utilise `gemini-embedding-2` pour la recherche et `gemini-3.8-flash` pour la vision, le chat, le brief et la génération. Configurez `GEMINI_API_KEY` dans le fichier local `apps/api/.env`.
 
 Cycle d’un document :
 
 1. Le professeur importe un PDF. L’API vérifie l’accès à la séance, la taille et la signature `%PDF-`, déduplique par SHA-256 dans la séance, écrit l’original dans le bucket, puis crée la version et un travail `extract`.
-2. Le worker réserve le travail avec un bail de 5 minutes, rend chaque page et extrait les blocs : texte numérique, code, tableaux et figures pour un PDF natif. Une page scannée passe par Tesseract, puis par Qwen vision si l’OCR est vide ou peu fiable (confiance moyenne < 0,78).
+2. Le worker réserve le travail avec un bail de 5 minutes, rend chaque page et extrait les blocs : texte numérique, code, tableaux et figures pour un PDF natif. Une page scannée passe par Tesseract, puis par Gemini vision si l’OCR est vide ou peu fiable (confiance moyenne < 0,78).
 3. Tout bloc issu de l’OCR, de la vision ou de la détection de figures porte `review_required`. La version reste à l’état `review` jusqu’à ce que le professeur relise et valide chaque bloc. Un PDF natif sans bloc incertain passe directement à l’indexation.
 4. Le travail `index` découpe les blocs en chunks parents et enfants, calcule les embeddings, puis publie la révision de façon atomique. L’état passe à `ready`.
 5. La recherche combine pgvector (HNSW, distance cosinus) et le plein texte PostgreSQL par fusion des rangs. Elle applique un reclassement lexical léger et un budget de contexte. Chaque réponse ou question conserve des citations vérifiées mot pour mot dans la page source.
@@ -35,11 +35,13 @@ docker compose -f compose.documents.yml --profile web up -d --build
 
 Ports publiés sur `127.0.0.1` uniquement : API `8010`, PostgreSQL `55432`, S3 `59000`, web `3152`.
 
-Modèles requis dans Ollama :
+Pour utiliser Ollama sur configuration explicite :
 
 ```powershell
 ollama pull qwen3-embedding:0.6b
 ollama pull qwen3.5:9b
+# .env : MODEL_BACKEND=ollama, LLM_MODEL=qwen3.5:9b,
+# DOCUMENT_VISION_MODEL=qwen3.5:9b, EMBEDDING_MODEL=qwen3-embedding:0.6b
 ```
 
 Pour un frontend de développement hors conteneur, lancez `npm run dev` avec `BACKEND_URL=http://127.0.0.1:8010/api/v1`.
@@ -57,14 +59,16 @@ Pour un frontend de développement hors conteneur, lancez `npm run dev` avec `BA
 | `DOCUMENT_MAX_PAGES` | `120` (1–300) | Nombre maximal de pages |
 | `DOCUMENT_OCR_LANGUAGES` | `eng+fra+ara` | Langues Tesseract installées dans l’image |
 | `DOCUMENT_TESSERACT` | `tesseract` | Binaire OCR |
-| `DOCUMENT_VISION_ENABLED` | `true` | Repli sur Qwen vision pour les pages scannées |
-| `DOCUMENT_VISION_MODEL` | `qwen3.5:9b` | Modèle de transcription |
-| `EMBEDDING_MODEL` | `qwen3-embedding:0.6b` | Modèle d’embedding, 1024 dimensions |
+| `DOCUMENT_VISION_ENABLED` | `true` | Repli sur Gemini vision pour les pages scannées |
+| `DOCUMENT_VISION_MODEL` | `gemini-3.8-flash` | Modèle de transcription |
+| `EMBEDDING_MODEL` | `gemini-embedding-2` | Modèle d’embedding, 1024 dimensions |
 | `RAG_CONTEXT_BUDGET` | `5500` octets | Budget des passages transmis au modèle |
 | `RAG_RERANK` | `true` | Reclassement lexical après fusion |
 | `DOCUMENT_JOB_RETRIES` | `3` (1–8) | Tentatives avant l’échec définitif d’un travail |
 | `LLM_ENABLED`, `LLM_MODEL`, `LLM_NUM_CTX`, `LLM_TIMEOUT_S` | voir `README.md` | Chat, brief et génération |
-| `MODEL_BACKEND` | `ollama` | `ollama` (API native) ou `openai` (serveur compatible OpenAI : vLLM, llama.cpp server, TGI…) |
+| `MODEL_BACKEND` | `gemini` | `gemini`, `ollama` ou `openai` |
+| `GEMINI_API_KEY` | vide | Clé Gemini côté API et worker |
+| `GEMINI_DIAGNOSIS_MODEL` | `gemini-3.5-flash-lite` | Hypothèses facultatives dans MindMirror |
 | `LLM_BASE_URL` | `http://127.0.0.1:11434` | Adresse du serveur de modèles, sans le suffixe `/v1` |
 | `MODEL_API_KEY` | vide | Jeton Bearer envoyé au serveur de modèles (par exemple `vllm serve --api-key`) |
 | `EMBEDDING_REVISION` | vide | Backend `openai` : version des poids d’embedding servis, enregistrée avec chaque index |
@@ -73,7 +77,7 @@ Pour un frontend de développement hors conteneur, lancez `npm run dev` avec `BA
 
 Le backend dépend de deux interfaces, `LLMClient` (génération structurée) et `DocumentModels` (embeddings et transcription). `app/ai/serving.py` choisit leur implémentation selon `MODEL_BACKEND`. Le cache, la recherche, le worker et les prompts ne dépendent pas du serveur.
 
-Par défaut, Qwen et les embeddings restent locaux dans Ollama. Pour un serveur dédié avec vLLM, par exemple :
+Gemini est appelé via le SDK Python officiel. Une clé absente, invalide ou sans accès au modèle donne une erreur de configuration. Pour un serveur dédié avec vLLM, par exemple :
 
 ```bash
 vllm serve Qwen/Qwen3.5-9B --api-key "$MODEL_API_KEY"                         # génération et vision
@@ -128,13 +132,13 @@ L’outil exige PostgreSQL et des comptes professeurs non fictifs. Il est idempo
 
 - Chaque correction de bloc incrémente la révision de la version. Les travaux et les modifications concurrentes portant une révision obsolète sont rejetés (`409 DOCUMENT_CHANGED`). Le texte extrait d’origine reste consultable à côté de la correction.
 - **Réindexer** relance l’indexation d’un document prêt avec une nouvelle révision. Pendant ce temps, le document n’est plus sélectionnable pour l’assistant ni pour le quiz (`409 DOCUMENT_NOT_INDEXED`). La nouvelle révision est publiée de façon atomique à la fin du travail.
-- La version du modèle d’embedding est enregistrée sous la forme `tag@digest` avec Ollama, ou `openai:<modèle>@<EMBEDDING_REVISION>` avec un serveur compatible OpenAI. Après un changement de modèle, les documents indexés avec l’ancien modèle restent consultables en recherche lexicale seule (`mode: lexical`) pour éviter de comparer deux espaces vectoriels. Réindexez-les pour revenir au mode hybride.
+- Gemini enregistre le nom et la version du modèle, la dimension et le profil de recherche. La version du modèle d’embedding est aussi enregistrée sous la forme `tag@digest` avec Ollama, ou `openai:<modèle>@<EMBEDDING_REVISION>` avec un serveur compatible OpenAI. Après un changement de modèle, les documents indexés avec l’ancien modèle restent consultables en recherche lexicale seule (`mode: lexical`) pour éviter de comparer deux espaces vectoriels. Réindexez-les pour revenir au mode hybride. Le worker réutilise les extraits existants et conserve les originaux, les corrections et les citations.
 - Pour réindexer en lot après un changement de modèle, utilisez l’outil ci-dessous. Chaque document mis en file sort de la recherche jusqu’à la fin de son indexation, d’où le traitement par lots :
 
   ```powershell
   .\.venv\Scripts\python.exe -m tools.reindex_documents --dry-run     # compter les documents à réindexer
   .\.venv\Scripts\python.exe -m tools.reindex_documents --limit 50    # relancer jusqu’à « queued now: 0 »
-  .\.venv\Scripts\python.exe -m tools.reindex_documents --all         # tout réindexer, par exemple après un changement d’extraction
+  .\.venv\Scripts\python.exe -m tools.reindex_documents --all         # tout réindexer, par exemple après un changement de poids
   ```
 - Une question publiée garde ses citations. La publication et la modification d’un item fondé exigent que les sources n’aient pas changé depuis la génération (`409 COURSE_SOURCES_CHANGED`).
 

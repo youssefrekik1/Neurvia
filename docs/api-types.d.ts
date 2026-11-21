@@ -557,6 +557,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lessons/{id}/members/{member_id}/difficulty-assistance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Difficulty Assistance */
+        post: operations["difficulty_assistance_api_v1_lessons__id__members__member_id__difficulty_assistance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/lessons/{id}/dashboard": {
         parameters: {
             query?: never;
@@ -1150,6 +1167,8 @@ export interface components {
              */
             option_id: string;
             confidence: components["schemas"]["Confidence"];
+            /** Justification */
+            justification?: string | null;
         };
         /** AnswerSaved */
         AnswerSaved: {
@@ -1550,6 +1569,27 @@ export interface components {
          * @enum {string}
          */
         DiagnosisStatus: "suspected" | "corroborated" | "contradicted_or_transient" | "insufficient";
+        /** DifficultyAssistance */
+        DifficultyAssistance: {
+            /** Model */
+            model?: string | null;
+            /** Evidence */
+            evidence?: components["schemas"]["DifficultyEvidence"][];
+        };
+        /** DifficultyEvidence */
+        DifficultyEvidence: {
+            /** Question */
+            question: string;
+            /** Selected Option */
+            selected_option: string;
+            confidence: components["schemas"]["Confidence"];
+            /** Objective */
+            objective: string;
+            /** Misconception Label */
+            misconception_label?: string | null;
+            /** Rationale */
+            rationale?: string | null;
+        };
         /** DocumentReview */
         DocumentReview: {
             /** Revision */
@@ -6224,6 +6264,148 @@ export interface operations {
                      *       "error": {
                      *         "code": "INVALID_INPUT",
                      *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    difficulty_assistance_api_v1_lessons__id__members__member_id__difficulty_assistance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                member_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DifficultyAssistance"];
+                };
+            };
+            /** @description Authentification requise. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHENTICATED",
+                     *         "message": "Authentification requise."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Accès refusé à cette ressource. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "UNAUTHORIZED_RESOURCE",
+                     *         "message": "Accès refusé à cette ressource."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ressource introuvable. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RESOURCE_NOT_FOUND",
+                     *         "message": "Ressource introuvable."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Action impossible dans l'état actuel. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "CONFLICT",
+                     *         "message": "Action impossible dans l'état actuel."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Les données envoyées sont invalides. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "INVALID_INPUT",
+                     *         "message": "Les données envoyées sont invalides."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Trop de tentatives. Réessayez plus tard. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "RATE_LIMITED",
+                     *         "message": "Trop de tentatives. Réessayez plus tard."
+                     *       }
+                     *     }
+                     */
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Ce service est momentanément indisponible. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "error": {
+                     *         "code": "SERVICE_UNAVAILABLE",
+                     *         "message": "Ce service est momentanément indisponible."
                      *       }
                      *     }
                      */

@@ -1,9 +1,4 @@
-"""Model-serving backends behind the `LLMClient` and `DocumentModels` protocols.
-
-`MODEL_BACKEND=ollama` (default) talks to Ollama's native API. `MODEL_BACKEND=openai` talks to any
-OpenAI-compatible server (vLLM, llama.cpp server, TGI, …) at `LLM_BASE_URL` without the `/v1` suffix.
-Everything above these classes — the gateway, cache, retrieval, worker — is backend-agnostic.
-"""
+"""Select the configured backend for structured generation and document models."""
 
 from base64 import b64encode
 from functools import lru_cache
@@ -35,6 +30,11 @@ def model_http(settings: Settings, *, connect: float = 3) -> httpx.Client:
 
 
 def model_clients(http: httpx.Client, settings: Settings) -> tuple[LLMClient, DocumentModels]:
+    if settings.model_backend == "gemini":
+        from app.ai.gemini import GeminiClient, GeminiDocumentModels
+
+        gemini = GeminiClient(settings)
+        return gemini, GeminiDocumentModels(gemini)
     if settings.model_backend == "openai":
         return OpenAICompatibleClient(http, settings), OpenAICompatibleDocumentModels(http, settings)
     return OllamaClient(http, settings), OllamaDocumentModels(http, settings)

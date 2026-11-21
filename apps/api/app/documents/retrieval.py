@@ -108,7 +108,7 @@ def sqlite_candidates(db, filters, q, vector, profile):
     rows = db.execute(
         base_query(DocumentChunk.id, DocumentChunk.text, ChunkEmbedding.vector)
         .outerjoin(ChunkEmbedding, (ChunkEmbedding.chunk_id == DocumentChunk.id)
-                   & (ChunkEmbedding.model_revision == profile))
+                   & (ChunkEmbedding.model_revision == profile) & (DocumentVersion.model_revision == profile))
         .where(*filters).limit(10000)
     )
     keywords = content_terms(q)
