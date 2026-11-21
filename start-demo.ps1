@@ -5,7 +5,7 @@ Set-Location -LiteralPath $PSScriptRoot
 $api = Join-Path $PSScriptRoot 'apps/api'
 $python = Join-Path $api '.venv/Scripts/python.exe'
 if (-not (Test-Path -LiteralPath $python)) {
-  throw 'Créez l’environnement Python et installez les dépendances comme indiqué dans README.md.'
+  throw "Créez l’environnement Python et installez les dépendances comme indiqué dans README.md."
 }
 if (-not (Test-Path -LiteralPath 'node_modules/next/package.json')) {
   npm.cmd ci
