@@ -1,5 +1,6 @@
 from pathlib import Path
 from secrets import token_urlsafe
+from typing import Literal
 from urllib.parse import urlsplit
 
 from pydantic import Field, SecretStr, model_validator
@@ -30,6 +31,10 @@ class Settings(BaseSettings):
     llm_num_ctx: int = Field(8192, ge=512)
     llm_timeout_s: float = Field(120, gt=0, le=300)
     llm_max_retries: int = Field(1, ge=0, le=3)
+    # `ollama` uses Ollama's native API; `openai` any OpenAI-compatible server such as vLLM.
+    model_backend: Literal["ollama", "openai"] = "ollama"
+    model_api_key: SecretStr | None = None
+    embedding_revision: str | None = None
 
     confident_wrong_weight: float = Field(0.5, ge=0, le=5)
     group_similarity: float = Field(0.5, gt=0, le=1)

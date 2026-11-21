@@ -51,8 +51,10 @@ def upload(lesson_id: UUID, request: Request, user: Teacher, db: Db,
            file: Annotated[UploadFile, File()],
            resource_id: Annotated[UUID | None, Form()] = None):
     request.app.state.rate_limiter.check(request, "document_upload", 30, subject=user.id)
-    # Authorize before consulting storage or revealing any parse error.
+    # Authorize before consulting storage or revealing any parse error. Creating the tenant is committed
+    # at once so that the write lock is not held while the PDF is read and stored.
     scope = scope_for(db, user, lesson_id, create=True)
+    db.commit()
     count = request.app.state.settings.document_max_upload_mb * 1024 * 1024
     try:
         data = file.file.read(count + 1)
@@ -62,28 +64,41 @@ def upload(lesson_id: UUID, request: Request, user: Teacher, db: Db,
         raise error(413)
     if not data.startswith(b"%PDF-"):
         raise error(415)
+    digest = sha256(data).hexdigest()
+    if resource_id is not None and db.scalar(
+        select(Resource.id).where(Resource.id == resource_id, *scope.filters())
+    ) is None:
+        raise error(404)
+
+    def existing():
+        return db.execute(select(DocumentVersion, Resource).select_from(DocumentVersion)
+                          .join(Resource, Resource.id == DocumentVersion.resource_id)
+                          .where(DocumentVersion.sha256 == digest, *scope.filters())).one_or_none()
+
+    if existing() is None:
+        db.rollback()
+        # The key depends only on the tenant and the content, so a concurrent duplicate rewrites the same bytes.
+        store = object_store(request)
+        try:
+            store.ensure_bucket()
+            store.put(f"{scope.prefix}/originals/{digest}.pdf", data, "application/pdf")
+        except (ClientError, BotoCoreError):
+            raise error(503, "DOCUMENT_STORAGE_UNAVAILABLE", "Le stockage des documents ne répond pas.") from None
+    db.rollback()
+    scope = scope_for(db, user, lesson_id, create=True)
+    key = f"{scope.prefix}/originals/{digest}.pdf"
     if resource_id is not None:
         resource = db.scalar(select(Resource).where(Resource.id == resource_id, *scope.filters()))
         if resource is None:
             raise error(404)
     else:
         resource = None
-    digest = sha256(data).hexdigest()
-    previous = db.execute(select(DocumentVersion, Resource).select_from(DocumentVersion)
-                          .join(Resource, Resource.id == DocumentVersion.resource_id)
-                          .where(DocumentVersion.sha256 == digest, *scope.filters())).one_or_none()
+    previous = existing()
     if previous is not None:
         old, owner = previous
         if resource is not None and old.resource_id != resource.id:
             raise error(409, "DOCUMENT_ALREADY_PRESENT", "Ce PDF appartient déjà à un autre document de la séance.")
         return doc_view(db, old, owner)
-    store = object_store(request)
-    key = f"{scope.prefix}/originals/{digest}.pdf"
-    try:
-        store.ensure_bucket()
-        store.put(key, data, "application/pdf")
-    except (ClientError, BotoCoreError):
-        raise error(503, "DOCUMENT_STORAGE_UNAVAILABLE", "Le stockage des documents ne répond pas.") from None
     if resource is None:
         name = PurePath((file.filename or "Document.pdf").replace("\\", "/")).name[:200]
         resource = Resource(institution_id=scope.institution_id, classroom_id=scope.classroom_id,

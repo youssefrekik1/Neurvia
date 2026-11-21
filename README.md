@@ -81,6 +81,8 @@ npm run typecheck
 npm run build
 ```
 
+La suite Python utilise SQLite par défaut. Pour l’exécuter sur PostgreSQL, définissez `NEURVIA_TEST_POSTGRES` avec une URL dont l’utilisateur peut créer des bases, par exemple `postgresql+psycopg://neurvia:neurvia-local-db@127.0.0.1:55432/neurvia` avec la pile Compose. Chaque test reçoit alors une base neuve, clonée depuis un modèle migré par Alembic.
+
 Les scripts Playwright `scripts/verify-workflows.mjs` et `scripts/verify-navigation.mjs` s’exécutent contre l’interface active. Définissez `NEURVIA_URL` pour son URL. Pour le scénario complet, sélectionnez `NEURVIA_MODE=demo` et une base de démo fraîche. Pour le parcours normal, utilisez une base normale et laissez cette variable vide. Le script de navigation mobile utilise les comptes fictifs. Installez Chromium avec `npx playwright install chromium` au besoin.
 
 [Contrat et correspondance des parcours](docs/API.md) · [OpenAPI](docs/openapi.json)

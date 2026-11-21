@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
 from secrets import token_urlsafe
 
-import httpx
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.ai.client import LLMGateway, OllamaClient
+from app.ai.client import LLMGateway
+from app.ai.serving import model_clients, model_http
 from app.core.auth import RateLimiter, password_hash
 from app.core.clock import DemoClock, SystemClock
 from app.core.config import Settings
@@ -14,7 +14,6 @@ from app.db.migrate import initialize_schema
 from app.db.seed import import_bank, read_seed
 from app.db.session import build_database
 from app.documents.storage import ObjectStore
-from app.documents.llm import OllamaDocumentModels
 from app.routers import analytics, attempts, bank, course_assistant, dev, documents, identity, lessons, quizzes
 from app.schemas.common import Health
 from app.services.demo_seed import seed_demo
@@ -38,12 +37,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 import_bank(db, read_seed())
                 if settings.demo_mode:
                     seed_demo(db, app.state.system_clock.now())
-            with httpx.Client(
-                base_url=settings.llm_base_url, trust_env=False,
-                timeout=httpx.Timeout(settings.llm_timeout_s, connect=min(3, settings.llm_timeout_s)),
-            ) as http:
-                app.state.gateway = LLMGateway(OllamaClient(http, settings), settings, sessions)
-                app.state.document_models = OllamaDocumentModels(http, settings)
+            with model_http(settings) as http:
+                client, app.state.document_models = model_clients(http, settings)
+                app.state.gateway = LLMGateway(client, settings, sessions)
                 yield
         finally:
             engine.dispose()
