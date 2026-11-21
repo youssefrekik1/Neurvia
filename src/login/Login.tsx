@@ -7,8 +7,6 @@ import {
   Eye,
   EyeOff,
   GraduationCap,
-  Info,
-  Landmark,
   LockKeyhole,
   Mail,
   Menu,
@@ -17,7 +15,8 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { login, type Role } from "./auth";
+import { login, register, type Role } from "./auth";
+import { errorMessage } from "../lib/api";
 import "./login.css";
 
 const information = {
@@ -55,7 +54,7 @@ const information = {
     "Cette démonstration est destinée à l’exploration des parcours pédagogiques avec des données fictives. Les résultats illustrent des pistes à vérifier en séance.",
   ],
   "Politique de confidentialité": [
-    "Votre navigateur conserve le rôle choisi pour la session. L’option « Se souvenir de moi » conserve ce choix après la fermeture du navigateur. Les champs e-mail et mot de passe ne sont ni enregistrés ni transmis par la démonstration.",
+    "Le serveur vérifie vos identifiants et ouvre une session à durée limitée. Les mots de passe sont stockés sous forme hachée.",
   ],
   Contact: [
     "Pour une demande concernant votre classe ou votre accès, adressez-vous au référent numérique de votre établissement.",
@@ -88,40 +87,6 @@ const benefits = [
     description: "Des indicateurs clairs pour accompagner la réussite.",
   },
 ];
-
-function GoogleMark() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path
-        fill="#4285F4"
-        d="M21.8 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.49a4.68 4.68 0 0 1-2.04 3.07v2.55h3.3c1.93-1.78 3.05-4.4 3.05-7.45Z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 22c2.76 0 5.08-.91 6.77-2.48l-3.3-2.56c-.92.61-2.1.98-3.47.98-2.66 0-4.92-1.8-5.73-4.22H2.86v2.64A10.23 10.23 0 0 0 12 22Z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M6.27 13.72a6.17 6.17 0 0 1 0-3.84V7.24H2.86a10.15 10.15 0 0 0 0 9.12l3.41-2.64Z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.66c1.5 0 2.83.52 3.89 1.52l2.91-2.91A9.8 9.8 0 0 0 12 1.6a10.22 10.22 0 0 0-9.14 5.64l3.41 2.64A6.09 6.09 0 0 1 12 5.66Z"
-      />
-    </svg>
-  );
-}
-
-function MicrosoftMark() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path fill="#F25022" d="M1 1h10.5v10.5H1z" />
-      <path fill="#7FBA00" d="M12.5 1H23v10.5H12.5z" />
-      <path fill="#00A4EF" d="M1 12.5h10.5V23H1z" />
-      <path fill="#FFB900" d="M12.5 12.5H23V23H12.5z" />
-    </svg>
-  );
-}
 
 function InformationDialog({
   topic,
@@ -164,9 +129,9 @@ function InformationDialog({
   );
 }
 
-export default function Login() {
+export default function Login({ joinCode }: { joinCode?: string }) {
   const router = useRouter();
-  const [role, setRole] = useState<Role>("teacher");
+  const [role, setRole] = useState<Role>(joinCode ? "student" : "teacher");
   const [remember, setRemember] = useState(false);
   const [visiblePassword, setVisiblePassword] = useState(false);
   const [topic, setTopic] = useState<Topic | null>(null);
@@ -175,10 +140,28 @@ export default function Login() {
     setMenuOpen(false);
     setTopic(next);
   }
-  function submit(event: FormEvent<HTMLFormElement>) {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+  const [creating, setCreating] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState("");
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    login(role, remember);
-    router.push("/" + role + "/dashboard");
+    const form = new FormData(event.currentTarget);
+    const email = String(form.get("email"));
+    const password = String(form.get("password"));
+    setBusy(true);
+    setFailure("");
+    try {
+      if (creating) await register({ email, password, full_name: String(form.get("full_name")), role });
+      const profile = await login(email, password, remember);
+      router.push(joinCode && profile.role === "student" ? "/join/" + encodeURIComponent(joinCode) :
+        "/" + profile.role + "/dashboard");
+    } catch (e) {
+      setFailure(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
   }
   return (
     <div className="neurvia-login">
@@ -279,8 +262,12 @@ export default function Login() {
               Étudiant
             </button>
           </div>
-          <h2 id="nl-connexion">Connexion</h2>
-          <form onSubmit={submit} noValidate>
+          <h2 id="nl-connexion">{creating ? "Inscription" : "Connexion"}</h2>
+          {joinCode && <p>Connectez-vous comme étudiant pour rejoindre la classe.</p>}
+          <form method="post" onSubmit={submit}>
+            {creating && <label className="nl-label">Nom complet
+              <span className="nl-input"><UserRound /><input name="full_name" autoComplete="name" required /></span>
+            </label>}
             <label className="nl-label" htmlFor="nl-email">
               Adresse e-mail
             </label>
@@ -288,6 +275,8 @@ export default function Login() {
               <Mail />
               <input
                 id="nl-email"
+                name="email"
+                required
                 type="email"
                 autoComplete="email"
                 placeholder="Entrez votre adresse e-mail"
@@ -300,8 +289,11 @@ export default function Login() {
               <LockKeyhole />
               <input
                 id="nl-password"
+                name="password"
+                required
+                minLength={creating ? 10 : 1}
                 type={visiblePassword ? "text" : "password"}
-                autoComplete="current-password"
+                autoComplete={creating ? "new-password" : "current-password"}
                 placeholder="Entrez votre mot de passe"
               />
               <button
@@ -326,41 +318,16 @@ export default function Login() {
                 />
                 Se souvenir de moi
               </label>
-              <button
-                type="button"
-                onClick={() => openTopic("Mot de passe oublié ?")}
-              >
-                Mot de passe oublié ?
-              </button>
             </div>
-            <button type="submit" className="nl-primary">
-              Se connecter
+            {failure && <p className="nl-notice" role="alert">{failure}</p>}
+            <button type="submit" className="nl-primary" disabled={!hydrated || busy}>
+              {busy ? "Connexion en cours…" : creating ? "Créer le compte" : "Se connecter"}
             </button>
           </form>
-          <div className="nl-divider">Ou se connecter avec</div>
-          <div className="nl-providers">
-            <button type="button" onClick={() => openTopic("Google")}>
-              <GoogleMark />
-              Continuer avec Google
+          <div className="nl-form-options">
+            <button type="button" onClick={() => { setCreating(!creating); setFailure(""); }}>
+              {creating ? "J’ai déjà un compte" : "Créer un compte"}
             </button>
-            <button type="button" onClick={() => openTopic("Microsoft")}>
-              <MicrosoftMark />
-              Continuer avec Microsoft
-            </button>
-            <button
-              type="button"
-              onClick={() => openTopic("Connexion établissement")}
-            >
-              <Landmark />
-              Continuer avec mon établissement (SSO)
-            </button>
-          </div>
-          <div className="nl-notice">
-            <Info />
-            <p>
-              <strong>Mode démonstration</strong> : choisissez Professeur ou
-              Étudiant pour accéder à votre espace.
-            </p>
           </div>
         </section>
       </main>

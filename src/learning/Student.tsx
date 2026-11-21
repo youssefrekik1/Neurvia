@@ -24,7 +24,6 @@ import {
   dayLabel,
   feedbackHref,
   isDue,
-  learningService,
   modeTitles,
   practiceHref,
   quizHref,
@@ -35,9 +34,12 @@ import {
   type LearningData,
   type Lesson,
   type Practice,
+  answerPayload,
+  useSession,
   type Session,
 } from "./service";
 import { Empty, Heading, ProgressBar, Prompt } from "./ui";
+import { api, errorMessage, type Schema } from "../lib/api";
 
 type StudentProps = { classroom: string; data: LearningData };
 const courseIds = ["python", "math", "network"];
@@ -46,43 +48,6 @@ const practiceIcons = {
   confirmation: CircleHelp,
   retest: RotateCcw,
   review: CalendarClock,
-};
-const advice: Record<
-  string,
-  { tip: string; example: string; exercise: string }
-> = {
-  "Bornes des boucles": {
-    tip: "Repère la première valeur et la borne exclue avant de compter les passages.",
-    example: "range(2, 5) parcourt 2, 3 et 4.",
-    exercise: "Écris les valeurs de range(3, 7), puis compte-les.",
-  },
-  "Indices et listes": {
-    tip: "Numérote les positions à partir de zéro. Le dernier indice est la taille de la liste moins un.",
-    example: 'Dans ["a", "b", "c"], l’indice 2 correspond à "c".',
-    exercise: "Dessine une liste de quatre éléments et indique leurs indices.",
-  },
-  "Boucles conditionnelles": {
-    tip: "Teste la condition avant chaque passage et mets à jour la variable à la fin du bloc.",
-    example:
-      "Avec n = 1, la boucle « while n < 3 » avec n += 1 passe par 1 puis 2.",
-    exercise:
-      "Trace une colonne pour la valeur de n et une autre pour le résultat du test.",
-  },
-  Conditions: {
-    tip: "Évalue chaque comparaison avant de combiner les résultats avec and ou or.",
-    example: "True and False donne False.",
-    exercise: "Trouve un exemple où une seule des deux comparaisons est vraie.",
-  },
-  Fonctions: {
-    tip: "Remplace chaque paramètre par son argument, puis suis les instructions jusqu’à return.",
-    example: "Si f(x) renvoie x + 1, f(4) vaut 5.",
-    exercise: "Écris les valeurs des paramètres pour deux appels différents.",
-  },
-  "Variables et types": {
-    tip: "Relève le type de chaque valeur avant de prédire le résultat d’une opération.",
-    example: '"3" est du texte. int("3") est un entier.',
-    exercise: 'Compare le résultat de 3 + 2 avec celui de "3" + "2".',
-  },
 };
 export function Courses({
   classroom,
@@ -151,7 +116,7 @@ export function Courses({
                 <span key={c}>{c}</span>
               ))}
             </div>
-            {selected.questions.length > 0 && (
+            {selected.quizId && selected.status === "published" && (
               <a
                 className="lr-btn primary"
                 href={done ? feedbackHref(done.id) : quizHref(selected.id)}
@@ -182,7 +147,7 @@ export function Courses({
       <>
         <Heading
           title={subject}
-          description={classroom}
+          description={lessons[0]?.classroomName ?? ""}
           back={["/student/courses", "Mes cours"]}
         />
         {items.length ? (
@@ -229,7 +194,7 @@ export function Courses({
       <section className="lr-panel">
         <div className="lr-panel-head">
           <h2>Cours de ma classe</h2>
-          <small>{classroom}</small>
+          <small>{lessons[0]?.classroomName}</small>
         </div>
         {availableSubjects.map((s, i) => {
           const items = lessons.filter((l) => l.subject === s);
@@ -263,114 +228,41 @@ export function Courses({
   );
 }
 function TaskRow({ task }: { task: Practice }) {
-  const [open, setOpen] = useState(false);
-  const Icon = practiceIcons[task.mode],
-    due = isDue(task.due),
-    support = advice[task.concept];
+  const Icon = practiceIcons[task.mode];
   return (
-    <div>
-      <div className="lr-item">
-        <span
-          className={
-            "lr-symbol " + (task.mode === "retest" ? "tone-2" : "tone-1")
-          }
-        >
-          <Icon size={19} />
-        </span>
-        <div className="lr-grow">
-          <b>{task.concept}</b>
-          <small>
-            {modeTitles[task.mode]} ·{" "}
-            {due ? "1 question" : "Disponible le " + dayLabel(task.due, true)}
-          </small>
-        </div>
-        {due ? (
-          <a className="lr-btn sm" href={practiceHref(task)}>
-            {task.mode === "confirmation"
-              ? "Vérifier"
-              : task.mode === "retest"
-                ? "Faire le retest"
-                : "Réviser"}
-            <ArrowRight size={14} />
-          </a>
-        ) : (
-          <span className="lr-badge">À venir</span>
-        )}
-      </div>
-      {task.mode === "retest" && support && (
-        <div className="lr-activity">
-          <button
-            className="lr-textlink"
-            aria-expanded={open}
-            onClick={() => setOpen(!open)}
-          >
-            <BookOpen size={14} />
-            {open ? "Masquer l’exercice" : "Ouvrir l’exercice de révision"}
-          </button>
-          {open && (
-            <div className="lr-explain">
-              <b>Exercice guidé</b>
-              <p>{support.tip}</p>
-              <p>
-                <strong>Exemple.</strong> {support.example}
-              </p>
-              <p>{support.exercise}</p>
-            </div>
-          )}
-        </div>
-      )}
+    <div className="lr-item">
+      <span className="lr-symbol"><Icon size={19} /></span>
+      <div className="lr-grow"><b>{task.concept}</b><small>{modeTitles[task.mode]} · {task.pending ? dayLabel(task.due, true) : "1 question"}</small></div>
+      {!task.pending && <a className="lr-btn sm" href={practiceHref(task)}>
+        {task.mode === "confirmation" ? "Vérifier" : task.mode === "retest" ? "Faire le retest" : "Réviser"}
+        <ArrowRight size={14} />
+      </a>}
     </div>
   );
 }
-export function Tasks({ classroom, data }: StudentProps) {
+export function Tasks({ data }: StudentProps) {
   const [filter, setFilter] = useState("À faire");
-  const lessons = data.lessons.filter(
-    (l) =>
-      l.classroom === classroom &&
-      l.status === "published" &&
-      l.questions.length,
-  );
-  const done = data.attempts
-    .filter((a) => a.classroom === classroom)
-    .sort((a, b) => b.date.localeCompare(a.date));
-  const quiz = lessons.filter(
-    (l) =>
-      !done.some((a) => a.lessonId === l.id && a.mode === "quiz") &&
-      (!l.release || isDue(l.release)) === (filter === "À faire"),
-  );
-  const tasks = data.practice.filter(
-    (p) =>
-      p.classroom === classroom &&
-      !p.done &&
-      isDue(p.due) === (filter === "À faire"),
-  );
+  const done = data.attempts;
+  const quiz = filter === "À faire" ? data.lessons.filter((lesson) => data.tasks.some(
+    (task) => task.kind === "initial" && task.status === "available" && task.lesson_id === lesson.id,
+  )) : [];
+  const tasks = data.practice.filter((task) => !task.done && (filter === "À faire" ? !task.pending : task.pending));
   return (
     <>
       <Heading
         title="Mes tâches"
         description="Tes quiz, tes vérifications et tes révisions au même endroit."
       />
-      <div className="lr-notice">
-        <span>
-          {data.simulatedDays
-            ? "Simulation · horloge avancée de " + data.simulatedDays + " jours"
-            : "Démonstration · suivi différé"}
-        </span>
-        <button
-          className="lr-btn sm"
-          onClick={() => learningService.simulateWeek()}
-        >
-          Simuler J+7
-        </button>
-        {!!data.simulatedDays && (
-          <button
-            className="lr-btn sm"
-            onClick={() => learningService.resetClock()}
-          >
-            Réinitialiser l’horloge
-          </button>
-        )}
-      </div>
+      {data.interventions.length > 0 && <section className="lr-panel lr-pad">
+        <h2>Remédiations affectées</h2>
+        {data.interventions.map(({ id, lesson_title, plan }) => <details key={id}>
+          <summary>{plan.title} · {lesson_title}</summary>
+          <p>{plan.objective}</p>
+          <p>{plan.example}</p><p>{plan.counter_example}</p><p>{plan.explanation}</p>
+          <ol>{plan.steps.map((step) => <li key={step.start_min}>{step.start_min}–{step.end_min} min · {step.action}</li>)}</ol>
+          <p>{plan.check_question}</p>
+        </details>)}
+      </section>}
       <div className="lr-filters" role="group" aria-label="État des tâches">
         {["À faire", "À venir", "Terminées"].map((f) => (
           <button
@@ -403,7 +295,7 @@ export function Tasks({ classroom, data }: StudentProps) {
                   <div className="lr-grow">
                     <b>{l.title}</b>
                     <small>
-                      {l.questions.length} questions ·{" "}
+                      {l.count} questions ·{" "}
                       {l.release && !isDue(l.release)
                         ? "Disponible le " + dayLabel(l.release, true)
                         : l.subject}
@@ -499,11 +391,11 @@ export function Progress({ classroom, data }: StudentProps) {
             <small> / {summary.weeklyTarget} quiz</small>
           </div>
           <ProgressBar
-            value={(summary.completedThisWeek / summary.weeklyTarget) * 100}
-            label="Objectif hebdomadaire"
+            value={summary.weeklyTarget ? (summary.completedThisWeek / summary.weeklyTarget) * 100 : 0}
+            label="Quiz disponibles"
           />
           <small>
-            Objectif hebdomadaire · {summary.weeklyTarget} quiz terminés
+            Quiz disponibles · {summary.weeklyTarget} quiz terminés
           </small>
         </section>
         <section className="lr-panel lr-pad">
@@ -620,12 +512,7 @@ function Feedback({ attempt, data }: { attempt: Attempt; data: LearningData }) {
                         </div>
                       </dl>
                       <p>{q.explanation}</p>
-                      {!right && (
-                        <div className="lr-explain">
-                          <b>Interprétation possible</b>
-                          <p>{q.misconceptions[answer.option]}</p>
-                        </div>
-                      )}
+
                     </div>
                   )}
                 </div>
@@ -651,7 +538,7 @@ function Feedback({ attempt, data }: { attempt: Attempt; data: LearningData }) {
                         dayLabel(p.due, true) +
                         " pour revoir cette notion à distance."}
                 </p>
-                {isDue(p.due) && (
+                {!p.done && (
                   <a className="lr-btn primary" href={practiceHref(p)}>
                     {p.mode === "confirmation"
                       ? "Faire la vérification"
@@ -676,6 +563,10 @@ function Feedback({ attempt, data }: { attempt: Attempt; data: LearningData }) {
                 : "Tu as répondu correctement à toutes les questions de cette activité."}
             </p>
           )}
+          {attempt.mode === "quiz" && attempt.quality === "insufficient" && <p>Il faut davantage de réponses pour interpréter ce résultat.</p>}
+          {attempt.diagnoses.map((diagnosis) => <p key={diagnosis.misconception_code}>
+            <strong>{data.taxonomy.flatMap((concept) => concept.misconceptions).find((error) => error.code === diagnosis.misconception_code)?.label_fr ?? diagnosis.misconception_code}</strong><br />{diagnosis.message}
+          </p>)}
           <a className="lr-btn" href="/student/progress">
             Voir ma progression
             <ArrowRight size={15} />
@@ -685,66 +576,44 @@ function Feedback({ attempt, data }: { attempt: Attempt; data: LearningData }) {
     </>
   );
 }
-function Runner({
-  classroom,
-  lesson,
-  task,
-  session,
-}: {
-  classroom: string;
-  lesson: Lesson;
-  task?: Practice;
-  session?: Session;
-}) {
+function Runner({ lesson, task, session }: { lesson: Lesson; task?: Practice; session: Session }) {
+  const [current, setCurrent] = useState(session);
   const [error, setError] = useState("");
-  const sessionId = classroom + "-" + (task?.id || lesson.id);
-  const current: Session = session || {
-    questions: task ? [task.question] : lesson.questions,
-    index: 0,
-    answers: {},
-  };
-  const { index, questions } = current,
-    q = questions[index],
-    answer = current.answers[index] || {},
-    last = index === questions.length - 1;
+  const [busy, setBusy] = useState(false);
+  const { index, questions } = current;
+  const q = questions[index];
+  const answer = current.answers[index] || {};
+  const last = index === questions.length - 1;
   function update(patch: Partial<Answer>) {
-    learningService.saveSession(sessionId, {
-      ...current,
-      answers: { ...current.answers, [index]: { ...answer, ...patch } },
-    });
+    setCurrent({ ...current, answers: { ...current.answers, [index]: { ...answer, ...patch } } });
     setError("");
   }
-  function navigate(i: number) {
-    learningService.saveSession(sessionId, { ...current, index: i });
+  function navigate(index: number) {
+    setCurrent({ ...current, index });
     setError("");
   }
-  function next() {
+  async function next() {
     if (answer.option === undefined || !answer.confidence) {
-      setError(
-        "Choisis une réponse et indique ton niveau de confiance pour continuer.",
-      );
+      setError("Choisis une réponse et indique ton niveau de confiance pour continuer.");
       return;
     }
-    if (!last) {
-      navigate(index + 1);
-      return;
-    }
+    setBusy(true);
     try {
-      const result = learningService.submit(
-        classroom,
-        lesson,
-        task,
-        sessionId,
-        current,
-      );
-      window.location.assign(feedbackHref(result.id));
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Impossible d’enregistrer la réponse.",
-      );
-    }
+      const body = answerPayload(q, { option: answer.option, confidence: answer.confidence });
+      if (task?.mode === "confirmation") {
+        const result = await api<Schema["Feedback"]>("/attempts/" + task.fromAttempt + "/confirmation", "POST", body);
+        window.location.assign(feedbackHref(result.attempt_id));
+      } else {
+        const path = "/attempts/" + session.attemptId;
+        await api(path + "/answers", "POST", body);
+        if (!last) navigate(index + 1);
+        else {
+          const result = await api<Schema["Feedback"]>(path + "/submit", "POST");
+          window.location.assign(feedbackHref(result.attempt_id));
+        }
+      }
+    } catch (cause) { setError(errorMessage(cause)); }
+    finally { setBusy(false); }
   }
   return (
     <>
@@ -825,7 +694,7 @@ function Runner({
               <ChevronLeft size={15} />
               Précédent
             </button>
-            <button className="lr-btn primary" onClick={next}>
+            <button className="lr-btn primary" onClick={next} disabled={busy}>
               {last ? "Terminer" : "Suivant"}
               <ArrowRight size={15} />
             </button>
@@ -848,7 +717,7 @@ export function StudentQuiz({
     (l) =>
       l.classroom === classroom &&
       l.status === "published" &&
-      l.questions.length &&
+      l.count &&
       (!l.release || isDue(l.release)),
   );
   const attempts = data.attempts.filter((a) => a.classroom === classroom);
@@ -859,19 +728,12 @@ export function StudentQuiz({
           (p) =>
             p.classroom === classroom &&
             p.mode === mode &&
-            !p.done &&
-            isDue(p.due),
+            !p.done && !p.pending,
         )
       : undefined;
   const completed = result
     ? attempts.find((a) => a.id === result)
-    : task?.done
-      ? attempts.find((a) => a.practiceId === task.id)
-      : requestedLesson && !task
-        ? attempts.find(
-            (a) => a.mode === "quiz" && a.lessonId === requestedLesson,
-          )
-        : undefined;
+    : requestedLesson && !task ? attempts.find((a) => a.mode === "quiz" && a.lessonId === requestedLesson) : undefined;
   if (completed)
     return <Feedback key={completed.id} attempt={completed} data={data} />;
   const lesson = task
@@ -886,18 +748,13 @@ export function StudentQuiz({
     !lesson ||
     result ||
     (taskId && !task) ||
-    (mode && mode !== "quiz" && !task) ||
-    (task && !isDue(task.due))
+    (mode && mode !== "quiz" && !task) || task?.done || task?.pending
   )
     return (
       <>
         <Heading title="Mon activité" back={["/student/tasks", "Mes tâches"]} />
         <Empty
-          title={
-            task && !isDue(task.due)
-              ? "Révision prévue le " + dayLabel(task.due, true)
-              : "Aucune activité disponible ici"
-          }
+          title="Aucune activité disponible ici"
           action={
             <a className="lr-btn primary" href="/student/tasks">
               Consulter mes tâches
@@ -907,12 +764,13 @@ export function StudentQuiz({
       </>
     );
   return (
-    <Runner
-      key={task?.id || lesson.id}
-      classroom={classroom}
-      lesson={lesson}
-      task={task}
-      session={data.sessions[classroom + "-" + (task?.id || lesson.id)]}
-    />
+    <LiveRunner key={task?.id || lesson.id} lesson={lesson} task={task} taxonomy={data.taxonomy} />
   );
+}
+
+function LiveRunner({ lesson, task, taxonomy }: { lesson: Lesson; task?: Practice; taxonomy: Schema["ConceptView"][] }) {
+  const session = useSession(lesson, task, taxonomy);
+  if (session.error) return <p className="lr-error" role="alert">{session.error}</p>;
+  if (!session.value) return <p role="status">Chargement des questions…</p>;
+  return <Runner lesson={lesson} task={task} session={session.value} />;
 }

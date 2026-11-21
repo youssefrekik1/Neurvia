@@ -21,7 +21,7 @@ export default function Learning({
   path: string;
   classroom: string;
 }) {
-  const data = useLearning();
+  const { data, loading, error } = useLearning(classroom, path.startsWith("/teacher/"));
   const query = useSyncExternalStore(
     subscribeQuery,
     () => window.location.search,
@@ -32,6 +32,8 @@ export default function Learning({
   );
   const route = path.split("?")[0].replace(/\/+$/, "");
   const props = { classroom, data };
+  if (loading) return <p role="status">Chargement des séances…</p>;
+  if (error) return <p role="alert">{error}</p>;
   let view;
   if (route === "/teacher/lessons/new") {
     const existing = data.lessons.find(
@@ -42,6 +44,7 @@ export default function Learning({
         key={existing?.id || classroom}
         classroom={classroom}
         existing={existing}
+        taxonomy={data.taxonomy}
       />
     );
   } else if (route.startsWith("/teacher/lessons/")) {
@@ -63,6 +66,7 @@ export default function Learning({
         key={(lesson?.id || "") + "-" + params.get("step")}
         lesson={lesson}
         step={params.get("step")}
+        taxonomy={data.taxonomy}
         classroom={classroom}
       />
     );

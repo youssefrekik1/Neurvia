@@ -1,0 +1,529 @@
+{
+  "note": "BROUILLON À FAIRE VALIDER PAR UN ENSEIGNANT avant usage. Matière : algorithmique / Python débutant. Les codes sont stables : ne pas les renommer sans prévenir l'équipe.",
+  "subject": "python_intro",
+  "concepts": [
+    {
+      "code": "C_LOOPS",
+      "label_fr": "Boucles",
+      "label_en": "Loops",
+      "label_ar": "الحلقات التكرارية"
+    },
+    {
+      "code": "C_INDEXING",
+      "label_fr": "Indices et listes",
+      "label_en": "Indexing and lists",
+      "label_ar": "الفهارس والقوائم"
+    },
+    {
+      "code": "C_SCOPE",
+      "label_fr": "Portée des variables",
+      "label_en": "Variable scope",
+      "label_ar": "نطاق المتغيرات"
+    },
+    {
+      "code": "C_CONDITIONS",
+      "label_fr": "Conditions",
+      "label_en": "Conditions",
+      "label_ar": "الشروط"
+    },
+    {
+      "code": "C_TYPES",
+      "label_fr": "Types et conversions",
+      "label_en": "Types and conversions",
+      "label_ar": "الأنواع والتحويلات"
+    },
+    {
+      "code": "C_MUTABILITY",
+      "label_fr": "Mutabilité et références",
+      "label_en": "Mutability and references",
+      "label_ar": "القابلية للتغيير والمراجع"
+    }
+  ],
+  "misconceptions": [
+    {
+      "code": "M_LOOP_STOP",
+      "label_fr": "Oublie la mise à jour ou la condition d'arrêt de la boucle",
+      "label_en": "Forgets the loop update or stop condition",
+      "remediation_hint": "Suivre la valeur de la variable de boucle à chaque tour sur un tableau de trace.",
+      "allowed_concept_codes": [
+        "C_LOOPS"
+      ],
+      "is_transversal": false
+    },
+    {
+      "code": "M_OFF_BY_ONE",
+      "label_fr": "Décalage d'un (indices ou bornes)",
+      "label_en": "Off-by-one error",
+      "remediation_hint": "Rappeler que les indices commencent à 0 et que len(l) n'est pas un indice valide.",
+      "allowed_concept_codes": [
+        "C_CONDITIONS",
+        "C_INDEXING",
+        "C_LOOPS"
+      ],
+      "is_transversal": false
+    },
+    {
+      "code": "M_SCOPE",
+      "label_fr": "Confond variable locale et variable globale",
+      "label_en": "Confuses local and global variables",
+      "remediation_hint": "Montrer qu'une affectation dans une fonction crée une variable locale.",
+      "allowed_concept_codes": [
+        "C_SCOPE"
+      ],
+      "is_transversal": false
+    },
+    {
+      "code": "M_COND_LOGIC",
+      "label_fr": "Mauvaise combinaison logique (and / or)",
+      "label_en": "Wrong logical combination (and / or)",
+      "remediation_hint": "Écrire la table de vérité de la condition sur des valeurs limites.",
+      "allowed_concept_codes": [
+        "C_CONDITIONS"
+      ],
+      "is_transversal": false
+    },
+    {
+      "code": "M_ASSIGN_EQ",
+      "label_fr": "Confond affectation (=) et comparaison (==)",
+      "label_en": "Confuses assignment (=) and comparison (==)",
+      "remediation_hint": "Distinguer « donner une valeur » et « tester une égalité ».",
+      "allowed_concept_codes": [
+        "C_CONDITIONS"
+      ],
+      "is_transversal": false
+    },
+    {
+      "code": "M_TYPE_INPUT",
+      "label_fr": "Oublie que input() renvoie une chaîne",
+      "label_en": "Forgets that input() returns a string",
+      "remediation_hint": "Afficher type(x) et convertir avec int() avant de calculer.",
+      "allowed_concept_codes": [
+        "C_TYPES"
+      ],
+      "is_transversal": false
+    },
+    {
+      "code": "M_MUTABLE_ALIAS",
+      "label_fr": "Croit qu'une affectation de liste crée une copie",
+      "label_en": "Believes list assignment makes a copy",
+      "remediation_hint": "Dessiner deux noms pointant vers le même objet ; utiliser list(l) ou l.copy() pour copier.",
+      "allowed_concept_codes": [
+        "C_MUTABILITY"
+      ],
+      "is_transversal": false
+    },
+    {
+      "code": "M_TRACE",
+      "label_fr": "Difficulté à suivre l'exécution pas à pas",
+      "label_en": "Difficulty tracing execution step by step",
+      "remediation_hint": "Utiliser un tableau de trace des variables ligne par ligne.",
+      "allowed_concept_codes": [
+        "C_CONDITIONS",
+        "C_INDEXING",
+        "C_LOOPS",
+        "C_MUTABILITY",
+        "C_SCOPE",
+        "C_TYPES"
+      ],
+      "is_transversal": true
+    }
+  ],
+  "questions": [
+    {
+      "seed_key": "Q1",
+      "variant_family_id": "VG1",
+      "role": "initial",
+      "status": "draft",
+      "concept_code": "C_LOOPS",
+      "difficulty": 1,
+      "stem": "Que fait ce programme ?",
+      "code": "i = 0\nwhile i < 3:\n    print(i)",
+      "options": [
+        {
+          "text": "Il affiche 0, 1, 2 puis s'arrête",
+          "is_correct": false,
+          "misconception_code": "M_LOOP_STOP"
+        },
+        {
+          "text": "Il affiche 0 indéfiniment",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "Il affiche 0, 1, 2, 3",
+          "is_correct": false,
+          "misconception_code": "M_OFF_BY_ONE"
+        },
+        {
+          "text": "Il n'affiche rien",
+          "is_correct": false,
+          "misconception_code": "M_TRACE"
+        }
+      ],
+      "explanation": "i n'est jamais modifié : la condition i < 3 reste vraie, la boucle est infinie."
+    },
+    {
+      "seed_key": "Q2",
+      "variant_family_id": "VG2",
+      "role": "initial",
+      "status": "draft",
+      "concept_code": "C_INDEXING",
+      "difficulty": 1,
+      "stem": "Que produit ce code ?",
+      "code": "notes = [12, 15, 9, 18]\nprint(notes[len(notes)])",
+      "options": [
+        {
+          "text": "18",
+          "is_correct": false,
+          "misconception_code": "M_OFF_BY_ONE"
+        },
+        {
+          "text": "Une erreur IndexError",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "4",
+          "is_correct": false,
+          "misconception_code": "M_TRACE"
+        },
+        {
+          "text": "None",
+          "is_correct": false,
+          "misconception_code": null
+        }
+      ],
+      "explanation": "Les indices valides vont de 0 à len(notes) - 1 ; notes[4] n'existe pas."
+    },
+    {
+      "seed_key": "Q3",
+      "variant_family_id": "VG3",
+      "role": "initial",
+      "status": "draft",
+      "concept_code": "C_SCOPE",
+      "difficulty": 2,
+      "stem": "Quelle valeur s'affiche ?",
+      "code": "x = 5\ndef f():\n    x = 10\nf()\nprint(x)",
+      "options": [
+        {
+          "text": "10",
+          "is_correct": false,
+          "misconception_code": "M_SCOPE"
+        },
+        {
+          "text": "5",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "15",
+          "is_correct": false,
+          "misconception_code": "M_TRACE"
+        },
+        {
+          "text": "Une erreur NameError",
+          "is_correct": false,
+          "misconception_code": null
+        }
+      ],
+      "explanation": "x = 10 dans f crée une variable locale ; le x global reste 5."
+    },
+    {
+      "seed_key": "Q4",
+      "variant_family_id": "VG4",
+      "role": "initial",
+      "status": "draft",
+      "concept_code": "C_CONDITIONS",
+      "difficulty": 2,
+      "stem": "Quelle condition accepte uniquement les âges de 18 à 65 ans inclus ?",
+      "code": null,
+      "options": [
+        {
+          "text": "age >= 18 or age <= 65",
+          "is_correct": false,
+          "misconception_code": "M_COND_LOGIC"
+        },
+        {
+          "text": "age >= 18 and age <= 65",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "age > 18 and age < 65",
+          "is_correct": false,
+          "misconception_code": "M_OFF_BY_ONE"
+        },
+        {
+          "text": "age = 18 and age = 65",
+          "is_correct": false,
+          "misconception_code": "M_ASSIGN_EQ"
+        }
+      ],
+      "explanation": "Il faut les deux bornes inclusives combinées par and ; = est une affectation, pas une comparaison."
+    },
+    {
+      "seed_key": "Q5",
+      "variant_family_id": "VG5",
+      "role": "initial",
+      "status": "draft",
+      "concept_code": "C_TYPES",
+      "difficulty": 1,
+      "stem": "L'utilisateur saisit 4 puis 5. Qu'affiche ce programme ?",
+      "code": "a = input()\nb = input()\nprint(a + b)",
+      "options": [
+        {
+          "text": "9",
+          "is_correct": false,
+          "misconception_code": "M_TYPE_INPUT"
+        },
+        {
+          "text": "45",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "4 + 5",
+          "is_correct": false,
+          "misconception_code": "M_TRACE"
+        },
+        {
+          "text": "Une erreur TypeError",
+          "is_correct": false,
+          "misconception_code": "M_TYPE_INPUT"
+        }
+      ],
+      "explanation": "input() renvoie des chaînes : + les concatène."
+    },
+    {
+      "seed_key": "Q6",
+      "variant_family_id": "VG6",
+      "role": "initial",
+      "status": "draft",
+      "concept_code": "C_MUTABILITY",
+      "difficulty": 2,
+      "stem": "Que s'affiche-t-il ?",
+      "code": "a = [1, 2, 3]\nb = a\nb.append(4)\nprint(a)",
+      "options": [
+        {
+          "text": "[1, 2, 3]",
+          "is_correct": false,
+          "misconception_code": "M_MUTABLE_ALIAS"
+        },
+        {
+          "text": "[1, 2, 3, 4]",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "[4]",
+          "is_correct": false,
+          "misconception_code": "M_TRACE"
+        },
+        {
+          "text": "[1, 2, 3, [1, 2, 3, 4]]",
+          "is_correct": false,
+          "misconception_code": null
+        }
+      ],
+      "explanation": "b = a ne copie pas la liste : a et b désignent le même objet."
+    },
+    {
+      "seed_key": "Q1V",
+      "variant_family_id": "VG1",
+      "role": "immediate_retest",
+      "status": "draft",
+      "concept_code": "C_LOOPS",
+      "difficulty": 1,
+      "stem": "Que fait ce programme ?",
+      "code": "n = 5\nwhile n > 0:\n    print(n)",
+      "options": [
+        {
+          "text": "Il affiche 5, 4, 3, 2, 1 puis s'arrête",
+          "is_correct": false,
+          "misconception_code": "M_LOOP_STOP"
+        },
+        {
+          "text": "Il affiche 5 indéfiniment",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "Il affiche 5, 4, 3, 2, 1, 0",
+          "is_correct": false,
+          "misconception_code": "M_OFF_BY_ONE"
+        },
+        {
+          "text": "Il n'affiche rien",
+          "is_correct": false,
+          "misconception_code": "M_TRACE"
+        }
+      ],
+      "explanation": "n n'est jamais modifié : la condition n > 0 reste vraie."
+    },
+    {
+      "seed_key": "Q2V",
+      "variant_family_id": "VG2",
+      "role": "immediate_retest",
+      "status": "draft",
+      "concept_code": "C_INDEXING",
+      "difficulty": 1,
+      "stem": "Que produit ce code ?",
+      "code": "mots = [\"a\", \"b\", \"c\"]\nprint(mots[3])",
+      "options": [
+        {
+          "text": "\"c\"",
+          "is_correct": false,
+          "misconception_code": "M_OFF_BY_ONE"
+        },
+        {
+          "text": "Une erreur IndexError",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "3",
+          "is_correct": false,
+          "misconception_code": "M_TRACE"
+        },
+        {
+          "text": "None",
+          "is_correct": false,
+          "misconception_code": null
+        }
+      ],
+      "explanation": "La liste a 3 éléments : les indices valides sont 0, 1 et 2."
+    },
+    {
+      "seed_key": "Q3V",
+      "variant_family_id": "VG3",
+      "role": "immediate_retest",
+      "status": "draft",
+      "concept_code": "C_SCOPE",
+      "difficulty": 2,
+      "stem": "Quelle valeur s'affiche ?",
+      "code": "n = 1\ndef g():\n    n = 2\ng()\nprint(n)",
+      "options": [
+        {
+          "text": "2",
+          "is_correct": false,
+          "misconception_code": "M_SCOPE"
+        },
+        {
+          "text": "1",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "3",
+          "is_correct": false,
+          "misconception_code": "M_TRACE"
+        },
+        {
+          "text": "Une erreur NameError",
+          "is_correct": false,
+          "misconception_code": null
+        }
+      ],
+      "explanation": "n = 2 dans g crée une variable locale ; le n global reste 1."
+    },
+    {
+      "seed_key": "Q4V",
+      "variant_family_id": "VG4",
+      "role": "immediate_retest",
+      "status": "draft",
+      "concept_code": "C_CONDITIONS",
+      "difficulty": 2,
+      "stem": "Quelle condition accepte uniquement les notes de 10 à 20 inclus ?",
+      "code": null,
+      "options": [
+        {
+          "text": "note >= 10 or note <= 20",
+          "is_correct": false,
+          "misconception_code": "M_COND_LOGIC"
+        },
+        {
+          "text": "note >= 10 and note <= 20",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "note > 10 and note < 20",
+          "is_correct": false,
+          "misconception_code": "M_OFF_BY_ONE"
+        },
+        {
+          "text": "note = 10 and note = 20",
+          "is_correct": false,
+          "misconception_code": "M_ASSIGN_EQ"
+        }
+      ],
+      "explanation": "Deux bornes inclusives combinées par and."
+    },
+    {
+      "seed_key": "Q5V",
+      "variant_family_id": "VG5",
+      "role": "immediate_retest",
+      "status": "draft",
+      "concept_code": "C_TYPES",
+      "difficulty": 1,
+      "stem": "L'utilisateur saisit 2 puis 3. Qu'affiche ce programme ?",
+      "code": "x = input()\ny = input()\nprint(x + y)",
+      "options": [
+        {
+          "text": "5",
+          "is_correct": false,
+          "misconception_code": "M_TYPE_INPUT"
+        },
+        {
+          "text": "23",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "2 + 3",
+          "is_correct": false,
+          "misconception_code": "M_TRACE"
+        },
+        {
+          "text": "Une erreur TypeError",
+          "is_correct": false,
+          "misconception_code": "M_TYPE_INPUT"
+        }
+      ],
+      "explanation": "input() renvoie des chaînes : + les concatène."
+    },
+    {
+      "seed_key": "Q6V",
+      "variant_family_id": "VG6",
+      "role": "immediate_retest",
+      "status": "draft",
+      "concept_code": "C_MUTABILITY",
+      "difficulty": 2,
+      "stem": "Que s'affiche-t-il ?",
+      "code": "l1 = [5, 6]\nl2 = l1\nl2.append(7)\nprint(l1)",
+      "options": [
+        {
+          "text": "[5, 6]",
+          "is_correct": false,
+          "misconception_code": "M_MUTABLE_ALIAS"
+        },
+        {
+          "text": "[5, 6, 7]",
+          "is_correct": true,
+          "misconception_code": null
+        },
+        {
+          "text": "[7]",
+          "is_correct": false,
+          "misconception_code": "M_TRACE"
+        },
+        {
+          "text": "[5, 6, [5, 6, 7]]",
+          "is_correct": false,
+          "misconception_code": null
+        }
+      ],
+      "explanation": "l2 = l1 ne copie pas la liste : les deux noms désignent le même objet."
+    }
+  ]
+}

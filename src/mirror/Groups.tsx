@@ -1,431 +1,242 @@
-import { useState } from "react";
-import {
-  ArrowRight,
-  Check,
-  CheckCheck,
-  ChevronDown,
-  Clock3,
-  ListChecks,
-  Pencil,
-  Users,
-  X,
-} from "lucide-react";
-import { groupEvidence, students, updateGroup } from "./service";
-import type { Group, Plan } from "./service";
+"use client";
 
-const statusNames = {
-  suggested: "Proposé",
-  accepted: "Accepté",
-  rejected: "Refusé",
+import { useState, type FormEvent, type ReactNode } from "react";
+import { ArrowRight, Check, ChevronDown, Clock3, Pencil, Users, X } from "lucide-react";
+import { api, errorMessage, refresh, type Schema, useGet } from "../lib/api";
+import type { Group, Student } from "./service";
+
+const statuses: Record<Group["status"], string> = {
+  suggested: "Proposé", accepted: "Accepté", modified: "Modifié", rejected: "Refusé",
 };
-const fields: { key: keyof Plan; label: string; time: string }[] = [
-  { key: "objectif", label: "Objectif", time: "1 min" },
-  { key: "exemple", label: "Exemple", time: "2 min" },
-  { key: "contreExemple", label: "Contre-exemple", time: "1 min" },
-  { key: "exercice", label: "Exercice guidé", time: "4 min" },
-  { key: "verification", label: "Question de vérification", time: "2 min" },
-];
+const stages = ["initial", "immediate", "j7"] as const;
+const groupLink = (lessonId: string, groupId: string) =>
+  "/teacher/groups?lesson=" + lessonId + "&group=" + groupId;
 
-export function GroupActions({
-  group,
-  classroom,
-  compact = false,
-}: {
-  group: Group;
-  classroom: string;
-  compact?: boolean;
-}) {
+function canPlan(group: Group) {
+  return group.status === "accepted" || group.status === "modified";
+}
+
+function Members({ group, students, lessonId }: { group: Group; students: Student[]; lessonId: string }) {
+  const names = new Map(students.map((student) => [student.id, student.label]));
+  return <p className="mm-chips">
+    {group.members.map((id) => <a href={"/teacher/mindmirror?lesson=" + lessonId + "&student=" + id} key={id}>
+      {names.get(id) ?? "Étudiant"}</a>)}
+  </p>;
+}
+
+export function GroupActions({ group, students }: { group: Group; students: Student[] }) {
   const [editing, setEditing] = useState(false);
-  const [membership, setMembership] = useState(group.members);
+  const [members, setMembers] = useState(group.members);
+  const [reason, setReason] = useState("");
   const [message, setMessage] = useState("");
-  const change = (
-    patch: Parameters<typeof updateGroup>[2],
-    feedback: string,
-  ) => {
-    updateGroup(classroom, group.id, patch);
-    setMessage(feedback);
-  };
-  return (
-    <div className="mm-group-actions">
-      <div className="mm-actions-row">
-        {group.status !== "accepted" && (
-          <button
-            className="mm-primary"
-            onClick={() =>
-              change(
-                { status: "accepted" },
-                "Groupe accepté. Le plan est disponible pour relecture.",
-              )
-            }
-          >
-            <Check size={15} />
-            Accepter
-          </button>
-        )}
-        <button
-          className="mm-outline"
-          onClick={() => {
-            setMembership(group.members);
-            setEditing(!editing);
-            setMessage("");
-          }}
-          aria-expanded={editing}
-        >
-          <Pencil size={14} />
-          Modifier
-        </button>
-        {group.status !== "rejected" && (
-          <button
-            className="mm-text-action"
-            onClick={() => {
-              change(
-                { status: "rejected", validated: false },
-                "Suggestion refusée.",
-              );
-              setEditing(false);
-            }}
-          >
-            <X size={15} />
-            Refuser
-          </button>
-        )}
-      </div>
-      {editing && (
-        <form
-          className="mm-members"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!membership.length) return;
-            change(
-              { members: [...membership].sort(), validated: false },
-              "Composition du groupe enregistrée.",
-            );
-            setEditing(false);
-          }}
-        >
-          <fieldset>
-            <legend>Composition du groupe</legend>
-            <div>
-              {students.map((s) => (
-                <label key={s.id}>
-                  <input
-                    type="checkbox"
-                    checked={membership.includes(s.id)}
-                    onChange={(e) =>
-                      setMembership(
-                        e.target.checked
-                          ? [...membership, s.id]
-                          : membership.filter((id) => id !== s.id),
-                      )
-                    }
-                  />
-                  {s.id}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-          <div className="mm-actions-row">
-            <button className="mm-primary" disabled={!membership.length}>
-              Enregistrer ({membership.length})
-            </button>
-            <button
-              type="button"
-              className="mm-text-action"
-              onClick={() => setEditing(false)}
-            >
-              Annuler
-            </button>
-          </div>
-        </form>
-      )}
-      <p role="status" className="mm-feedback">
-        {message}
-      </p>
-      {compact && group.status === "accepted" && (
-        <a
-          className="mm-outline mm-full"
-          href={"/teacher/groups?group=" + group.id + "&view=plan"}
-        >
-          <ListChecks size={16} />
-          Ouvrir le plan de 10 min
-        </a>
-      )}
+  const [busy, setBusy] = useState(false);
+  const assigned = group.intervention?.status === "assigned";
+
+  async function change(action: Schema["GroupUpdate"]["action"]) {
+    setMessage("");
+    setBusy(true);
+    try {
+      await api("/groups/" + group.id, "PATCH", {
+        action, ...(action === "modify" ? { student_ids: members } : {}), reason: reason || null,
+      } satisfies Schema["GroupUpdate"]);
+      setEditing(false);
+      refresh();
+    } catch (error) { setMessage(errorMessage(error)); }
+    finally { setBusy(false); }
+  }
+
+  if (assigned) return <p className="mm-muted">Groupe affecté à une intervention.</p>;
+  return <div className="mm-group-actions">
+    <div className="mm-actions-row">
+      {!canPlan(group) && <button className="mm-primary" disabled={busy} onClick={() => void change("accept")}>
+        <Check size={15} /> Accepter
+      </button>}
+      <button className="mm-outline" disabled={busy} aria-expanded={editing}
+        onClick={() => { setMembers(group.members); setEditing(!editing); }}>
+        <Pencil size={14} /> Modifier
+      </button>
+      {group.status !== "rejected" && <button className="mm-text-action" disabled={busy}
+        onClick={() => void change("reject")}><X size={15} /> Refuser</button>}
     </div>
-  );
+    <label className="mm-plan-label">Motif de la décision (facultatif)
+      <input value={reason} onChange={(event) => setReason(event.target.value)} />
+    </label>
+    {editing && <form className="mm-members" onSubmit={(event) => { event.preventDefault(); void change("modify"); }}>
+      <fieldset><legend>Composition du groupe</legend>
+        <div>{students.map((student) => <label key={student.id}>
+          <input type="checkbox" checked={members.includes(student.id)} onChange={(event) =>
+            setMembers(event.target.checked ? [...members, student.id] : members.filter((id) => id !== student.id))} />
+          {student.label}
+        </label>)}</div>
+      </fieldset>
+      <button className="mm-primary" disabled={!members.length || busy}>Enregistrer ({members.length})</button>
+    </form>}
+    {message && <p className="mm-feedback" role="alert">{message}</p>}
+  </div>;
 }
 
-function Intervention({
-  group,
-  classroom,
-}: {
-  group: Group;
-  classroom: string;
-}) {
+function Intervention({ group, lessonId }: { group: Group; lessonId: string }) {
+  const plan = group.intervention;
   const [editing, setEditing] = useState(false);
-  const [plan, setPlan] = useState(group.plan);
-  return (
-    <section className="mm-plan">
-      <div className="mm-plan-heading">
-        <div>
-          <span className="mm-soft-label">
-            <Clock3 size={14} />
-            10 minutes
-          </span>
-          <h3>Plan de remédiation</h3>
-        </div>
-        <span
-          className={
-            "mm-status " + (group.validated ? "accepted" : "suggested")
-          }
-        >
-          {group.validated ? "Validé" : "À valider"}
-        </span>
-      </div>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          updateGroup(classroom, group.id, { plan, validated: false });
-          setEditing(false);
-        }}
-      >
-        <div className="mm-plan-fields">
-          {fields.map((field) => (
-            <div key={field.key}>
-              <div className="mm-plan-label">
-                <label htmlFor={"mm-" + group.id + "-" + field.key}>
-                  {field.label}
-                </label>
-                <small>{field.time}</small>
-              </div>
-              {editing ? (
-                <textarea
-                  id={"mm-" + group.id + "-" + field.key}
-                  required
-                  value={plan[field.key]}
-                  onChange={(e) =>
-                    setPlan({ ...plan, [field.key]: e.target.value })
-                  }
-                />
-              ) : (
-                <p>{group.plan[field.key]}</p>
-              )}
-            </div>
-          ))}
-        </div>
-        {editing ? (
-          <div className="mm-actions-row">
-            <button
-              className="mm-primary"
-              disabled={Object.values(plan).some((v) => !v.trim())}
-            >
-              Enregistrer le plan
-            </button>
-            <button
-              type="button"
-              className="mm-outline"
-              onClick={() => setEditing(false)}
-            >
-              Annuler
-            </button>
-          </div>
-        ) : (
-          <div className="mm-actions-row">
-            <button
-              className="mm-outline"
-              type="button"
-              onClick={() => {
-                setPlan(group.plan);
-                setEditing(true);
-              }}
-            >
-              <Pencil size={14} />
-              Modifier le plan
-            </button>
-            {!group.validated && (
-              <button
-                className="mm-primary"
-                type="button"
-                onClick={() =>
-                  updateGroup(classroom, group.id, { validated: true })
-                }
-              >
-                <CheckCheck size={16} />
-                Valider le plan
-              </button>
-            )}
-          </div>
-        )}
-      </form>
-    </section>
-  );
-}
+  const [draft, setDraft] = useState<Schema["RemediationPlan"]>();
+  const [approved, setApproved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
 
-export default function Groups({
-  groups,
-  classroom,
-}: {
-  groups: Group[];
-  classroom: string;
-}) {
-  const params = new URLSearchParams(window.location.search);
-  const requested = params.get("group");
-  const [expanded, setExpanded] = useState<string | null>(
-    groups.find((g) => g.id === requested)?.id ??
-      (params.get("view") === "plan"
-        ? (groups.find((g) => g.status === "accepted")?.id ?? groups[0]?.id)
-        : null),
-  );
-  const [filter, setFilter] = useState("all");
-  const list = groups.filter((g) => filter === "all" || g.status === filter);
-  return (
-    <div className="mm mm-groups-page">
-      <header className="mm-heading">
-        <div>
-          <h1>Groupes et remédiation</h1>
-          <p>
-            Examinez les difficultés communes et préparez une intervention
-            ciblée.
-          </p>
-        </div>
-      </header>
-      <div className="mm-groups-top">
-        <h2>Groupes de la classe</h2>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          aria-label="Filtrer les groupes"
-        >
-          <option value="all">Tous les statuts</option>
-          <option value="suggested">Proposés</option>
-          <option value="accepted">Acceptés</option>
-          <option value="rejected">Refusés</option>
-        </select>
-      </div>
-      {!list.length && (
-        <div className="mm-empty">
-          Aucun groupe à afficher pour cette sélection.
-        </div>
-      )}
-      <div className="mm-group-list">
-        {list.map((group) => {
-          const open = expanded === group.id;
-          return (
-            <article className="mm-group-card" key={group.id}>
-              <button
-                className="mm-group-trigger"
-                aria-expanded={open}
-                onClick={() => setExpanded(open ? null : group.id)}
-              >
-                <span className={"mm-group-icon " + group.id}>
-                  <Users size={21} />
-                </span>
-                <span className="mm-group-title">
-                  <strong>{group.name}</strong>
-                  <small>{group.difficulty}</small>
-                </span>
-                <span className="mm-member-n">
-                  {group.members.length} étudiants
-                </span>
-                <span className={"mm-status " + group.status}>
-                  {statusNames[group.status]}
-                </span>
-                <ChevronDown
-                  size={17}
-                  style={{ transform: open ? "rotate(180deg)" : "" }}
-                />
-              </button>
-              <div className="mm-group-summary">
-                <span>{group.reason}</span>
-                <span>{groupEvidence(group)}</span>
-              </div>
-              {open && (
-                <div className="mm-group-body">
-                  {requested === group.id &&
-                    params.get("student") &&
-                    group.members.includes(params.get("student")!) && (
-                      <p className="mm-student-note">
-                        Remédiation de {params.get("student")} ·{" "}
-                        {group.difficulty}
-                      </p>
-                    )}
-                  <h3>Membres du groupe</h3>
-                  <p className="mm-chips">
-                    {group.members.map((id) => (
-                      <a href={"/teacher/mindmirror?student=" + id} key={id}>
-                        {id}
-                      </a>
-                    ))}
-                  </p>
-                  <GroupActions classroom={classroom} group={group} />
-                  {group.status === "accepted" ? (
-                    <Intervention
-                      key={group.id}
-                      group={group}
-                      classroom={classroom}
-                    />
-                  ) : (
-                    <p className="mm-muted">
-                      Acceptez le groupe pour consulter et valider son plan de
-                      remédiation de 10 minutes.
-                    </p>
-                  )}
-                </div>
-              )}
-            </article>
-          );
-        })}
-      </div>
-      <a className="mm-return-link" href="/teacher/mindmirror">
-        Ouvrir MindMirror <ArrowRight size={15} />
-      </a>
+  async function run(action: () => Promise<string | void>) {
+    setBusy(true);
+    setMessage("");
+    try { setMessage(await action() ?? ""); refresh(); }
+    catch (error) { setMessage(errorMessage(error)); }
+    finally { setBusy(false); }
+  }
+  const fields = [["title", "Titre"], ["objective", "Objectif"], ["example", "Exemple"],
+    ["counter_example", "Contre-exemple"], ["explanation", "Explication"], ["check_question", "Question de vérification"]] as const;
+  return <section className="mm-plan">
+    <div className="mm-plan-heading">
+      <div><span className="mm-soft-label"><Clock3 size={14} /> 10 minutes</span>
+        <h3>Plan de remédiation</h3></div>
+      {plan && <span className={"mm-status " + (plan.status === "assigned" ? "accepted" : "suggested")}>
+        {plan.status === "assigned" ? "Affecté" : "À valider"}
+      </span>}
     </div>
-  );
+    {!plan ? <button className="mm-primary" disabled={busy}
+      onClick={() => void run(async () => { await api("/groups/" + group.id + "/remediation", "POST"); })}>
+      {busy ? "Génération en cours…" : "Générer le plan"}
+    </button> : <form onSubmit={(event: FormEvent) => {
+      event.preventDefault();
+      if (draft) void run(async () => {
+        await api("/interventions/" + plan.id, "PATCH", { plan: draft }); setEditing(false);
+      });
+    }}>
+      {plan.used_fallback && <p className="mm-muted">Modèle de plan utilisé en secours.</p>}
+      <div className="mm-plan-fields">
+        {fields.map(([key, title]) => <div key={key}>
+          <label className="mm-plan-label" htmlFor={group.id + "-" + key}>{title}</label>
+          {editing && draft ? <textarea id={group.id + "-" + key} required value={draft[key]}
+            onChange={(event) => setDraft({ ...draft, [key]: event.target.value })} /> : <p>{plan.plan[key]}</p>}
+        </div>)}
+        {(draft && editing ? draft : plan.plan).steps.map((step, index) => <div key={step.start_min}>
+          <label className="mm-plan-label" htmlFor={group.id + "-step-" + index}>
+            {step.start_min}–{step.end_min} min
+          </label>
+          {editing && draft ? <textarea id={group.id + "-step-" + index} required value={step.action}
+            onChange={(event) => setDraft({ ...draft, steps: draft.steps.map((item, i) =>
+              i === index ? { ...item, action: event.target.value } : item) })} /> : <p>{step.action}</p>}
+        </div>)}
+      </div>
+      {editing ? <div className="mm-actions-row">
+        <button className="mm-primary" disabled={busy}>Enregistrer le plan</button>
+        <button type="button" className="mm-outline" onClick={() => setEditing(false)}>Annuler</button>
+      </div> : plan.status !== "assigned" ? <div className="mm-actions-row">
+        <button type="button" className="mm-outline" onClick={() => { setDraft(plan.plan); setEditing(true); }}>
+          <Pencil size={14} /> Modifier le plan
+        </button>
+        <label><input type="checkbox" checked={approved} onChange={(event) => setApproved(event.target.checked)} />
+          J’ai relu le plan
+        </label>
+        <button type="button" className="mm-primary" disabled={!approved || busy}
+          onClick={() => void run(async () => {
+            await api("/interventions/" + plan.id + "/assign", "POST", { validated: true });
+          })}>Valider et affecter</button>
+      </div> : <div className="mm-actions-row">
+        <button type="button" className="mm-primary" disabled={busy}
+          onClick={() => void run(async () => {
+            const result = await api<Schema["ScheduleResult"]>("/lessons/" + lessonId + "/retest", "POST", { intervention_id: plan.id });
+            return result.schedules.some((item) => item.status === "skipped")
+              ? "Certains retests attendent une variante approuvée." : "Retests programmés.";
+          })}>Lancer le retest</button>
+        <button type="button" className="mm-outline" disabled={busy} onClick={() => void run(async () => {
+          const result = await api<Schema["ScheduleResult"]>("/lessons/" + lessonId + "/j7/schedule", "POST");
+          return result.schedules.some((item) => item.status === "skipped") ? "Variante J+7 manquante dans la banque." :
+            result.schedules.length + " suivis J+7 enregistrés.";
+        })}>Vérifier les suivis J+7</button>
+      </div>}
+    </form>}
+    {message && <p className="mm-feedback" role="status">{message}</p>}
+  </section>;
 }
 
-export function GroupPanel({
-  group,
-  classroom,
-}: {
-  group: Group;
-  classroom: string;
+function BeforeAfter({ lessonId }: { lessonId: string }) {
+  const resource = useGet<Schema["BeforeAfter"]>("/lessons/" + lessonId + "/before-after");
+  const taxonomy = useGet<Schema["ConceptView"][]>("/taxonomy");
+  const counts = (cell: Schema["Counts"]) => cell.attempts ? cell.correct + " / " + cell.attempts : "—";
+  return <section className="mm-plan">
+    <h2>Avant / après</h2>
+    {resource.error && <p role="alert">{resource.error}</p>}
+    {resource.value && <>
+      <p>Réponses correctes par étape. Les dénominateurs correspondent aux réponses reçues.</p>
+      <div className="nd-scroll"><table>
+        <thead><tr><th>Notion</th><th>Initial</th><th>Retest</th><th>J+7</th></tr></thead>
+        <tbody>{resource.value.concepts.map((item) => <tr key={item.concept_code}>
+          <th>{taxonomy.value?.find((concept) => concept.code === item.concept_code)?.label_fr ?? item.concept_code}</th>
+          {stages.map((stage) => <td key={stage}>{counts(item[stage])}</td>)}
+        </tr>)}</tbody>
+      </table></div>
+      {(resource.value.error_counts ?? []).map((item) => <p key={item.group_id}>
+        {taxonomy.value?.flatMap((c) => c.misconceptions).find((error) => error.code === item.misconception_code)?.label_fr ?? item.misconception_code}
+        {" · Élèves avec l’erreur parmi ceux évalués : "}
+        {stages.map((stage, index) => ["Initial ", "Retest ", "J+7 "][index] + counts(item[stage])).join(" · ")}
+      </p>)}
+    </>}
+  </section>;
+}
+
+export default function Groups({ groups, students, lessonId, selector }: {
+  groups: Group[]; students: Student[]; lessonId: string; selector: ReactNode;
 }) {
-  return (
-    <aside className="mm-panel mm-group-panel">
-      <div className="mm-panel-heading">
-        <span className={"mm-group-icon " + group.id}>
-          <Users size={24} />
-        </span>
-        <div>
-          <h2>{group.name}</h2>
-          <small>
-            {group.members.length} étudiants · {statusNames[group.status]}
-          </small>
-        </div>
-      </div>
-      <div className="mm-panel-inner">
-        <h3>Difficulté commune</h3>
-        <p>{group.difficulty}</p>
-        <h3>Pourquoi ce groupe ?</h3>
-        <p>{group.reason}</p>
-        <div className="mm-observation">
-          <strong>Niveau de preuve</strong>
-          <span>{groupEvidence(group)}</span>
-        </div>
-        <h3>Étudiants concernés</h3>
-        <p className="mm-chips">
-          {group.members.map((id) => (
-            <a href={"/teacher/mindmirror?student=" + id} key={id}>
-              {id}
-            </a>
-          ))}
-        </p>
-        <GroupActions
-          key={group.id}
-          group={group}
-          classroom={classroom}
-          compact
-        />
-      </div>
-    </aside>
-  );
+  const requested = new URLSearchParams(window.location.search).get("group");
+  const [expanded, setExpanded] = useState(requested);
+  const [failure, setFailure] = useState("");
+  const [busy, setBusy] = useState(false);
+  return <div className="mm mm-groups-page">
+    <header className="mm-heading"><div><h1>Groupes et remédiation</h1>
+      <p>Examinez les difficultés communes et préparez une intervention ciblée.</p></div>{selector}
+    </header>
+    <div className="mm-groups-top"><h2>Groupes de la classe</h2>
+      {lessonId && <button className="mm-primary" disabled={busy} onClick={async () => {
+        setBusy(true); setFailure("");
+        try { await api("/lessons/" + lessonId + "/groups/suggest", "POST"); refresh(); }
+        catch (error) { setFailure(errorMessage(error)); }
+        finally { setBusy(false); }
+      }}>{busy ? "Calcul en cours…" : "Calculer les groupes"}</button>}
+    </div>
+    {failure && <p role="alert">{failure}</p>}
+    {!groups.length && <div className="mm-empty">Aucun groupe proposé pour cette séance.</div>}
+    <div className="mm-group-list">
+      {groups.map((group) => <article className="mm-group-card" key={group.id}>
+        <button className="mm-group-trigger" aria-expanded={expanded === group.id}
+          onClick={() => setExpanded(expanded === group.id ? null : group.id)}>
+          <span className="mm-group-icon"><Users size={21} /></span>
+          <span className="mm-group-title"><strong>{group.name}</strong></span>
+          <span className="mm-member-n">{group.members.length} étudiants</span>
+          <span className={"mm-status " + group.status}>{statuses[group.status]}</span>
+          <ChevronDown size={17} />
+        </button>
+        <div className="mm-group-summary"><span>{group.reason}</span>
+          <span>{group.confidence === "provisional" ? "Provisoire" : "Difficulté corroborée"}</span></div>
+        {expanded === group.id && <div className="mm-group-body">
+          <h3>Membres du groupe</h3><Members group={group} students={students} lessonId={lessonId} />
+          <GroupActions group={group} students={students} />
+          {canPlan(group) && <Intervention group={group} lessonId={lessonId} />}
+        </div>}
+      </article>)}
+    </div>
+    {lessonId && <BeforeAfter lessonId={lessonId} />}
+    <a className="mm-return-link" href={"/teacher/mindmirror?lesson=" + lessonId}>Ouvrir MindMirror <ArrowRight size={15} /></a>
+  </div>;
+}
+
+export function GroupPanel({ group, students, lessonId }: { group: Group; students: Student[]; lessonId: string }) {
+  return <aside className="mm-panel mm-group-panel">
+    <div className="mm-panel-heading"><span className="mm-group-icon"><Users size={24} /></span>
+      <div><h2>{group.name}</h2><small>{group.members.length} étudiants · {statuses[group.status]}</small></div>
+    </div>
+    <div className="mm-panel-inner">
+      <h3>Pourquoi ce groupe ?</h3><p>{group.reason}</p>
+      <Members group={group} students={students} lessonId={lessonId} />
+      <GroupActions group={group} students={students} />
+      <a className="mm-outline mm-full" href={groupLink(lessonId, group.id)}>Ouvrir la remédiation</a>
+    </div>
+  </aside>;
 }

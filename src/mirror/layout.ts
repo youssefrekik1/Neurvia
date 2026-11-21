@@ -1,66 +1,28 @@
-import { initialGroups, similarity, students } from "./service";
-import type { Student } from "./service";
+import type { Group, Student } from "./service";
+import type { Schema } from "../lib/api";
 
 export type Point = { x: number; y: number };
-export type Star = Point & { student: Student; color: string; cluster: number };
-export type Connection = { a: Star; b: Star; weight: number };
-const anchor: Record<string, Point> = {
-  A01: { x: 106, y: 347 },
-  A02: { x: 677, y: 78 },
-  A03: { x: 277, y: 147 },
-  A04: { x: 670, y: 156 },
-  A05: { x: 672, y: 405 },
-  A06: { x: 201, y: 380 },
-  A07: { x: 151, y: 131 },
-  A08: { x: 778, y: 116 },
-  A09: { x: 296, y: 356 },
-  A10: { x: 373, y: 250 },
-  A11: { x: 542, y: 95 },
-  A12: { x: 518, y: 364 },
-  A13: { x: 383, y: 88 },
-  A14: { x: 746, y: 229 },
-  A15: { x: 196, y: 221 },
-  A16: { x: 241, y: 284 },
-  A17: { x: 562, y: 273 },
-  A18: { x: 102, y: 183 },
-  A19: { x: 793, y: 349 },
-  A20: { x: 590, y: 420 },
-  A21: { x: 461, y: 417 },
-  A22: { x: 447, y: 181 },
-};
+export type Star = Point & { student: Student; color: string; cluster: number; index: number };
+export type Connection = { a: Star; b: Star; weight: number; provisional: boolean };
 
-// Deterministic force relaxation keeps the same analytical cluster in the
-// same region on repeat visits. Anchors set the initial astronomical framing.
-function makeLayout() {
-  const stars: Star[] = students.map((student) => {
-    const cluster = initialGroups.findIndex((group) =>
-      group.members.includes(student.id),
-    );
-    return {
-      student,
-      ...anchor[student.id],
-      cluster,
-      color: initialGroups[cluster]?.color ?? "#b4d8e9",
-    };
+export function makeLayout(students: Student[], groups: Group[], links: Schema["GraphEdge"][]) {
+  const anchors = students.map((_, index) => ({
+    x: 85 + random(index + 17) * 730,
+    y: 70 + random(index + 210) * 365,
+  }));
+  const stars: Star[] = students.map((student, index) => {
+    const cluster = groups.findIndex((group) => group.status !== "rejected" && group.members.includes(student.id));
+    return { student, ...anchors[index], index, cluster, color: groups[cluster]?.color ?? "#b4d8e9" };
   });
-  const edges: Connection[] = [];
-  for (let i = 0; i < stars.length; i++) {
-    const a = stars[i];
-    const options = stars
-      .slice(i + 1)
-      .map((b) => ({ a, b, weight: similarity(a.student, b.student) }))
-      .filter((edge) => edge.weight >= 0.5)
-      .sort(
-        (l, r) =>
-          Math.hypot(a.x - l.b.x, a.y - l.b.y) -
-          Math.hypot(a.x - r.b.x, a.y - r.b.y),
-      );
-    edges.push(...options.slice(0, 2));
-  }
+  const byId = new Map(stars.map((star) => [star.student.id, star]));
+  const edges: Connection[] = links.flatMap((link) => {
+    const a = byId.get(link.source), b = byId.get(link.target);
+    return a && b ? [{ a, b, weight: link.similarity, provisional: link.provisional }] : [];
+  });
   for (let iteration = 0; iteration < 95; iteration++) {
     const forces = stars.map((star) => ({
-      x: (anchor[star.student.id].x - star.x) * 0.22,
-      y: (anchor[star.student.id].y - star.y) * 0.22,
+      x: (anchors[star.index].x - star.x) * 0.22,
+      y: (anchors[star.index].y - star.y) * 0.22,
     }));
     for (let i = 0; i < stars.length; i++)
       for (let j = i + 1; j < stars.length; j++) {
@@ -78,8 +40,7 @@ function makeLayout() {
         dy = edge.b.y - edge.a.y;
       const distance = Math.max(1, Math.hypot(dx, dy)),
         spring = (distance - 96) * edge.weight * 0.024;
-      const a = stars.indexOf(edge.a),
-        b = stars.indexOf(edge.b);
+      const a = edge.a.index, b = edge.b.index;
       forces[a].x += (dx / distance) * spring;
       forces[a].y += (dy / distance) * spring;
       forces[b].x -= (dx / distance) * spring;
@@ -92,7 +53,6 @@ function makeLayout() {
   }
   return { stars, edges };
 }
-export const model = makeLayout();
 export function curve(a: Point, b: Point, bend: number) {
   const cx = (a.x + b.x) / 2 - (b.y - a.y) * bend;
   const cy = (a.y + b.y) / 2 + (b.x - a.x) * bend;
@@ -109,14 +69,14 @@ export const sky = Array.from({ length: 420 }, (_, i) => ({
   opacity: 0.13 + random(i + 471) * 0.47,
 }));
 export function satellites(star: Star, selected: boolean) {
-  const idx = Number(star.student.id.slice(1));
-  return star.student.concepts.map((score, j) => {
-    const angle = (j / 4) * Math.PI * 2 + idx * 2.34 + random(j + idx) * 0.45;
+  const idx = star.index;
+  return star.student.concepts.map(({ score, label }, j) => {
+    const angle = (j / star.student.concepts.length) * Math.PI * 2 + idx * 2.34 + random(j + idx) * 0.45;
     const length = (selected ? 58 : 20) + random(idx * 3 + j) * 32;
     return {
       x: star.x + Math.cos(angle) * length,
       y: star.y + Math.sin(angle) * length,
-      score,
+      score, label,
     };
   });
 }

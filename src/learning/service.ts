@@ -1,504 +1,217 @@
 "use client";
-import { useSyncExternalStore } from "react";
-import { followupBank } from "./practice";
-import {
-  bank,
-  initialQuestions,
-  selectQuestions,
-  topics,
-  type Question,
-  type Level,
-  levels,
-} from "./bank";
 
-export const classrooms = ["L1 Python · Groupe A", "L1 Python · Groupe B"];
-export const subjects = ["Algorithmique & Python", "Mathématiques", "Réseaux"];
-export const confidenceLevels = [
-  "Sûr",
-  "Moyennement sûr",
-  "Incertain",
-] as const;
+import { useCallback } from "react";
+import { api, refresh, type Schema, useResource } from "../lib/api";
+import { levels, type Level, type Question } from "./bank";
+
+export const subjects = ["Algorithmique & Python"];
+export const confidenceLevels = ["Sûr", "Moyennement sûr", "Incertain"] as const;
+const confidenceCodes = ["sure", "medium", "unsure"] as const;
 export type Confidence = (typeof confidenceLevels)[number];
 export type Mode = "quiz" | "confirmation" | "retest" | "review";
 export type Lesson = {
-  id: string;
-  classroom: string;
-  title: string;
-  subject: string;
-  concepts: string[];
-  content: string;
-  date: string;
-  questions: Question[];
-  status: "draft" | "published";
-  count: number;
-  level: Level;
-  evaluate: string[];
-  responses: number;
-  difficulty: string;
-  trend: string;
-  release?: string;
+  id: string; classroom: string; classroomName: string; title: string; subject: string;
+  concepts: string[]; content: string; date: string; questions: Question[];
+  status: "draft" | "published" | "closed"; count: number; level: Level; evaluate: string[];
+  responses: number; difficulty: string; trend: string; quizId?: string; release?: string;
+  pitfalls: string; instructions: string; usedFallback?: boolean;
 };
 export type Answer = { option: number; confidence: Confidence };
 export type Attempt = {
-  id: string;
-  classroom: string;
-  lessonId: string;
-  title: string;
-  date: string;
-  mode: Mode;
-  questions: Question[];
-  answers: Answer[];
-  score: number;
-  total: number;
-  practiceId?: string;
+  id: string; classroom: string; lessonId: string; title: string; date: string; mode: Mode;
+  questions: Question[]; answers: Answer[]; score: number; total: number;
+  diagnoses: Schema["Diagnosis"][]; quality: Schema["Feedback"]["diagnosis_quality"];
 };
 export type Practice = {
-  id: string;
-  classroom: string;
-  lessonId: string;
-  concept: string;
-  mode: Exclude<Mode, "quiz">;
-  due: string;
-  used: string[];
-  fromAttempt?: string;
-  question: Question;
-  done: boolean;
+  id: string; classroom: string; lessonId: string; concept: string; mode: Exclude<Mode, "quiz">;
+  due: string; fromAttempt?: string; quizId?: string; done: boolean; pending: boolean;
 };
 export type Session = {
-  questions: Question[];
-  answers: Partial<Record<number, Partial<Answer>>>;
-  index: number;
+  attemptId?: string; questions: Question[];
+  answers: Partial<Record<number, Partial<Answer>>>; index: number;
 };
 export type LearningData = {
-  lessons: Lesson[];
-  attempts: Attempt[];
-  practice: Practice[];
-  sessions: Record<string, Session>;
-  simulatedDays?: number;
+  lessons: Lesson[]; attempts: Attempt[]; practice: Practice[]; taxonomy: Schema["ConceptView"][];
+  tasks: Schema["StudentTask"][]; interventions: Schema["AssignedPlan"][];
 };
-const key = "neurvia.learning.v1";
-const listeners = new Set<() => void>();
-export const uid = () =>
-  typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID()
-    : Date.now().toString(36) + Math.random().toString(36).slice(2);
-function relativeDate(offset: number) {
-  const day = new Date();
-  day.setDate(day.getDate() + offset);
-  day.setHours(9, 0, 0, 0);
-  return day.toISOString();
-}
-export function dayLabel(date: string, long = false) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "numeric",
-    month: long ? "long" : "short",
-  }).format(new Date(date));
-}
-export function isDue(date: string) {
-  const end = new Date();
-  if (typeof window !== "undefined")
-    end.setDate(end.getDate() + (snapshot().simulatedDays || 0));
-  end.setHours(23, 59, 59, 999);
-  return new Date(date) <= end;
-}
-export const lessonHref = (id: string) =>
-  "/teacher/lessons/" + encodeURIComponent(id);
-export const quizHref = (lessonId: string) =>
-  "/student/quiz?lesson=" + encodeURIComponent(lessonId);
-export const practiceHref = (p: Practice) =>
-  "/student/quiz?mode=" + p.mode + "&task=" + encodeURIComponent(p.id);
-export const feedbackHref = (id: string) =>
-  "/student/quiz?result=" + encodeURIComponent(id);
+
+const empty: LearningData = { lessons: [], attempts: [], practice: [], taxonomy: [], tasks: [], interventions: [] };
+const modes = { initial: "quiz", confirmation: "confirmation", immediate_retest: "retest", j7_retest: "review" } as const;
+const sources = { bank: "Banque", llm: "IA", teacher: "Professeur" } as const;
 export const modeTitles: Record<Mode, string> = {
-  quiz: "Quiz",
-  confirmation: "Vérification",
-  retest: "Retest immédiat",
-  review: "Révision J+7",
+  quiz: "Quiz", confirmation: "Vérification", retest: "Retest immédiat", review: "Révision J+7",
 };
+export const lessonHref = (id: string) => "/teacher/lessons/" + encodeURIComponent(id);
+export const quizHref = (lessonId: string) => "/student/quiz?lesson=" + encodeURIComponent(lessonId);
+export const practiceHref = (p: Practice) => "/student/quiz?mode=" + p.mode + "&task=" + encodeURIComponent(p.id);
+export const feedbackHref = (id: string) => "/student/quiz?result=" + encodeURIComponent(id);
+
+export function dayLabel(date: string, long = false) {
+  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: long ? "long" : "short",
+    timeZone: "Africa/Tunis" }).format(new Date(date));
+}
+export function isDue(date: string) { return Date.parse(date) <= Date.now(); }
+
 export function blankLesson(classroom: string): Lesson {
   return {
-    id: "",
-    classroom,
-    title: "",
-    subject: subjects[0],
-    concepts: [],
-    content: "",
-    date: relativeDate(0),
-    questions: [],
-    status: "draft",
-    count: 6,
-    level: levels[0],
-    evaluate: [],
-    responses: 0,
-    difficulty: "À observer",
-    trend: "À observer",
+    id: "", classroom, classroomName: "", title: "", subject: subjects[0], concepts: [], content: "",
+    date: new Date().toISOString(), questions: [], status: "draft", count: 6, level: levels[0],
+    evaluate: [], responses: 0, difficulty: "À observer", trend: "À observer", pitfalls: "", instructions: "",
   };
 }
-function makeSeed(): LearningData {
-  const classroom = classrooms[0];
-  const lesson = (
-    id: string,
-    title: string,
-    content: string,
-    concepts: string[],
-    days: number,
-    responses: number,
-    trend: string,
-    extra: Partial<Lesson> = {},
-  ): Lesson => ({
-    ...blankLesson(classroom),
-    id,
-    title,
-    content,
-    date: relativeDate(days),
-    responses,
-    concepts,
-    evaluate: concepts,
-    difficulty: concepts[0],
-    trend,
-    status: "published",
-    questions: selectQuestions(concepts, "Essentiel", 6),
-    ...extra,
-  });
-  const lessons = [
-    lesson(
-      "boucles-indices",
-      "Boucles et indices Python",
-      "Une boucle for parcourt les éléments d’une séquence. Avec range(début, fin), le parcours commence à début et s’arrête avant fin.\n\nPour une liste de taille n, les indices vont de 0 à n − 1. Pour lire le dernier élément, on peut utiliser la position −1.\n\nUne boucle while réévalue sa condition avant chaque passage. Une mise à jour de la variable de contrôle permet de progresser vers la sortie.",
-      [topics[0], topics[1], topics[2]],
-      -1,
-      18,
-      "En progression",
-      { questions: initialQuestions },
-    ),
-    lesson(
-      "conditions",
-      "Conditions et expressions booléennes",
-      "Les expressions de comparaison renvoient True ou False. Le bloc if est exécuté si le test est vrai. elif introduit une condition alternative et else traite les autres cas.",
-      [topics[3], topics[5]],
-      -3,
-      20,
-      "Stable",
-    ),
-    lesson(
-      "listes",
-      "Manipuler les listes",
-      "Les listes sont des séquences ordonnées. On accède à un élément par son indice. Le premier indice est 0. Les tranches permettent d’extraire une partie de la liste.",
-      [topics[1], topics[0]],
-      -5,
-      21,
-      "En progression",
-    ),
-    lesson(
-      "variables",
-      "Variables et types",
-      "Une variable associe un nom à une valeur. Les types usuels sont int, float, str et bool. Une conversion explicite permet de passer d’un type à l’autre lorsque la valeur est compatible.",
-      [topics[5]],
-      -9,
-      22,
-      "En progression",
-    ),
-    lesson(
-      "prochaine-seance",
-      "Approfondir les boucles",
-      "Retracer les valeurs successives d’une variable dans une boucle while et expliquer sa condition d’arrêt. Comparer avec un parcours for à bornes fixées.",
-      [topics[2], topics[0]],
-      0,
-      0,
-      "À observer",
-      { status: "draft" },
-    ),
-    lesson(
-      "fonctions",
-      "Découvrir les fonctions",
-      "Une fonction regroupe des instructions réutilisables. Ses paramètres reçoivent les arguments de l’appel. return transmet le résultat à l’appelant.",
-      [topics[4]],
-      1,
-      0,
-      "À observer",
-      { release: relativeDate(1) },
-    ),
-    lesson(
-      "suites",
-      "Suites arithmétiques",
-      "Une suite arithmétique évolue par addition d’une raison constante. Pour calculer un terme, ajoutez la raison au terme précédent.\n\nExemple : avec un premier terme égal à 2 et une raison égale à 3, les premiers termes sont 2, 5, 8 et 11.",
-      ["Suites arithmétiques"],
-      -2,
-      0,
-      "À observer",
-      { subject: subjects[1], questions: [] },
-    ),
-    lesson(
-      "reseaux",
-      "Les couches du modèle OSI",
-      "Le modèle OSI décrit sept couches de communication. La couche réseau s’occupe notamment de l’adressage et du routage. La couche transport assure le transfert de données entre applications.",
-      ["Modèle OSI"],
-      -4,
-      0,
-      "À observer",
-      { subject: subjects[2], questions: [] },
-    ),
-  ];
-  const attempts: Attempt[] = [];
-  [lessons[1], lessons[2], lessons[3]].forEach((l, i) => {
-    const questions = i === 2 ? l.questions.slice(0, 2) : l.questions;
-    const answers = questions.map((q, j) => ({
-      option: j === 1 ? (q.correct + 1) % 4 : q.correct,
-      confidence: confidenceLevels[j === 1 ? 2 : 0],
-    }));
-    attempts.push({
-      id: "history-" + i,
-      classroom,
-      lessonId: l.id,
-      title: l.title,
-      date: relativeDate([-1, -2, -9][i]),
-      mode: "quiz",
-      questions,
-      answers,
-      score: questions.length - 1,
-      total: questions.length,
-    });
-  });
-  const practice: Practice[] = [
-    {
-      id: "check-bounds",
-      classroom,
-      lessonId: "listes",
-      concept: topics[0],
-      mode: "confirmation",
-      due: relativeDate(0),
-      used: lessons[2].questions.map((q) => q.id),
-      question: followupBank[0],
-      fromAttempt: "history-1",
-      done: false,
-    },
-    {
-      id: "retest-list",
-      classroom,
-      lessonId: "listes",
-      concept: topics[1],
-      mode: "retest",
-      due: relativeDate(0),
-      used: [bank[8].id, bank[9].id],
-      question: followupBank[4],
-      done: false,
-    },
-    {
-      id: "week-types",
-      classroom,
-      lessonId: "variables",
-      concept: topics[5],
-      mode: "review",
-      due: relativeDate(0),
-      used: [bank[27].id, bank[28].id, bank[29].id],
-      question: followupBank[17],
-      done: false,
-    },
-  ];
-  return { lessons, attempts, practice, sessions: {} };
+function label(code: string, taxonomy: Schema["ConceptView"][]) {
+  return taxonomy.find((item) => item.code === code)?.label_fr ?? code;
 }
-const seed = makeSeed();
-let cache: LearningData = seed;
-let lastSerialized: string | null = null;
-function snapshot(): LearningData {
-  if (typeof window === "undefined") return seed;
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw !== lastSerialized) {
-      cache = raw ? (JSON.parse(raw) as LearningData) : seed;
-      lastSerialized = raw;
+function question(row: Schema["StudentQuestion"] | Schema["TeacherQuestion"], taxonomy: Schema["ConceptView"][]): Question {
+  const teacher = "source" in row ? row : null;
+  return {
+    id: row.id, text: row.stem, code: row.code ?? undefined, options: row.options.map((o) => o.text),
+    optionIds: row.options.map((o) => o.id), concept: label(row.concept_code, taxonomy),
+    conceptCode: row.concept_code, correct: teacher?.options.findIndex((o) => o.is_correct) ?? -1,
+    explanation: teacher?.explanation ?? "", misconceptions: teacher?.options.map((o) => o.misconception_code ?? "") ?? [],
+    source: teacher ? sources[teacher.source] : "Professeur", level: levels[(teacher?.difficulty ?? 1) - 1] ?? levels[0],
+  };
+}
+function toAttempt(row: Schema["Feedback"], lessons: Lesson[], taxonomy: Schema["ConceptView"][]): Attempt {
+  const rows = row.questions.flatMap((item) => {
+    const answer = row.answers.find((a) => a.question_id === item.id);
+    if (!answer) return [];
+    const q = question(item, taxonomy);
+    const correct = item.options.findIndex((o) => o.id === answer.correct_option_id);
+    const option = item.options.findIndex((o) => o.id === answer.selected_option_id);
+    return [{ question: { ...q, correct, explanation: answer.explanation },
+              answer: { option, confidence: confidenceLevels[confidenceCodes.indexOf(answer.confidence)] } }];
+  });
+  return {
+    id: row.attempt_id, classroom: row.classroom_id, lessonId: row.lesson_id,
+    title: lessons.find((l) => l.id === row.lesson_id)?.title ?? modeTitles[modes[row.kind]],
+    date: row.submitted_at, mode: modes[row.kind], questions: rows.map((r) => r.question),
+    answers: rows.map((r) => r.answer), score: row.correct_count, total: row.answered_count,
+    diagnoses: row.suspected_difficulties, quality: row.diagnosis_quality,
+  };
+}
+
+async function load(key: string): Promise<LearningData> {
+  const [role, classroom] = key.split(":");
+  const teacher = role === "teacher";
+  const [rows, taxonomy, rooms] = await Promise.all([
+    api<Schema["LessonView"][]>("/classrooms/" + classroom + "/lessons"),
+    api<Schema["ConceptView"][]>("/taxonomy"),
+    api<Schema["ClassroomView"][]>("/classrooms"),
+  ]);
+  const room = rooms.find((r) => r.id === classroom);
+  const lessons = await Promise.all(rows.map(async (row): Promise<Lesson> => {
+    const quiz = teacher && row.quiz_id ? await api<Schema["TeacherQuiz"]>("/quizzes/" + row.quiz_id) : undefined;
+    const brief = row.focus_brief;
+    const concepts = row.concept_codes.map((code) => label(code, taxonomy));
+    return {
+      ...blankLesson(classroom), id: row.id, title: row.title, date: row.created_at,
+      classroomName: room?.name ?? "", concepts, evaluate: concepts, content: row.content_text ?? "",
+      status: row.status, responses: row.submitted_count ?? 0, quizId: row.quiz_id ?? undefined,
+      count: teacher ? brief?.question_count ?? 6 : row.question_count ?? 0,
+      level: levels[(brief?.difficulty ?? 1) - 1], pitfalls: brief?.pitfalls?.join(", ") ?? "",
+      instructions: brief?.instructions ?? "", usedFallback: quiz?.used_fallback,
+      questions: quiz?.questions.map((q) => question(q, taxonomy)) ?? [],
+    };
+  }));
+  if (teacher) return { ...empty, lessons, taxonomy };
+  const [tasks, feedback, interventions] = await Promise.all([
+    api<Schema["StudentTask"][]>("/me/tasks?include_upcoming=true&classroom_id=" + classroom),
+    api<Schema["Feedback"][]>("/me/feedback?classroom_id=" + classroom),
+    api<Schema["AssignedPlan"][]>("/me/interventions?classroom_id=" + classroom),
+  ]);
+  return {
+    lessons, taxonomy, tasks, interventions,
+    attempts: feedback.map((row) => toAttempt(row, lessons, taxonomy)),
+    practice: tasks.flatMap((item): Practice[] => item.kind === "initial" ? [] : [{
+      id: item.id, classroom, lessonId: item.lesson_id, concept: item.title,
+      mode: modes[item.kind], due: item.due_at ?? new Date().toISOString(),
+      fromAttempt: item.kind === "confirmation" ? item.attempt_id ?? undefined : undefined,
+      quizId: item.quiz_id ?? undefined, done: item.status === "done", pending: item.status === "pending",
+    }]),
+  };
+}
+
+export function useLearning(classroom: string, teacher: boolean) {
+  const resource = useResource(classroom ? (teacher ? "teacher:" : "student:") + classroom : "", load);
+  return { ...resource, data: resource.value ?? empty };
+}
+
+function conceptCodes(labels: string[], taxonomy: Schema["ConceptView"][]) {
+  return labels.map((name) => {
+    const concept = taxonomy.find((row) => [row.label_fr, row.code].some((value) =>
+      value.toLocaleLowerCase("fr") === name.trim().toLocaleLowerCase("fr")));
+    if (!concept) throw new Error("Concept absent de la taxonomie : " + name);
+    return concept.code;
+  });
+}
+export async function saveLesson(lesson: Lesson, taxonomy: Schema["ConceptView"][]) {
+  const payload: Schema["LessonCreate"] = {
+    title: lesson.title, content_text: lesson.content, concept_codes: conceptCodes(lesson.evaluate, taxonomy),
+    focus_brief: {
+      difficulty: levels.indexOf(lesson.level) + 1, question_count: lesson.count,
+      pitfalls: lesson.pitfalls.split(",").map((value) => value.trim()).filter(Boolean),
+      instructions: lesson.instructions,
+    },
+  };
+  return api<Schema["LessonView"]>(lesson.id ? "/lessons/" + lesson.id :
+    "/classrooms/" + lesson.classroom + "/lessons", lesson.id ? "PATCH" : "POST", payload);
+}
+export async function prepareQuiz(lesson: Lesson, taxonomy: Schema["ConceptView"][], seed: boolean) {
+  if (!lesson.quizId) await saveLesson(lesson, taxonomy);
+  return api<Schema["TeacherQuiz"]>("/lessons/" + lesson.id + "/quiz/generate", "POST",
+    { question_count: lesson.count, use_seed_drafts: seed } satisfies Schema["QuizGenerate"]);
+}
+export async function saveQuestion(quizId: string, value: Question, taxonomy: Schema["ConceptView"][], id?: string) {
+  await api("/quizzes/" + quizId + "/questions" + (id ? "/" + id : ""), id ? "PATCH" : "POST", {
+    concept_code: conceptCodes([value.concept], taxonomy)[0], stem: value.text,
+    code: value.code ?? null, difficulty: levels.indexOf(value.level) + 1, explanation: value.explanation,
+    options: value.options.map((text, i) => ({ text, is_correct: i === value.correct,
+      misconception_code: i === value.correct ? null : value.misconceptions[i] || null })),
+  } satisfies Schema["QuestionDraft"]);
+  refresh();
+}
+export function useSession(lesson: Lesson, task: Practice | undefined, taxonomy: Schema["ConceptView"][]) {
+  const mode = task?.mode;
+  const parentId = task?.fromAttempt;
+  const quizId = task?.quizId ?? lesson.quizId;
+  const get = useCallback(async (): Promise<Session> => {
+    if (mode === "confirmation") {
+      const item = await api<Schema["Confirmation"] | null>("/attempts/" + parentId + "/confirmation");
+      if (!item) throw new Error("Cette vérification est terminée ou indisponible.");
+      return { questions: [question(item.question, taxonomy)], answers: {}, index: 0 };
     }
-  } catch {
-    /* Keep the current session when storage is unavailable. */
-  }
-  return cache;
+    const attempt = await api<Schema["AttemptView"]>("/quizzes/" + quizId + "/attempts", "POST");
+    const items = attempt.questions.map((row) => question(row, taxonomy));
+    const answers: Session["answers"] = {};
+    for (const answer of attempt.saved_answers ?? []) {
+      const index = items.findIndex((item) => item.id === answer.question_id);
+      if (index < 0) continue;
+      const option = items[index].optionIds?.indexOf(answer.option_id);
+      answers[index] = { option, confidence: confidenceLevels[confidenceCodes.indexOf(answer.confidence)] };
+    }
+    return { attemptId: attempt.id, questions: items, answers, index: 0 };
+  }, [mode, parentId, quizId, taxonomy]);
+  return useResource(task?.id || lesson.quizId || "", get);
 }
-function write(data: LearningData) {
-  cache = data;
-  try {
-    const raw = JSON.stringify(data);
-    localStorage.setItem(key, raw);
-    lastSerialized = raw;
-  } catch {
-    /* The in-memory session remains usable. */
-  }
-  listeners.forEach((listener) => listener());
+export function answerPayload(item: Question, answer: Answer): Schema["AnswerInput"] {
+  return { question_id: item.id, option_id: item.optionIds![answer.option],
+    confidence: confidenceCodes[confidenceLevels.indexOf(answer.confidence)] };
 }
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  const sync = (event: StorageEvent) => {
-    if (event.key === key || event.key === null) listener();
-  };
-  window.addEventListener("storage", sync);
-  return () => {
-    listeners.delete(listener);
-    window.removeEventListener("storage", sync);
-  };
-}
-export const useLearning = () =>
-  useSyncExternalStore(subscribe, snapshot, () => seed);
-export const learningService = {
-  simulateWeek() {
-    const data = snapshot();
-    write({ ...data, simulatedDays: (data.simulatedDays || 0) + 7 });
-  },
-  resetClock() {
-    write({ ...snapshot(), simulatedDays: 0 });
-  },
-  saveLesson(lesson: Lesson) {
-    const data = snapshot();
-    const saved = { ...lesson, id: lesson.id || uid() };
-    write({
-      ...data,
-      lessons: [saved, ...data.lessons.filter((l) => l.id !== saved.id)],
-    });
-    return saved;
-  },
-  saveSession(id: string, session: Session) {
-    const data = snapshot();
-    write({ ...data, sessions: { ...data.sessions, [id]: session } });
-  },
-  submit(
-    classroom: string,
-    lesson: Lesson,
-    task: Practice | undefined,
-    sessionId: string,
-    session: Session,
-  ) {
-    const data = snapshot();
-    const previous = data.attempts.find(
-      (a) =>
-        a.classroom === classroom &&
-        (task
-          ? a.practiceId === task.id
-          : a.mode === "quiz" && a.lessonId === lesson.id),
-    );
-    if (previous) return previous;
-    const answers = session.questions.map((q, i) => {
-      const answer = session.answers[i];
-      if (
-        answer?.option === undefined ||
-        !q.options[answer.option] ||
-        !answer.confidence ||
-        !confidenceLevels.includes(answer.confidence)
-      )
-        throw new Error(
-          "Réponds à chaque question et indique ton niveau de confiance.",
-        );
-      return { option: answer.option, confidence: answer.confidence };
-    });
-    const wrong = session.questions.filter(
-      (q, i) => q.correct !== answers[i].option,
-    );
-    const attempt: Attempt = {
-      id: uid(),
-      classroom,
-      lessonId: lesson.id,
-      title: task ? task.concept : lesson.title,
-      date: new Date().toISOString(),
-      mode: task?.mode || "quiz",
-      questions: session.questions,
-      answers,
-      score: answers.length - wrong.length,
-      total: answers.length,
-      practiceId: task?.id,
-    };
-    const practice = data.practice.map((p) =>
-      p.id === task?.id ? { ...p, done: true } : p,
-    );
-    const plan = (
-      concept: string,
-      mode: Practice["mode"],
-      due: number,
-      used: string[],
-    ) => {
-      const question = [...followupBank, ...bank].find(
-        (q) =>
-          q.concept === concept &&
-          !used.includes(q.id) &&
-          !session.questions.some((old) => old.text.trim() === q.text.trim()),
-      );
-      if (question)
-        practice.push({
-          id: uid(),
-          classroom,
-          lessonId: lesson.id,
-          concept,
-          mode,
-          due: relativeDate(due),
-          used,
-          fromAttempt: attempt.id,
-          question,
-          done: false,
-        });
-    };
-    const used = [...(task?.used || []), ...session.questions.map((q) => q.id)];
-    if (!task)
-      [...new Set(wrong.map((q) => q.concept))]
-        .slice(0, 2)
-        .forEach((concept) => plan(concept, "confirmation", 0, used));
-    else if (task.mode === "confirmation" && wrong.length)
-      plan(task.concept, "retest", 0, used);
-    else if (task.mode !== "review") plan(task.concept, "review", 7, used);
-    const sessions = { ...data.sessions };
-    delete sessions[sessionId];
-    const lessons = data.lessons.map((l) =>
-      !task && l.id === lesson.id ? { ...l, responses: l.responses + 1 } : l,
-    );
-    write({
-      ...data,
-      lessons,
-      practice,
-      attempts: [attempt, ...data.attempts],
-      sessions,
-    });
-    return attempt;
-  },
-};
-export function useLearningSummary(classroom: string) {
-  const data = useLearning();
-  const lessons = data.lessons.filter((l) => l.classroom === classroom);
-  const available = lessons.filter(
-    (l) =>
-      l.status === "published" &&
-      l.questions.length &&
-      (!l.release || isDue(l.release)),
-  );
-  const attempts = data.attempts
-    .filter((a) => a.classroom === classroom)
-    .sort((a, b) => b.date.localeCompare(a.date));
-  const priorityLesson = available.find(
-    (l) => !attempts.some((a) => a.mode === "quiz" && a.lessonId === l.id),
-  );
-  const tasks = data.practice.filter(
-    (p) => p.classroom === classroom && !p.done && isDue(p.due),
-  );
-  const verification = tasks.find((p) => p.mode === "confirmation") || tasks[0];
+export function useLearningSummary(classroom: string, teacher = false) {
+  const { data, loading, error } = useLearning(classroom, teacher);
+  const open = data.tasks.find((task) => task.kind === "initial" && task.status === "available");
+  const next = data.lessons.find((item) => item.id === open?.lesson_id);
+  const verification = data.practice.find((task) => task.mode === "confirmation" && !task.done);
   const monday = new Date();
   monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
   monday.setHours(0, 0, 0, 0);
   return {
-    lessons,
-    recentLessons: available
-      .slice()
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 4),
-    latestAttempt: attempts[0],
-    completedThisWeek: attempts.filter(
-      (a) => a.mode === "quiz" && new Date(a.date) >= monday,
-    ).length,
-    weeklyTarget: 4,
-    priority: priorityLesson
-      ? {
-          title: priorityLesson.title,
-          count: priorityLesson.questions.length,
-          href: quizHref(priorityLesson.id),
-        }
-      : null,
-    verificationHref: verification
-      ? practiceHref(verification)
-      : "/student/tasks",
-    reviewTopic: verification?.concept || "",
-    suspected: !!verification,
+    loading, error, lessons: data.lessons, recentLessons: data.lessons.slice(0, 5), latestAttempt: data.attempts[0],
+    completedThisWeek: data.attempts.filter((attempt) => attempt.mode === "quiz" && Date.parse(attempt.date) >= +monday).length,
+    weeklyTarget: data.lessons.filter((lesson) => lesson.quizId).length,
+    priority: next ? { title: next.title, count: next.count, href: quizHref(next.id) } : null,
+    verificationHref: verification ? practiceHref(verification) : undefined,
+    reviewTopic: verification?.concept ?? "", suspected: !!verification,
   };
 }
