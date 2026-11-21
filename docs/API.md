@@ -1,35 +1,45 @@
-# Passation frontend · Phase 0
+# Intégration FastAPI et Next.js
 
-Base API locale `http://127.0.0.1:8000/api/v1`. [Démarrage du backend](../README.md) · [OpenAPI 3.1 avec exemples JSON](openapi.json) · [Types TypeScript générés](api-types.d.ts)
+[Contrat OpenAPI](openapi.json) · [Types générés](api-types.d.ts)
 
-Le fichier OpenAPI décrit chaque méthode, chemin, paramètre, schéma de requête, schéma de réponse, authentification et erreurs. Les exemples de succès proviennent d’un appel exécuté contre l’API. Les exemples de chemins utilisent les identifiants de cet appel. Récupérer les identifiants de la session courante par les routes ci-dessous.
+La source de vérité est le schéma servi à `/openapi.json`. Les routes métier utilisent `/api/v1`. Le navigateur passe par Next.js `/backend`, qui conserve le JWT dans un cookie HttpOnly, contrôle l’origine des écritures et envoie un jeton Bearer à FastAPI. Les routes d’administration `/dev/*` sont accessibles directement sur FastAPI avec le secret de démo et un environnement de démonstration.
 
-## Connexion et parcours enseignant
+## Correspondance des parcours
 
-1. Envoyer le JSON `{"email":"prof.fahm@example.com","password":"FAHM-demo-2026"}` à `POST /auth/login`. Utiliser `Authorization: Bearer <access_token>` sur les routes métier. `GET /me` renvoie `role` et `is_synthetic`. Garder le jeton en mémoire côté navigateur. Une actualisation peut demander une nouvelle connexion.
-2. Ouvrir `GET /classrooms`. La classe fictive est signalée par `is_synthetic=true`. L’ID stable de la séance fictive est `73f54f29-9287-5537-8238-74f7d1cd3959`. Il figure aussi dans les réponses de `GET /me/tasks` et `POST /dev/seed`.
-3. Appeler `GET /taxonomy` pour les concepts et les codes d’erreur autorisés. Avec la séance fictive, `POST /lessons/{id}/quiz/generate` accepte `{"question_count":2}` pour créer un brouillon. Lire `questions` et `generation_mode`. L’envoi de `{"validated":true}` à `POST /quizzes/{id}/publish` publie le brouillon. Les actions d’édition opèrent sur les brouillons. L’erreur standard contient `error.code` et `error.message`.
-4. `GET /lessons/{id}/dashboard` et `GET /lessons/{id}/graph?tau=0.4` exposent des exemples analytiques fictifs. Associer `nodes[].id`, `edges[].source` et `edges[].target` dans Cytoscape. `groups[].student_ids` contient les identifiants de membres pseudonymisés de la classe.
-5. Récupérer le groupe via `GET /lessons/{id}/groups`, puis envoyer `{"action":"accept"}` à `PATCH /groups/{id}`. Générer le plan avec `POST /groups/{id}/remediation`, puis l’affecter avec `POST /interventions/{id}/assign` et `{"validated":true}`. Créer le retest avec `POST /lessons/{id}/retest` et `{"intervention_id":"<uuid>"}`.
+| Écran | API | Données |
+| --- | --- | --- |
+| Connexion, inscription, espace de compte | `POST /auth/register`, `POST /auth/login`, `GET /me` | Users et jeton vérifié par FastAPI |
+| Classes et adhésion par lien ou QR | `GET/POST /classrooms`, `POST /classrooms/join`, `POST /classrooms/{id}/join-code`, `GET /classrooms/{id}/members` | Classes, codes à durée limitée, membres et pseudonymes |
+| Banque pédagogique | `GET /taxonomy`, `GET/POST /bank/questions`, `POST /bank/questions/{id}/approve` | Taxonomie et questions approuvées par le professeur pour chaque étape |
+| Séances et éditeur | `GET/POST /classrooms/{id}/lessons`, `GET/PATCH /lessons/{id}`, `POST /lessons/{id}/quiz/generate`, `/quizzes/{id}/*` | Brouillons versionnés, items, publication et fermeture |
+| Activités, cours et progression étudiant | `GET /me/tasks`, `GET /me/feedback`, `GET /me/interventions`, `GET /classrooms/{id}/lessons` | Activités dues ou à venir, remédiations et corrections du porteur du jeton |
+| Quiz et confirmation | `POST /quizzes/{id}/attempts`, `POST /attempts/{id}/answers`, `POST /attempts/{id}/submit`, `GET /attempts/{id}/feedback`, `GET/POST /attempts/{id}/confirmation` | Tentatives, options choisies, confiance, observations, hypothèses et résultats |
+| Accueil professeur et MindMirror | `GET /lessons/{id}/dashboard`, `GET /lessons/{id}/graph` | Priorités et participation calculées, profils pseudonymisés et arêtes Jaccard |
+| Groupes, remédiation et retests | `POST /lessons/{id}/groups/suggest`, `GET /lessons/{id}/groups`, `PATCH /groups/{id}`, `POST /groups/{id}/remediation`, `PATCH /interventions/{id}`, `POST /interventions/{id}/assign`, `POST /lessons/{id}/retest`, `GET /lessons/{id}/before-after`, `GET /me/retests`, `POST /lessons/{id}/j7/schedule` | Propositions de groupes, décisions enseignant, plans, exercices individuels et comparaison avec effectifs |
+| Simulation | `POST /demo/advance`, `POST /dev/seed`, `POST /dev/clock/advance`, `POST /dev/clock/reset` | Jeu synthétique et horloge indépendante |
 
-## Parcours étudiant
+## Décisions d’intégration
 
-1. Se connecter avec `eleve1.fahm@example.com` et le même mot de passe de démo. `GET /me/tasks` liste le quiz fictif prêt à l’emploi. `POST /quizzes/{id}/attempts` renvoie les choix et leurs IDs.
-2. Envoyer une réponse par `POST /attempts/{id}/answers` avec `{"question_id":"<uuid>","option_id":"<uuid>","confidence":"sure"}`. Les autres valeurs de confiance sont `medium` et `unsure`. `POST /attempts/{id}/submit` enregistre la soumission simulée et retourne le feedback. Les clés de correction sont accessibles ensuite dans le feedback de l’étudiant concerné.
-3. Pour voir la confirmation simulée, répondre aux quatre questions du quiz fictif avec le deuxième choix de la première question et le premier choix des trois suivantes. `GET /attempts/{id}/confirmation` renvoie alors une question distincte. Soumettre avec la même structure JSON. La réponse peut affaiblir ou corroborer l’hypothèse.
-4. Une fois le retest affecté, le récupérer via `GET /me/retests`. Utiliser le même parcours de tentative. Après une réponse au retest et sa soumission, avancer de sept jours via `POST /dev/clock/advance` et `{"days":7}` depuis un outil autorisé. L’exercice différé apparaît dans les tâches de cet étudiant. Afficher les dates reçues en UTC dans le fuseau `Africa/Tunis` et afficher « Simulation » pour l’horloge démo.
+- L’interface Next.js reste à la racine. Le backend existant est repris sous `apps/api`. Le tracé SVG de la constellation du frontend est conservé. Il reçoit les nœuds et arêtes calculés par FastAPI. Il dessine les arêtes provisoires en pointillés.
+- La banque de référence fournie reste en brouillon. Un professeur approuve ses propres copies des items. Les données persistées de la démo sont signalées et utilisent les mêmes routes métier. Une erreur seule donne une hypothèse. Le moteur déduplique le contenu d’item pour la corroboration et exclut du regroupement les profils avec moins de quatre réponses initiales.
+- Le score de priorité utilise le nombre d’étudiants concernés, multiplié par `1 + poids × part d’erreurs confiantes`. Le regroupement utilise Jaccard et average linkage avec taille minimale de trois. Les profils corroborés alimentent le premier passage, et les profils restants peuvent produire des suggestions provisoires.
+- Les retests et la relance sont attribués à des étudiants précis. La sélection exclut les items déjà présentés ou réservés à cet étudiant dans la séance. Le calendrier stocke les heures UTC. Le navigateur affiche les dates dans le fuseau `Africa/Tunis`. Les résultats restent descriptifs.
+- Pydantic contrôle les schémas et les durées. Le cache Ollama conserve les résultats validés et un hachage de la demande. En exécution avec Uvicorn, les logs de génération indiquent le modèle, la durée et les compteurs de tokens disponibles. Les prompts et les réponses brutes n’apparaissent pas dans ces logs.
 
-## Disponibilité et autorisations
+## Requêtes clés
 
-| Routes | Phase 0 |
-| --- | --- |
-| `GET /health` | Santé minimale publique, hors du préfixe métier |
-| `/auth/*`, `/me`, `/classrooms*`, `/taxonomy`, `GET /lessons/{id}` | Base SQLite et autorisations réelles |
-| Routes F2–F5 marquées « mock » dans OpenAPI | Scénario en mémoire, uniquement pour les comptes fictifs de départ et la séance fictive. Un redémarrage ou `POST /dev/seed` réinitialise le scénario |
-| `/dev/*` | `DEMO_MODE=true` et en-tête `X-Demo-Secret`. Garder le secret côté outil local ou serveur de confiance |
+```json
+{"title":"Les indices Python","content_text":"Les indices non négatifs vont de zéro à n−1.","concept_codes":["C_INDEXING"],"focus_brief":{"question_count":4,"difficulty":1,"pitfalls":["Dernier indice"]}}
+```
 
-Le quiz fictif permet quatre questions initiales et un parcours de confirmation, de retest et de J+7 sur un concept. Les tableaux Dashboard et Avant/après contiennent des valeurs fixes explicitement fictives. Les séances créées via SQLite restent en brouillon jusqu’à la Phase 1. Hors démo, les routes marquées « mock » répondent `501 PHASE_NOT_IMPLEMENTED` aux comptes du rôle attendu. Dans la démo, un compte extérieur au scénario reçoit `404`.
+La publication du quiz et l’affectation du plan attendent chacune `{"validated":true}`.
 
-Codes d’erreur à traiter dans les vues. `401` pour une session absente ou expirée, `403` pour un rôle invalide, `404` pour une ressource introuvable ou hors du périmètre autorisé, `409` pour une action incompatible avec l’état de la ressource, `422` pour une requête invalide et `429` pour une limite de débit. L’API limite CORS aux origines configurées. Pour un autre port frontend, définir `CORS_ORIGINS` et redémarrer le serveur.
+```json
+{"question_id":"<uuid>","option_id":"<uuid>","confidence":"sure"}
+```
 
-Première version du contrat. Les routes et les types devront continuer à évoluer ensemble. QR d’adhésion côté frontend à partir du `join_path` fourni par l’API. La rotation des codes d’adhésion et la persistance du workflow de quiz arrivent en Phase 1.
+Réponse type d’accès refusé ou de ressource inaccessible.
+
+```json
+{"error":{"code":"RESOURCE_NOT_FOUND","message":"Ressource introuvable."}}
+```

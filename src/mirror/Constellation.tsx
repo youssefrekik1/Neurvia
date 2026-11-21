@@ -1,14 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Crosshair, Info, Maximize, Minus, Plus, Users, X } from "lucide-react";
-import { curve, model, satellites, sky } from "./layout";
+import { curve, makeLayout, satellites, sky } from "./layout";
 import type { Point } from "./layout";
-import { conceptNames } from "./service";
+import type { Schema } from "../lib/api";
 import type { Group, Student } from "./service";
 
 type Props = {
   selected: string | null;
   focus: number;
   groups: Group[];
+  students: Student[];
+  links: Schema["GraphEdge"][];
   groupMode: boolean;
   activeGroup: string;
   onGroup: (id: string) => void;
@@ -22,6 +24,8 @@ export default function Constellation({
   selected,
   focus,
   groups,
+  students,
+  links,
   activeGroup,
   groupMode,
   onSelect,
@@ -38,6 +42,7 @@ export default function Constellation({
   const [dragging, setDragging] = useState(false);
   const drag = useRef<Point | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const model = useMemo(() => makeLayout(students, groups, links), [students, groups, links]);
   const selectedStar = model.stars.find((s) => s.student.id === selected);
   const selectedMembers =
     groups.find((g) => g.id === activeGroup)?.members ?? [];
@@ -95,7 +100,7 @@ export default function Constellation({
         className="mm-map"
         viewBox="0 0 900 500"
         role="group"
-        aria-label="Constellation interactive des 22 étudiants. Utilisez Tab pour sélectionner un profil."
+        aria-label={`Constellation interactive. ${students.length} étudiants. Utilisez Tab pour sélectionner un profil.`}
         onPointerDown={(event) => {
           if (
             event.button !== 0 ||
@@ -173,7 +178,7 @@ export default function Constellation({
             fill="url(#mm-bluemist)"
           />
           {edges &&
-            model.edges.map(({ a, b, weight }, index) => {
+            model.edges.map(({ a, b, weight, provisional }, index) => {
               const related =
                 a.student.id === selected || b.student.id === selected;
               const dim = groupMode && !selectedMembers.includes(a.student.id);
@@ -185,6 +190,7 @@ export default function Constellation({
                   stroke={a.color}
                   opacity={dim ? 0.11 : related ? 0.76 : 0.19 + weight * 0.13}
                   strokeWidth={related ? 1.1 : 0.8}
+                  strokeDasharray={provisional ? "4 3" : undefined}
                 />
               );
             })}
@@ -193,8 +199,8 @@ export default function Constellation({
             const selectedNode = !groupMode && student.id === selected;
             const measured = student.mastery !== null;
             const luminosity = 0.38 + (student.mastery ?? 0) * 0.006;
-            const glow = "url(#mm-glow" + (cluster < 0 ? 3 : cluster) + ")";
-            const hub = ["A03", "A04", "A06", "A05"].includes(student.id);
+            const glow = "url(#mm-glow" + (cluster < 0 ? 3 : cluster % hues.length) + ")";
+            const hub = cluster >= 0 && groups[cluster]?.members[0] === student.id;
             const radius =
               (hub ? 22 : 9) * luminosity + (selectedNode ? 26 : 0);
             return (
@@ -216,9 +222,9 @@ export default function Constellation({
                     return (
                       <g key={i}>
                         <title>
-                          {student.id +
+                          {student.label +
                             " · " +
-                            conceptNames[i] +
+                            s.label +
                             " · " +
                             s.score +
                             " %"}
@@ -252,11 +258,10 @@ export default function Constellation({
                   role="button"
                   tabIndex={0}
                   aria-label={
-                    "Étudiant " +
-                    student.id +
+                    student.label +
                     ", " +
                     (measured
-                      ? "maîtrise observée " + student.mastery + " %"
+                      ? "réussite au quiz " + student.mastery + " %"
                       : "en attente de réponse")
                   }
                   className="mm-star"
@@ -269,10 +274,10 @@ export default function Constellation({
                   }}
                 >
                   <title>
-                    {student.id +
+                    {student.label +
                       " · " +
                       (measured
-                        ? student.mastery + " % de maîtrise observée"
+                        ? student.mastery + " % de réussite au quiz"
                         : "Données insuffisantes")}
                   </title>
                   <circle cx={x} cy={y} r="15" fill="transparent" />
@@ -354,7 +359,7 @@ export default function Constellation({
                       fontWeight="600"
                       textAnchor="middle"
                     >
-                      {student.id}
+                      {student.label}
                     </text>
                   </g>
                 </g>
@@ -409,7 +414,7 @@ export default function Constellation({
             </button>
           </div>
           <p>
-            L’éclat indique la maîtrise observée au quiz. Les points creux
+            L’éclat indique la réussite au quiz au quiz. Les points creux
             signalent une absence de réponse.
           </p>
           <p>
@@ -438,7 +443,7 @@ export default function Constellation({
       <div className="mm-sky-footer">
         <div className="mm-glass mm-counter">
           <Users size={15} />
-          <span>22 étudiants</span>
+          <span>{students.length} étudiants</span>
           <i />
           <span>
             {groups.filter((g) => g.status !== "rejected").length} groupes

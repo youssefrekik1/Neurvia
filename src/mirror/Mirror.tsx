@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ArrowRight,
   BookOpen,
@@ -18,13 +18,7 @@ import {
 } from "lucide-react";
 import Constellation from "./Constellation";
 import Groups, { GroupPanel } from "./Groups";
-import {
-  conceptNames,
-  getClassRoster,
-  initialGroups,
-  studentDifficulty,
-  useMirrorGroups,
-} from "./service";
+import { studentDifficulty, useMirrorData } from "./service";
 import type { Group, Student } from "./service";
 import "./mirror.css";
 
@@ -34,17 +28,18 @@ const recommendation =
 function StudentPanel({
   student,
   classroom,
+  lessonId,
   group,
   onClose,
 }: {
   student: Student;
   classroom: string;
+  lessonId: string;
   group?: Group;
   onClose: () => void;
 }) {
   const [tab, setTab] = useState("Profil");
   const measured = student.mastery !== null;
-  const score = Math.round(((student.mastery ?? 0) * 6) / 100);
   return (
     <aside className="mm-panel">
       <header className="mm-panel-heading">
@@ -52,7 +47,7 @@ function StudentPanel({
           <UserRound size={26} strokeWidth={1.65} />
         </span>
         <div>
-          <h2>{student.id}</h2>
+          <h2>{student.label}</h2>
           <small>Étudiant(e)</small>
         </div>
         <button
@@ -74,20 +69,19 @@ function StudentPanel({
         {tab === "Profil" && (
           <>
             <div className="mm-mastery">
-              <strong>Maîtrise globale</strong>
+              <strong>Réussite au quiz</strong>
               <div>
                 <progress
                   max="100"
                   value={student.mastery ?? 0}
-                  aria-label="Maîtrise globale"
+                  aria-label="Réussite au quiz"
                 />
                 <b>{measured ? student.mastery + " %" : "—"}</b>
               </div>
             </div>
             <h3>Notions clés</h3>
             <ul className="mm-concepts">
-              {conceptNames.map((name, i) => {
-                const score = student.concepts[i];
+              {student.concepts.map(({ label: name, score }) => {
                 return (
                   <li key={name}>
                     <span
@@ -139,13 +133,13 @@ function StudentPanel({
                     }
                   >
                     {student.corroborated
-                      ? "Deux observations"
-                      : "Une observation"}
+                      ? "Erreur répétée sur plusieurs items"
+                      : "Hypothèse"}
                   </span>
                   <p>
                     {student.corroborated
-                      ? "Une question de vérification distincte a fait ressortir la même erreur."
-                      : "Une réponse au quiz suggère cette difficulté. Elle reste à confirmer en séance."}
+                      ? "Des items indépendants ont fait ressortir la même erreur."
+                      : "Les réponses suggèrent cette difficulté. Elle reste à vérifier."}
                   </p>
                 </div>
                 <h3>Action recommandée</h3>
@@ -173,18 +167,18 @@ function StudentPanel({
                 {student.corroborated && (
                   <div>
                     <i />
-                    <strong>Question de vérification</strong>
+                    <strong>Observations sur des items indépendants</strong>
                     <p>Nouvel exercice · difficulté corroborée</p>
                   </div>
                 )}
                 <div>
                   <i />
-                  <strong>Boucles et indices Python</strong>
-                  <p>Quiz de séance · {score} bonnes réponses sur 6</p>
+                  <strong>{classroom}</strong>
+                  <p>Quiz de séance · {student.correct} bonnes réponses sur {student.answered}</p>
                 </div>
                 <div>
                   <i />
-                  <strong>Maîtrise observée</strong>
+                  <strong>Réussite au quiz</strong>
                   <p>Synthèse des notions évaluées · {student.mastery} %</p>
                 </div>
               </div>
@@ -201,7 +195,7 @@ function StudentPanel({
             href={
               "/teacher/groups?group=" +
               group.id +
-              "&student=" +
+              "&lesson=" + lessonId + "&student=" +
               student.id +
               "&view=plan"
             }
@@ -220,17 +214,15 @@ function StudentPanel({
   );
 }
 
-function ClassroomMirror({
-  classroom,
-  groups,
-}: {
-  classroom: string;
-  groups: Group[];
+function ClassroomMirror({ data, selector }: {
+  data: ReturnType<typeof useMirrorData>; selector: ReactNode;
 }) {
-  const roster = getClassRoster(classroom);
+  const { students: roster, groups, edges, selected: lesson, dashboard } = data;
+  const lessonId = lesson?.id ?? "";
+  const classroom = lesson?.title ?? "";
   const requested = new URLSearchParams(window.location.search).get("student");
   const [selected, setSelected] = useState<string | null>(
-    roster.find((s) => s.id === requested)?.id ?? "A17",
+    roster.find((s) => s.id === requested)?.id ?? null,
   );
   const [groupMode, setGroupMode] = useState(false);
   const [activeGroup, setActiveGroup] = useState(groups[0]?.id ?? "");
@@ -244,7 +236,7 @@ function ClassroomMirror({
     (g) => selected && g.members.includes(selected),
   );
   const matches = roster.filter((s) =>
-    s.id.toLowerCase().includes(query.trim().toLowerCase()),
+    s.label.toLowerCase().includes(query.trim().toLowerCase()),
   );
   const select = (s: Student) => {
     setSelected(s.id);
@@ -253,7 +245,7 @@ function ClassroomMirror({
     setQuery("");
     setFocus((i) => i + 1);
   };
-  const report = groups.find((g) => g.id === "boucles") ?? initialGroups[0];
+  const report = groups.find((g) => g.status !== "rejected");
   return (
     <div className="mm mm-view">
       <header className="mm-heading">
@@ -263,6 +255,7 @@ function ClassroomMirror({
             Vue de la compréhension de la classe et des difficultés communes.
           </p>
         </div>
+        {selector}
         {roster.length > 0 && (
           <div
             className="mm-segment"
@@ -313,7 +306,7 @@ function ClassroomMirror({
               <div className="mm-graph-toolbar">
                 <span className="mm-session">
                   <span />
-                  Boucles et indices Python
+                  {lesson?.title}
                 </span>
                 <div className="mm-graph-tools">
                   <button
@@ -376,7 +369,7 @@ function ClassroomMirror({
                       {matches.map((s) => (
                         <li key={s.id}>
                           <button onClick={() => select(s)}>
-                            {s.id}
+                            {s.label}
                             <small>
                               {s.mastery === null
                                 ? "Sans réponse"
@@ -421,7 +414,7 @@ function ClassroomMirror({
                 <div className="mm-student-list">
                   <div className="mm-list-head">
                     <span>Étudiant</span>
-                    <span>Maîtrise observée</span>
+                    <span>Réussite au quiz</span>
                   </div>
                   {roster.map((s) => (
                     <button
@@ -431,7 +424,7 @@ function ClassroomMirror({
                     >
                       <span>
                         <UserRound size={15} />
-                        {s.id}
+                        {s.label}
                       </span>
                       <span>
                         {s.mastery === null ? "Sans réponse" : s.mastery + " %"}
@@ -443,6 +436,8 @@ function ClassroomMirror({
               ) : (
                 <Constellation
                   selected={selected}
+                  students={roster}
+                  links={edges}
                   focus={focus}
                   groups={groups}
                   groupMode={groupMode}
@@ -453,13 +448,14 @@ function ClassroomMirror({
               )}
             </section>
             {groupMode && group ? (
-              <GroupPanel group={group} classroom={classroom} />
+              <GroupPanel group={group} students={roster} lessonId={lessonId} />
             ) : (
               student && (
                 <StudentPanel
                   key={student.id}
                   student={student}
                   classroom={classroom}
+                  lessonId={lessonId}
                   group={studentGroup}
                   onClose={() => setSelected(null)}
                 />
@@ -473,21 +469,16 @@ function ClassroomMirror({
               </span>
               <div>
                 <h2>À retenir</h2>
-                <p>
-                  Les réponses de 7 étudiants suggèrent une difficulté sur les
-                  bornes des boucles.
-                </p>
+                {dashboard?.priorities.length ? dashboard.priorities.map((priority) => <p key={priority.misconception_code}>
+                  {priority.label} · {priority.affected_students} étudiants concernés · {priority.corroborated_students} cas corroborés
+                </p>) : <p>Aucune erreur associée à une notion dans cette séance.</p>}
               </div>
             </div>
             <div className="mm-context-actions">
               <h2>Actions suggérées</h2>
               <div>
-                <a
-                  className="mm-outline"
-                  href={"/teacher/groups?group=" + report.id}
-                >
-                  <Users size={16} />
-                  Voir le groupe
+                <a className="mm-outline" href={"/teacher/groups?lesson=" + lessonId + (report ? "&group=" + report.id : "")}>
+                  <Users size={16} /> Voir les groupes
                 </a>
                 <a className="mm-primary" href="/teacher/lessons/new">
                   <CalendarDays size={16} />
@@ -502,17 +493,19 @@ function ClassroomMirror({
   );
 }
 
-export default function Mirror({
-  path,
-  classroom,
-}: {
-  path: string;
-  classroom: string;
-}) {
-  const groups = useMirrorGroups(classroom);
-  return path.startsWith("/teacher/mindmirror") ? (
-    <ClassroomMirror key={classroom} classroom={classroom} groups={groups} />
-  ) : (
-    <Groups key={classroom} groups={groups} classroom={classroom} />
-  );
+export default function Mirror({ path, classroom }: { path: string; classroom: string }) {
+  const params = new URLSearchParams(window.location.search);
+  const data = useMirrorData(classroom, true, params.get("lesson"));
+  const isGraph = path.startsWith("/teacher/mindmirror");
+  const selector = data.available.length > 0 && <label>Séance
+    <select aria-label="Séance" value={data.selected?.id ?? ""} onChange={(event) =>
+      window.location.assign((isGraph ? "/teacher/mindmirror" : "/teacher/groups") + "?lesson=" + event.target.value)}>
+      {data.available.map((lesson) => <option value={lesson.id} key={lesson.id}>{lesson.title}</option>)}
+    </select>
+  </label>;
+  if (data.loading) return <p role="status">Chargement des réponses…</p>;
+  if (data.error) return <p role="alert">{data.error}</p>;
+  return isGraph ? <ClassroomMirror key={data.selected?.id ?? classroom} data={data} selector={selector} /> :
+    <Groups key={data.selected?.id ?? classroom} groups={data.groups} students={data.students}
+      lessonId={data.selected?.id ?? ""} selector={selector} />;
 }

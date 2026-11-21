@@ -5,32 +5,17 @@ import {
   Braces,
   ChevronRight,
   ClipboardList,
-  Clock3,
   GraduationCap,
   Info,
   ShieldCheck,
-  Sigma,
   Target,
   Users,
-  Waypoints,
 } from "lucide-react";
-import {
-  getClassRoster,
-  getRoster,
-  useSuggestedGroupCount,
-} from "../mirror/service";
-import {
-  dayLabel,
-  feedbackHref,
-  useLearningSummary,
-} from "../learning/service";
+import QRCode from "qrcode";
+import { useMirrorData } from "../mirror/service";
+import { dayLabel, feedbackHref, useLearningSummary } from "../learning/service";
+import { api, errorMessage, refresh, type Schema, useGet } from "../lib/api";
 import "./dashboard.css";
-const classOptions = ["L1 Python · Groupe A", "L1 Python · Groupe B"];
-const courseRows = [
-  { name: "Algorithmique & Python", unit: "Boucles et indices", icon: Braces },
-  { name: "Mathématiques", unit: "Suites arithmétiques", icon: Sigma },
-  { name: "Réseaux", unit: "Les couches du modèle OSI", icon: Waypoints },
-];
 function Go({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <a className="nd-go" href={href}>
@@ -50,21 +35,28 @@ function Heading({ title, sub }: { title: string; sub: string }) {
 export function Dashboard({
   teacher,
   classroom,
+  profile,
 }: {
   teacher: boolean;
   classroom: string;
+  profile: Schema["Profile"];
 }) {
-  const summary = useLearningSummary(classroom),
-    groupCount = useSuggestedGroupCount(classroom),
-    roster = getClassRoster(classroom);
-  const active = roster.length > 0;
+  const summary = useLearningSummary(classroom, teacher);
+  const mirror = useMirrorData(classroom, teacher);
+  const dashboard = mirror.dashboard;
+  const priority = dashboard?.priorities[0];
+  const roster = useGet<Schema["Member"][]>(teacher && classroom ? "/classrooms/" + classroom + "/members" : "");
+  const groupCount = mirror.groups.filter((group) => group.status === "suggested").length;
+  const name = profile.full_name;
   if (!teacher)
     return (
       <div className="nd">
         <Heading
-          title="Bonjour Malek"
+          title={"Bonjour " + name}
           sub="Voici ce qui compte pour ton apprentissage aujourd’hui."
         />
+        {summary.error && <p role="alert">{summary.error}</p>}
+        {summary.loading && <p role="status">Chargement des activités…</p>}
         <section className="nd-studentpriority">
           <div>
             <small>Ta priorité du jour</small>
@@ -80,11 +72,6 @@ export function Dashboard({
               </p>
             )}
           </div>
-          {summary.priority && (
-            <span>
-              <Clock3 size={15} /> 8 min
-            </span>
-          )}
           <Go href={summary.priority?.href || "/student/tasks"}>
             {summary.priority ? "Commencer le quiz" : "Mes tâches"}
           </Go>
@@ -93,35 +80,18 @@ export function Dashboard({
           <section className="nd-card">
             <h2>Mes cours</h2>
             {!summary.lessons.length && <p>Aucun cours disponible.</p>}
-            {courseRows.map(
-              ({ name, unit, icon: Icon }, i) =>
-                summary.lessons.some((l) => l.subject === name) && (
-                  <a
-                    key={name}
-                    className="nd-course"
-                    href={
-                      "/student/courses?course=" +
-                      ["python", "math", "network"][i]
-                    }
-                  >
-                    <i>
-                      <Icon size={19} />
-                    </i>
-                    <div>
-                      <strong>{name}</strong>
-                      <p>Dernière leçon · {unit}</p>
-                    </div>
-                    <span>Ouvrir →</span>
-                  </a>
-                ),
-            )}
+            {summary.recentLessons[0] && <a className="nd-course" href="/student/courses?course=python">
+              <i><Braces size={19} /></i>
+              <div><strong>{summary.recentLessons[0].subject}</strong><p>{summary.recentLessons[0].title}</p></div>
+              <span>Ouvrir →</span>
+            </a>}
           </section>
           <section className="nd-card">
             <h2>Ma progression</h2>
             <strong>Quiz terminés cette semaine</strong>
             <progress
               value={summary.completedThisWeek}
-              max={summary.weeklyTarget}
+              max={Math.max(1, summary.weeklyTarget)}
             />
             <p>
               {summary.completedThisWeek} quiz sur {summary.weeklyTarget}
@@ -168,7 +138,7 @@ export function Dashboard({
   return (
     <div className="nd">
       <Heading
-        title="Bonjour, Mme Ben Salem"
+        title={"Bonjour, " + name}
         sub="Voici l’état de votre classe aujourd’hui."
       />
       <div className="nd-hero">
@@ -179,43 +149,18 @@ export function Dashboard({
             </i>
             <div>
               <span>Préparer le prochain cours</span>
-              <h2>
-                {active
-                  ? "Bornes des boucles Python"
-                  : "Préparer une première séance"}
-              </h2>
+              <h2>{priority?.label ?? "Préparer une première séance"}</h2>
             </div>
           </div>
           <div className="nd-signals">
-            <span>
-              <Users /> {active ? "7 étudiants concernés" : "Aucune réponse"}
-            </span>
-            {active && (
-              <>
-                <span>
-                  <ShieldCheck /> 2 cas corroborés
-                </span>
-                <span>
-                  <Info /> Autres difficultés à vérifier
-                </span>
-              </>
-            )}
+            <span><Users /> {priority ? priority.affected_students + " étudiants concernés" : "Aucune erreur observée"}</span>
+            {priority && <span><ShieldCheck /> {priority.corroborated_students} cas corroborés</span>}
           </div>
           <div className="nd-advice">
             <Info size={16} />
-            <p>
-              {active
-                ? "Il s’agit d’une hypothèse de difficulté basée sur les réponses au quiz. Une vérification en séance est recommandée."
-                : "Créez une séance pour recueillir les premières réponses."}
-            </p>
-            <Go
-              href={
-                active
-                  ? "/teacher/mindmirror?lesson=boucles-indices"
-                  : "/teacher/lessons/new"
-              }
-            >
-              {active ? "Voir les difficultés" : "Créer une séance"}
+            <p>{priority ? "Hypothèse pédagogique basée sur les réponses au quiz." : "Publiez une séance pour recueillir des réponses."}</p>
+            <Go href={mirror.selected ? "/teacher/mindmirror?lesson=" + mirror.selected.id : "/teacher/lessons/new"}>
+              {mirror.selected ? "Voir les difficultés" : "Créer une séance"}
             </Go>
           </div>
         </section>
@@ -237,6 +182,19 @@ export function Dashboard({
           ))}
         </section>
       </div>
+      {mirror.error && <p role="alert">{mirror.error}</p>}
+      {dashboard && dashboard.priorities.length > 0 && <section className="nd-card">
+        <h2>Priorités pédagogiques</h2>
+        <ol>{dashboard.priorities.map((item) => <li key={item.misconception_code}>
+          {item.label} · {item.affected_students} étudiants · {item.corroborated_students} corroborés ·
+          {" "}{Math.round(item.confident_wrong_share * 100)} % d’erreurs confiantes
+        </li>)}</ol>
+        <p>{dashboard.participation.insufficient_count} profils avec moins de quatre réponses.</p>
+        {dashboard.insights.map((item) => <p key={item.kind}>
+          <strong>{item.kind === "same_score_different_errors" ? "Même score, erreurs différentes" : "Scores différents, erreur commune"}</strong>
+          {" · "}{item.labels.map((label, index) => label + " (" + item.scores[index] + ")").join(" et ")}
+        </p>)}
+      </section>}
       <div className="nd-kpis">
         <div>
           <i>
@@ -244,9 +202,7 @@ export function Dashboard({
           </i>
           <section>
             <b>
-              {summary.lessons.find((l) => l.id === "boucles-indices")
-                ?.responses || 0}{" "}
-              <em>/ {roster.length}</em>
+              {dashboard?.participation.submitted_count ?? 0} <em>/ {roster.value?.length ?? 0}</em>
             </b>
             <p>Réponses reçues</p>
           </section>
@@ -271,29 +227,21 @@ export function Dashboard({
                   "Séance",
                   "Date",
                   "Réponses",
-                  "Principale difficulté",
-                  "Évolution de la classe",
                 ].map((h) => (
                   <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {summary.recentLessons.slice(0, 5).map((s, i) => (
+              {summary.recentLessons.slice(0, 5).map((s) => (
                 <tr key={s.id}>
                   <td>
                     <a href={"/teacher/lessons/" + s.id}>{s.title}</a>
                   </td>
                   <td>{dayLabel(s.date)}</td>
                   <td>
-                    {s.responses} / {roster.length}
+                    {s.responses} / {roster.value?.length ?? 0}
                   </td>
-                  <td>
-                    <span className={"nd-tag tone" + (i % 3)}>
-                      {s.difficulty}
-                    </span>
-                  </td>
-                  <td>{s.trend}</td>
                 </tr>
               ))}
             </tbody>
@@ -306,56 +254,82 @@ export function Dashboard({
     </div>
   );
 }
-export function Classes({
-  classroom,
-  choose,
-}: {
-  classroom: string;
-  choose: (v: string) => void;
+export function Classes({ classroom, choose, teacher, classrooms, joinCode }: {
+  classroom: string; choose: (v: string) => void; teacher: boolean;
+  classrooms: Schema["ClassroomView"][]; joinCode?: string;
 }) {
   const [query, setQuery] = useState("");
-  const students = getRoster(classroom);
-  return (
-    <div className="nd">
-      <Heading
-        title="Mes classes"
-        sub="Consultez les membres de vos groupes de TD."
-      />
-      <div className="nd-classcards">
-        {classOptions.map((c) => (
-          <button
-            className={"nd-card " + (c === classroom ? "active" : "")}
-            key={c}
-            onClick={() => choose(c)}
-          >
-            <GraduationCap />
-            <strong>{c}</strong>
-            <span>{getRoster(c).length} étudiants</span>
-          </button>
-        ))}
-      </div>
+  const [name, setName] = useState("");
+  const [code, setCode] = useState(joinCode ?? "");
+  const [pseudonym, setPseudonym] = useState("");
+  const [validHours, setValidHours] = useState(72);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [qr, setQr] = useState("");
+  const members = useGet<Schema["Member"][]>(teacher && classroom ? "/classrooms/" + classroom + "/members" : "");
+  const room = classrooms.find((item) => item.id === classroom);
+  const link = room?.join_path ? window.location.origin + room.join_path : "";
+  useEffect(() => {
+    let active = true;
+    if (link) void QRCode.toDataURL(link, { width: 176 }).then((image) => { if (active) setQr(image); },
+      () => { if (active) setQr(""); });
+    return () => { active = false; };
+  }, [link]);
+  async function run(action: () => Promise<Schema["ClassroomView"]>, message: string) {
+    setBusy(true);
+    setNotice("");
+    try { const result = await action(); refresh(); choose(result.id); setNotice(message); }
+    catch (error) { setNotice(errorMessage(error)); }
+    finally { setBusy(false); }
+  }
+  return <div className="nd">
+    <Heading title="Mes classes" sub={teacher ? "Créez une classe et partagez son code." : "Rejoignez une classe avec le code de votre professeur."} />
+    {notice && <p role="status">{notice}</p>}
+    <section className="nd-card">
+      {teacher ? <form className="lr-form" onSubmit={(event) => {
+        event.preventDefault(); void run(() => api("/classrooms", "POST", { name, subject: "python_intro", join_ttl_hours: validHours }),
+          "Classe créée.");
+      }}>
+        <label>Nom de la classe<input value={name} onChange={(event) => setName(event.target.value)} required maxLength={120} /></label>
+        <label>Validité du code (heures)<input type="number" min={1} max={720} value={validHours} required
+          onChange={(event) => setValidHours(Number(event.target.value))} /></label>
+        <button className="lr-btn primary" disabled={busy}>Créer la classe</button>
+      </form> : <form className="lr-form" onSubmit={(event) => {
+        event.preventDefault(); void run(() => api("/classrooms/join", "POST", { code, pseudonym: pseudonym || null }),
+          "Classe rejointe.");
+      }}>
+        <label>Code de la classe<input value={code} onChange={(event) => setCode(event.target.value)} required /></label>
+        <label>Pseudonyme (facultatif)<input value={pseudonym} onChange={(event) => setPseudonym(event.target.value)} /></label>
+        <button className="lr-btn primary" disabled={busy}>Rejoindre la classe</button>
+      </form>}
+    </section>
+    <div className="nd-classcards">{classrooms.map((item) =>
+      <button className={"nd-card " + (item.id === classroom ? "active" : "")} key={item.id} onClick={() => choose(item.id)}>
+        <GraduationCap /><strong>{item.name}</strong>
+      </button>)}</div>
+    {teacher && room && <>
       <section className="nd-card">
-        <h2>Étudiants · {classroom}</h2>
-        <input
-          placeholder="Rechercher un identifiant"
-          aria-label="Rechercher un identifiant"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <div className="nd-roster">
-          {students
-            .filter((id) => id.toLowerCase().includes(query.toLowerCase()))
-            .map((id) => (
-              <a key={id} href={"/teacher/mindmirror?student=" + id}>
-                <Users size={16} />
-                {id}
-              </a>
-            ))}
-        </div>
-        {!students.length && <p>Aucun étudiant inscrit dans cette classe.</p>}
+        <h2>Invitation · {room.name}</h2>
+        <p>Code : <strong>{room.join_code}</strong></p>
+        {room.join_expires_at && <p>Expire le {dayLabel(room.join_expires_at, true)}</p>}
+        {link && <p><a href={link}>{link}</a></p>}
+        {link && qr && <img src={qr} width={176} height={176} alt="QR d’adhésion à la classe" />}
+        <button className="lr-btn" disabled={busy} onClick={() => void run(
+          () => api("/classrooms/" + room.id + "/join-code", "POST", { join_ttl_hours: validHours }), "Code renouvelé.",
+        )}>Renouveler le code</button>
       </section>
-    </div>
-  );
+      <section className="nd-card">
+        <h2>Étudiants · {room.name}</h2>
+        <input placeholder="Rechercher un pseudonyme" aria-label="Rechercher un pseudonyme"
+          value={query} onChange={(event) => setQuery(event.target.value)} />
+        <div className="nd-roster">{members.value?.filter((item) => item.pseudonym.toLowerCase().includes(query.toLowerCase()))
+          .map((item) => <a key={item.id} href={"/teacher/mindmirror?student=" + item.id}>
+            <Users size={16} />{item.pseudonym}</a>)}</div>
+        {members.error && <p role="alert">{members.error}</p>}
+        {members.value?.length === 0 && <p>Aucun étudiant inscrit dans cette classe.</p>}
+      </section>
+    </>}
+  </div>;
 }
 export function SettingsPage() {
   const [motion, setMotion] = useState(false);

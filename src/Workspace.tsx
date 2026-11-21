@@ -19,15 +19,18 @@ import {
   X,
 } from "lucide-react";
 import Login from "./login/Login";
-import { getRole, logout } from "./login/auth";
+import { logout } from "./login/auth";
+import { api, errorMessage, type Schema, useGet } from "./lib/api";
 import Mirror from "./mirror/Mirror";
 import Learning from "./learning/Learning";
+import QuestionBank from "./learning/QuestionBank";
 import { Dashboard, Classes, SettingsPage, Help } from "./workspace/Dashboards";
 
 const teacherLinks = [
   { slug: "dashboard", label: "Accueil", icon: Home },
   { slug: "classes", label: "Mes classes", icon: School },
   { slug: "lessons", label: "Séances & quiz", icon: BookOpen },
+  { slug: "bank", label: "Banque pédagogique", icon: Library },
   { slug: "mindmirror", label: "MindMirror", icon: Network },
   { slug: "groups", label: "Groupes", icon: Users },
   { slug: "settings", label: "Paramètres", icon: Settings },
@@ -35,6 +38,7 @@ const teacherLinks = [
 const studentLinks = [
   { slug: "dashboard", label: "Mon espace", icon: Home },
   { slug: "tasks", label: "Mes tâches", icon: ListChecks },
+  { slug: "classes", label: "Mes classes", icon: School },
   { slug: "courses", label: "Mes cours", icon: Library },
   {
     slug: "progress",
@@ -43,30 +47,31 @@ const studentLinks = [
   },
   { slug: "help", label: "Aide", icon: CircleHelp },
 ];
-export const classrooms = ["L1 Python · Groupe A", "L1 Python · Groupe B"];
 export default function Workspace({ path }: { path: string }) {
   const router = useRouter();
   const [, role, page] = path.split("/");
-  const [ready, setReady] = useState(false),
-    [classroom, setClassroom] = useState(classrooms[0]);
-  const [drawer, setDrawer] = useState(false),
-    [popover, setPopover] = useState("");
+  const validRoute = role === "teacher" || role === "student" || role === "join";
+  const profileResource = useGet<Schema["Profile"]>(validRoute ? "/me" : "");
+  const profile = profileResource.value;
+  const roomResource = useGet<Schema["ClassroomView"][]>(profile ? "/classrooms" : "");
+  const classrooms = roomResource.value ?? [];
+  const [preferred, setPreferred] = useState("");
+  const classroom = classrooms.some((c) => c.id === preferred) ? preferred : classrooms[0]?.id ?? "";
+  const room = classrooms.find((entry) => entry.id === classroom);
+  const [drawer, setDrawer] = useState(false);
+  const [popover, setPopover] = useState("");
+  const [failure, setFailure] = useState("");
   useEffect(() => {
-    if (role === "student" || role === "teacher") {
-      const active = getRole();
-      if (active !== role) {
-        location.replace(active ? "/" + active + "/dashboard" : "/login");
-        return;
-      }
-    }
     document.documentElement.dataset.motion =
-      localStorage.getItem("neurvia.reduceMotion") === "true"
-        ? "reduced"
-        : "auto";
+      localStorage.getItem("neurvia.reduceMotion") === "true" ? "reduced" : "auto";
     const stored = localStorage.getItem("neurvia.classroom");
-    if (stored && classrooms.includes(stored)) setClassroom(stored);
-    setReady(true);
-  }, [role]);
+    if (stored) setPreferred(stored);
+  }, []);
+  useEffect(() => {
+    if (!validRoute || role === "join" || profileResource.loading) return;
+    if (profile && profile.role !== role) router.replace("/" + profile.role + "/dashboard");
+    if (!profile && profileResource.error === "Authentification requise.") router.replace("/login");
+  }, [role, router, profile, profileResource.loading, profileResource.error, validRoute]);
   useEffect(() => {
     const close = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -77,20 +82,27 @@ export default function Workspace({ path }: { path: string }) {
     window.addEventListener("keydown", close);
     return () => window.removeEventListener("keydown", close);
   }, []);
-  if (path === "/" || role === "login") return <Login />;
-  if (!ready) return <p className="loading">Ouverture de votre espace…</p>;
-  const teacher = role === "teacher",
-    links = teacher ? teacherLinks : studentLinks;
+  if (!validRoute) return <Login />;
+  if (profileResource.loading || roomResource.loading) return <p className="loading">Ouverture de votre espace…</p>;
+  if (!profile && role === "join") return <Login joinCode={page} />;
+  if (!profile || roomResource.error) return <p className="loading" role="alert">
+    {profileResource.error ?? roomResource.error} <a href="/login">Connexion</a>
+  </p>;
+  if (role !== "join" && profile.role !== role) return null;
+  const teacher = profile.role === "teacher";
+  const links = teacher ? teacherLinks : studentLinks;
+  const appRole = profile.role;
   function choose(value: string) {
-    setClassroom(value);
+    setPreferred(value);
     localStorage.setItem("neurvia.classroom", value);
   }
   let content;
   if (page === "dashboard")
-    content = <Dashboard teacher={teacher} classroom={classroom} />;
-  else if (teacher && page === "classes")
-    content = <Classes classroom={classroom} choose={choose} />;
+    content = <Dashboard teacher={teacher} classroom={classroom} profile={profile} />;
+  else if (page === "classes" || role === "join")
+    content = <Classes classroom={classroom} choose={choose} teacher={teacher} classrooms={classrooms} joinCode={role === "join" ? page : undefined} />;
   else if (teacher && page === "settings") content = <SettingsPage />;
+  else if (teacher && page === "bank") content = <QuestionBank />;
   else if (!teacher && page === "help") content = <Help />;
   else if (teacher && ["mindmirror", "groups", "remediation"].includes(page))
     content = <Mirror path={path} classroom={classroom} />;
@@ -104,7 +116,7 @@ export default function Workspace({ path }: { path: string }) {
     content = (
       <section>
         <h1>Page introuvable</h1>
-        <a href={"/" + role + "/dashboard"}>Retour à l’accueil</a>
+        <a href={"/" + appRole + "/dashboard"}>Retour à l’accueil</a>
       </section>
     );
   return (
@@ -120,7 +132,7 @@ export default function Workspace({ path }: { path: string }) {
         />
       )}
       <aside className={"nv-side " + (drawer ? "open" : "")}>
-        <a className="nv-brand" href={"/" + role + "/dashboard"}>
+        <a className="nv-brand" href={"/" + appRole + "/dashboard"}>
           <img src="/logo.svg" alt="" />
           Neurvia
         </a>
@@ -128,7 +140,7 @@ export default function Workspace({ path }: { path: string }) {
           {links.map(({ slug, label, icon: Icon }) => (
             <a
               key={slug}
-              href={"/" + role + "/" + slug}
+              href={"/" + appRole + "/" + slug}
               aria-current={page === slug ? "page" : undefined}
             >
               <Icon size={18} />
@@ -153,8 +165,9 @@ export default function Workspace({ path }: { path: string }) {
               value={classroom}
               onChange={(e) => choose(e.target.value)}
             >
+              {!classrooms.length && <option value="">Aucune classe</option>}
               {classrooms.map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
             <ChevronDown size={14} />
@@ -172,7 +185,7 @@ export default function Workspace({ path }: { path: string }) {
               aria-expanded={popover === "user"}
               onClick={() => setPopover(popover === "user" ? "" : "user")}
             >
-              <b className="nv-avatar">{teacher ? "BS" : "M"}</b>
+              <b className="nv-avatar">{profile.full_name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase()}</b>
               <ChevronDown size={14} />
             </button>
           </div>
@@ -195,12 +208,11 @@ export default function Workspace({ path }: { path: string }) {
                 </>
               ) : (
                 <>
-                  <strong>{teacher ? "Mme Ben Salem" : "Malek"}</strong>
-                  <p>{teacher ? "Professeure" : "Étudiant"} · Démonstration</p>
+                  <strong>{profile.full_name}</strong>
+                  <p>{teacher ? "Professeur" : "Étudiant"}{profile.is_synthetic ? " · Démonstration" : ""}</p>
                   <button
-                    onClick={() => {
-                      logout();
-                      router.replace("/login");
+                    onClick={async () => {
+                      try { await logout(); router.replace("/login"); } catch (error) { setFailure(errorMessage(error)); }
                     }}
                   >
                     <LogOut size={15} /> Se déconnecter
@@ -213,9 +225,16 @@ export default function Workspace({ path }: { path: string }) {
         <main id="contenu" className="nv-content" key={classroom}>
           {content}
         </main>
-        <footer className="nv-demo">
-          Données fictives · Espace de démonstration
-        </footer>
+        {failure && <p role="status" className="nv-demo">{failure}</p>}
+        {(room?.is_synthetic || profile.is_synthetic) && <footer className="nv-demo">
+          Données fictives · Démonstration
+          {teacher && profile.is_synthetic && <button type="button" className="lr-btn sm" onClick={async () => {
+            try {
+              const clock = await api<Schema["DemoClockView"]>("/demo/advance", "POST");
+              setFailure("Simulation · " + new Date(clock.now).toLocaleDateString("fr-FR", { timeZone: "Africa/Tunis" }));
+            } catch (error) { setFailure(errorMessage(error)); }
+          }}>Simuler J+7</button>}
+        </footer>}
       </div>
     </div>
   );

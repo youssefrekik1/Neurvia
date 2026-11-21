@@ -1,26 +1,16 @@
-export type Role = "teacher" | "student";
+import { api, type Schema } from "../lib/api";
 
-const roleKey = "neurvia.demo.role";
+export type Role = Schema["Role"];
 
-function validRole(value: string | null): Role | null {
-  return value === "teacher" || value === "student" ? value : null;
+export async function login(email: string, password: string, remember: boolean) {
+  await api("/auth/login" + (remember ? "?remember=1" : ""), "POST", { email, password });
+  return api<Schema["Profile"]>("/me");
 }
 
-export function getRole(): Role | null {
-  if (typeof window === "undefined") return null;
-  return (
-    validRole(sessionStorage.getItem(roleKey)) ??
-    validRole(localStorage.getItem(roleKey))
-  );
+export async function register(data: Schema["Register"]) {
+  return api<Schema["Profile"]>("/auth/register", "POST", data);
 }
 
-export function login(role: Role, remember: boolean): void {
-  logout();
-  const storage = remember ? localStorage : sessionStorage;
-  storage.setItem(roleKey, role);
-}
-
-export function logout(): void {
-  localStorage.removeItem(roleKey);
-  sessionStorage.removeItem(roleKey);
+export async function logout() {
+  return api("/auth/logout", "POST");
 }

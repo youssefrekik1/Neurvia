@@ -17,27 +17,11 @@ import {
   RefreshCw,
   Send,
   Trash2,
-  Upload,
 } from "lucide-react";
-import {
-  bank,
-  levels,
-  selectQuestions,
-  topics,
-  type Level,
-  type Question,
-} from "./bank";
-import {
-  blankLesson,
-  classrooms,
-  dayLabel,
-  learningService,
-  lessonHref,
-  subjects,
-  uid,
-  type Lesson,
-  type LearningData,
-} from "./service";
+import { levels, type Level, type Question } from "./bank";
+import { blankLesson, dayLabel, lessonHref, prepareQuiz, saveLesson, saveQuestion,
+  subjects, type Lesson, type LearningData } from "./service";
+import { api, errorMessage, refresh, type Schema, useGet } from "../lib/api";
 import { Empty, Heading, Prompt, Stepper } from "./ui";
 
 const editorHref = (id: string, step = "review") =>
@@ -66,7 +50,7 @@ function Status({ lesson }: { lesson: Lesson }) {
       }
     >
       <i />
-      {lesson.status === "published" ? "Publiée" : "Brouillon"}
+      {lesson.status === "published" ? "Publiée" : lesson.status === "closed" ? "Fermée" : "Brouillon"}
     </span>
   );
 }
@@ -169,7 +153,7 @@ export function LessonDetail({
     <>
       <Heading
         title={lesson.title}
-        description={lesson.subject + " · " + lesson.classroom}
+        description={lesson.subject + " · " + lesson.classroomName}
         back={["/teacher/lessons", "Séances & quiz"]}
         action={<Status lesson={lesson} />}
       />
@@ -245,69 +229,38 @@ export function LessonDetail({
 export function LessonEditor({
   classroom,
   existing,
+  taxonomy,
 }: {
   classroom: string;
   existing?: Lesson;
+  taxonomy: Schema["ConceptView"][];
 }) {
   const [lesson, setLesson] = useState<Lesson>(
     () => existing || blankLesson(classroom),
   );
-  const [concepts, setConcepts] = useState(lesson.concepts.join(", "));
+  const [concepts, setConcepts] = useState(lesson.concepts);
+  const rooms = useGet<Schema["ClassroomView"][]>("/classrooms").value ?? [];
   const [error, setError] = useState("");
-  function update(
-    key: "title" | "subject" | "classroom" | "content",
-    value: string,
-  ) {
+  const [busy, setBusy] = useState(false);
+  function update(key: "title" | "subject" | "classroom" | "content", value: string) {
     setLesson({ ...lesson, [key]: value });
   }
-  function save(prepare: boolean) {
-    const chosen = [
-      ...new Set(
-        concepts
-          .split(",")
-          .map((c) => c.trim())
-          .filter(Boolean),
-      ),
-    ];
-    if (
-      !lesson.title.trim() ||
-      (prepare && (!chosen.length || !lesson.content.trim()))
-    ) {
-      setError(
-        prepare
-          ? "Renseignez le titre, au moins une notion et le contenu de la séance."
-          : "Donnez un titre à votre brouillon.",
-      );
+  async function save(prepare: boolean) {
+    if (!lesson.classroom || !lesson.title.trim() || !concepts.length || !lesson.content.trim()) {
+      setError("Renseignez la classe, le titre, le contenu et au moins une notion.");
       return;
     }
-    const evaluate = chosen.flatMap((c) => {
-      const match = topics.find(
-        (t) => t.toLocaleLowerCase("fr") === c.toLocaleLowerCase("fr"),
-      );
-      if (match) return [match];
-      const name = c.toLowerCase();
-      return topics.filter((_, i) =>
-        [
-          /borne|boucle|range|\bfor\b/,
-          /indice|liste/,
-          /while|conditionnelle/,
-          /condition(?!nelle)|bool/,
-          /fonction/,
-          /variable|type/,
-        ][i].test(name),
-      );
-    });
-    const saved = learningService.saveLesson({
-      ...lesson,
-      title: lesson.title.trim(),
-      concepts: chosen,
-      evaluate: [...new Set(evaluate)],
-      status: "draft",
-    });
-    rememberClass(saved.classroom);
-    window.location.assign(
-      prepare ? editorHref(saved.id, "prepare") : lessonHref(saved.id),
-    );
+    setBusy(true);
+    setError("");
+    try {
+      const saved = await saveLesson({ ...lesson, evaluate: concepts }, taxonomy);
+      rememberClass(saved.classroom_id);
+      window.location.assign(prepare ? editorHref(saved.id, "prepare") : lessonHref(saved.id));
+    } catch (cause) {
+      setError(errorMessage(cause));
+    } finally {
+      setBusy(false);
+    }
   }
   return (
     <>
@@ -335,9 +288,8 @@ export function LessonEditor({
               value={lesson.classroom}
               onChange={(e) => update("classroom", e.target.value)}
             >
-              {classrooms.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
+              {!rooms.length && <option value="">Aucune classe</option>}
+              {rooms.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </label>
           <label>
@@ -364,15 +316,16 @@ export function LessonEditor({
             required
           />
         </label>
-        <label>
-          Notions principales
-          <input
-            value={concepts}
-            onChange={(e) => setConcepts(e.target.value)}
-            placeholder="Ex. Bornes des boucles, indices et listes"
-          />
-          <small>Séparez les notions par des virgules.</small>
-        </label>
+        <fieldset>
+          <legend>Notions principales</legend>
+          <div className="lr-checks">{taxonomy.map(({ code, label_fr }) =>
+            <label className="lr-check" key={code}>
+              <input type="checkbox" checked={concepts.includes(label_fr)}
+                disabled={!!existing?.quizId}
+                onChange={(event) => setConcepts(event.target.checked ? [...concepts, label_fr] :
+                  concepts.filter((label) => label !== label_fr))} />{label_fr}
+            </label>)}</div>
+        </fieldset>
         <label>
           Contenu du cours
           <textarea
@@ -382,26 +335,16 @@ export function LessonEditor({
             placeholder="Collez le texte de votre cours ici…"
           />
         </label>
-        <div className="lr-upload">
-          <Upload size={20} />
-          <div>
-            <b>Importer un PDF ou un document Word</b>
-            <small>
-              Import indisponible en démonstration. Vous pouvez coller le texte
-              ci-dessus.
-            </small>
-          </div>
-        </div>
         {error && (
           <p className="lr-error" role="alert">
             {error}
           </p>
         )}
         <div className="lr-actions">
-          <button type="button" className="lr-btn" onClick={() => save(false)}>
+          <button type="button" className="lr-btn" disabled={busy} onClick={() => save(false)}>
             Enregistrer le brouillon
           </button>
-          <button className="lr-btn primary">
+          <button className="lr-btn primary" disabled={busy}>
             Préparer le quiz
             <ArrowRight size={16} />
           </button>
@@ -410,38 +353,31 @@ export function LessonEditor({
     </>
   );
 }
-function Parameters({ lesson }: { lesson: Lesson }) {
+function Parameters({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["ConceptView"][] }) {
   const [count, setCount] = useState(lesson.count);
   const [level, setLevel] = useState<Level>(lesson.level);
   const [chosen, setChosen] = useState(lesson.evaluate);
+  const [pitfalls, setPitfalls] = useState(lesson.pitfalls);
+  const [instructions, setInstructions] = useState(lesson.instructions);
+  const [useSeed, setUseSeed] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [replace, setReplace] = useState(false);
-  const candidates = [
-    ...new Set([
-      ...lesson.concepts,
-      ...lesson.evaluate,
-      ...(lesson.subject === subjects[0] ? topics : []),
-    ]),
-  ];
-  function prepare(e: FormEvent) {
+  const candidates = taxonomy.map((item) => item.label_fr);
+  async function prepare(e: FormEvent) {
     e.preventDefault();
     if (!chosen.length) {
       setError("Sélectionnez au moins une notion à évaluer.");
       return;
     }
-    if (lesson.questions.length && !replace) {
-      setReplace(true);
-      return;
+    setError("");
+    setBusy(true);
+    try {
+      await prepareQuiz({ ...lesson, count, level, evaluate: chosen, pitfalls, instructions }, taxonomy, useSeed);
+      window.location.assign(editorHref(lesson.id));
+    } catch (cause) {
+      setError(errorMessage(cause));
+      setBusy(false);
     }
-    const questions = selectQuestions(chosen, level, count);
-    learningService.saveLesson({
-      ...lesson,
-      questions,
-      count,
-      level,
-      evaluate: chosen,
-    });
-    window.location.assign(editorHref(lesson.id));
   }
   return (
     <>
@@ -464,7 +400,7 @@ function Parameters({ lesson }: { lesson: Lesson }) {
                 value={count}
                 onChange={(e) => setCount(Number(e.target.value))}
               >
-                {Array.from({ length: 12 }, (_, i) => (
+                {Array.from({ length: 10 }, (_, i) => (
                   <option key={i + 1}>{i + 1}</option>
                 ))}
               </select>
@@ -507,15 +443,15 @@ function Parameters({ lesson }: { lesson: Lesson }) {
               {error}
             </p>
           )}
-          {replace && (
-            <p className="lr-notice" role="status">
-              La préparation remplacera les questions de ce brouillon. Confirmez
-              pour continuer.
-            </p>
-          )}
+          <label>Pièges observés<input value={pitfalls} onChange={(event) => setPitfalls(event.target.value)} /></label>
+          <label>Consigne de génération<textarea value={instructions} onChange={(event) => setInstructions(event.target.value)} /></label>
+          <label className="lr-check">
+            <input type="checkbox" checked={useSeed} onChange={(event) => setUseSeed(event.target.checked)} />
+            Inclure les brouillons de la banque Python à relire
+          </label>
           <div className="lr-actions">
-            <button className="lr-btn primary">
-              {replace ? "Confirmer la préparation" : "Préparer le quiz"}
+            <button className="lr-btn primary" disabled={busy}>
+              {busy ? "Préparation en cours…" : lesson.quizId ? "Ouvrir le brouillon" : "Préparer le quiz"}
               <ArrowRight size={16} />
             </button>
           </div>
@@ -523,12 +459,10 @@ function Parameters({ lesson }: { lesson: Lesson }) {
         <aside className="lr-panel lr-pad lr-aside">
           <div className="lr-section-title">
             <Layers3 />
-            <h2>Banque de démonstration</h2>
+            <h2>Banque pédagogique</h2>
           </div>
           <p>
-            Les questions proviennent d’une banque pédagogique Python. Pour les
-            autres notions, vous pouvez rédiger vos questions à l’étape
-            suivante.
+            Les questions approuvées sont sélectionnées en priorité. Qwen peut compléter le brouillon.
           </p>
           <div className="lr-rule" />
           <small>Chaque question peut être modifiée avant publication.</small>
@@ -538,12 +472,14 @@ function Parameters({ lesson }: { lesson: Lesson }) {
   );
 }
 
-function QuestionForm({
+export function QuestionForm({
   initial,
+  taxonomy,
   onSave,
   onCancel,
 }: {
   initial: Question;
+  taxonomy: Schema["ConceptView"][];
   onSave: (q: Question) => void;
   onCancel: () => void;
 }) {
@@ -556,15 +492,14 @@ function QuestionForm({
   function save(e: FormEvent) {
     e.preventDefault();
     if (
-      !q.text.trim() ||
+      q.text.trim().length < 10 ||
       !q.concept.trim() ||
       !q.explanation.trim() ||
       q.options.some((o) => !o.trim()) ||
-      q.misconceptions.some((m, i) => i !== q.correct && !m.trim()) ||
       new Set(q.options.map((o) => o.trim().toLowerCase())).size !== 4
     ) {
       setError(
-        "Renseignez la question, quatre réponses distinctes, la notion, l’explication et les trois hypothèses.",
+        "Renseignez un énoncé d’au moins dix caractères, quatre réponses distinctes et une explication.",
       );
       return;
     }
@@ -584,12 +519,11 @@ function QuestionForm({
       </label>
       <label>
         Notion évaluée
-        <input
-          value={q.concept}
-          onChange={(e) => setQ({ ...q, concept: e.target.value })}
-          required
-        />
+        <select value={q.concept} onChange={(e) => setQ({ ...q, concept: e.target.value, misconceptions: ["", "", "", ""] })}>
+          {taxonomy.map((item) => <option key={item.code}>{item.label_fr}</option>)}
+        </select>
       </label>
+      <label>Code Python (facultatif)<textarea value={q.code ?? ""} onChange={(e) => setQ({ ...q, code: e.target.value })} /></label>
       <fieldset>
         <legend>Réponses proposées</legend>
         {q.options.map((o, i) => (
@@ -621,18 +555,13 @@ function QuestionForm({
             {q.correct !== i && (
               <label>
                 Hypothèse si cette réponse est choisie
-                <input
-                  value={q.misconceptions[i]}
-                  onChange={(e) =>
-                    setQ({
-                      ...q,
-                      misconceptions: q.misconceptions.map((v, j) =>
-                        j === i ? e.target.value : v,
-                      ),
-                    })
-                  }
-                  required
-                />
+                <select value={q.misconceptions[i]}
+                  onChange={(e) => setQ({ ...q, misconceptions: q.misconceptions.map((value, index) =>
+                    index === i ? e.target.value : value) })}>
+                  <option value="">Aucune association</option>
+                  {taxonomy.find((item) => item.label_fr === q.concept)?.misconceptions.map((error) =>
+                    <option key={error.code} value={error.code}>{error.label_fr}</option>)}
+                </select>
               </label>
             )}
           </div>
@@ -664,35 +593,25 @@ function QuestionForm({
     </form>
   );
 }
-function Review({ lesson }: { lesson: Lesson }) {
+function Review({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["ConceptView"][] }) {
   const [index, setIndex] = useState(0);
   const [editor, setEditor] = useState<"add" | "edit" | null>(null);
   const [publish, setPublish] = useState(false);
   const [approved, setApproved] = useState(false);
   const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
   const q = lesson.questions[index];
-  const readOnly = lesson.status === "published";
-  function setQuestions(questions: Question[]) {
-    learningService.saveLesson({ ...lesson, questions });
-    setEditor(null);
+  const readOnly = lesson.status !== "draft";
+  const root = "/quizzes/" + lesson.quizId;
+  async function run(action: () => Promise<unknown>) {
+    setBusy(true);
     setMessage("");
+    try { await action(); refresh(); }
+    catch (error) { setMessage(errorMessage(error)); }
+    finally { setBusy(false); }
   }
   function regenerate() {
-    const alternate = selectQuestions(
-      [q.concept],
-      lesson.level,
-      1,
-      lesson.questions.map((v) => v.id),
-    )[0];
-    if (!alternate) {
-      setMessage(
-        "Toutes les variantes disponibles pour cette notion sont utilisées. Vous pouvez modifier la question.",
-      );
-      return;
-    }
-    setQuestions(
-      lesson.questions.map((item, i) => (i === index ? alternate : item)),
-    );
+    return run(() => api(root + "/questions/" + q.id + "/regenerate", "POST", {}));
   }
   if (publish)
     return (
@@ -711,7 +630,7 @@ function Review({ lesson }: { lesson: Lesson }) {
           <dl className="lr-facts">
             <div>
               <dt>Classe</dt>
-              <dd>{lesson.classroom}</dd>
+              <dd>{lesson.classroomName}</dd>
             </div>
             <div>
               <dt>Questions relues</dt>
@@ -734,22 +653,18 @@ function Review({ lesson }: { lesson: Lesson }) {
             />
             J’ai vérifié les questions, les réponses et les explications.
           </label>
+          {message && <p className="lr-error" role="alert">{message}</p>}
           <div className="lr-actions">
             <button className="lr-btn" onClick={() => setPublish(false)}>
               Retour aux questions
             </button>
             <button
               className="lr-btn primary"
-              disabled={!approved}
-              onClick={() => {
-                learningService.saveLesson({
-                  ...lesson,
-                  status: "published",
-                  date: new Date().toISOString(),
-                  release: undefined,
-                });
+              disabled={!approved || busy}
+              onClick={() => void run(async () => {
+                await api(root + "/publish", "POST", { validated: true });
                 window.location.assign(lessonHref(lesson.id) + "?published=1");
-              }}
+              })}
             >
               <Send size={16} />
               Valider et publier
@@ -766,6 +681,10 @@ function Review({ lesson }: { lesson: Lesson }) {
         back={[lessonHref(lesson.id), "Détail de la séance"]}
       />
       {!readOnly && <Stepper step={2} />}
+      {lesson.usedFallback && <p className="lr-notice">Le stock de la banque et du modèle a produit un brouillon partiel. Complétez-le manuellement.</p>}
+      {busy && <p role="status">Enregistrement en cours…</p>}
+      {message && editor && <p className="lr-error" role="alert">{message}</p>}
+      {lesson.status === "published" && <button className="lr-btn" disabled={busy} onClick={() => void run(() => api(root + "/close", "POST"))}>Fermer le quiz</button>}
       <div className="lr-columns">
         <section className="lr-panel lr-pad lr-review">
           {editor ? (
@@ -775,7 +694,7 @@ function Review({ lesson }: { lesson: Lesson }) {
                 editor === "edit"
                   ? q
                   : {
-                      id: uid(),
+                      id: "",
                       text: "",
                       options: ["", "", "", ""],
                       correct: 0,
@@ -787,15 +706,12 @@ function Review({ lesson }: { lesson: Lesson }) {
                     }
               }
               onCancel={() => setEditor(null)}
-              onSave={(updated) => {
-                if (editor === "add") {
-                  setQuestions([...lesson.questions, updated]);
-                  setIndex(lesson.questions.length);
-                } else
-                  setQuestions(
-                    lesson.questions.map((v, i) => (i === index ? updated : v)),
-                  );
-              }}
+              taxonomy={taxonomy.filter((item) => lesson.concepts.includes(item.label_fr))}
+              onSave={(updated) => void run(async () => {
+                await saveQuestion(lesson.quizId!, updated, taxonomy, editor === "edit" ? q.id : undefined);
+                if (editor === "add") setIndex(lesson.questions.length);
+                setEditor(null);
+              })}
             />
           ) : q ? (
             <>
@@ -841,17 +757,16 @@ function Review({ lesson }: { lesson: Lesson }) {
                     <Pencil />
                     Modifier
                   </button>
-                  <button onClick={regenerate}>
+                  <button onClick={regenerate} disabled={busy}>
                     <RefreshCw />
                     Régénérer
                   </button>
                   <button
-                    onClick={() => {
-                      setQuestions(
-                        lesson.questions.filter((_, i) => i !== index),
-                      );
+                    disabled={busy}
+                    onClick={() => void run(async () => {
+                      await api(root + "/questions/" + q.id, "DELETE");
                       setIndex(Math.max(0, index - 1));
-                    }}
+                    })}
                   >
                     <Trash2 />
                     Retirer
@@ -960,10 +875,12 @@ export function TeacherQuiz({
   lesson,
   step,
   classroom,
+  taxonomy,
 }: {
   lesson?: Lesson;
   step: string | null;
   classroom: string;
+  taxonomy: Schema["ConceptView"][];
 }) {
   if (!lesson)
     return (
@@ -980,9 +897,9 @@ export function TeacherQuiz({
         />
       </>
     );
-  return step === "prepare" && lesson.status !== "published" ? (
-    <Parameters lesson={lesson} />
+  return (step === "prepare" || !lesson.quizId) && lesson.status === "draft" ? (
+    <Parameters lesson={lesson} taxonomy={taxonomy} />
   ) : (
-    <Review lesson={lesson} />
+    <Review lesson={lesson} taxonomy={taxonomy} />
   );
 }
