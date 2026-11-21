@@ -10,7 +10,7 @@ from app.core.config import Settings
 from app.db.base import Base
 from app.db.migrate import initialize_schema
 from app.db.session import build_database
-from app.models import documents
+from app.models import documents  # noqa: F401  (registers the document tables)
 
 EXT_TABLES = {
     "institutions", "institution_members", "classroom_tenants", "document_resources",

@@ -3,7 +3,7 @@ from alembic import context
 from app.core.config import Settings
 from app.db.base import Base
 from app.db.session import build_database
-from app.models import documents
+from app.models import documents  # noqa: F401  (registers the document tables)
 
 config = context.config
 

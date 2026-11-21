@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Request
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from app.ai.tasks import generate_question
 from app.core.auth import Teacher

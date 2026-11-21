@@ -3,7 +3,7 @@
 from alembic import op
 
 from app.db.base import Base
-from app import models
+from app import models  # noqa: F401  (registers the tables)
 
 revision = "20261121_01"
 down_revision = None

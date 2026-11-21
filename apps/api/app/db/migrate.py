@@ -2,7 +2,7 @@ from sqlalchemy import inspect, text
 from sqlalchemy.engine import Engine
 
 from app.db.base import Base
-from app.models import documents
+from app.models import documents  # noqa: F401  (registers the document tables)
 
 # Additive upgrade from the existing Phase 0 SQLite schema.
 COLUMNS = {
