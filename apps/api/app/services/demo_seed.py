@@ -11,6 +11,7 @@ from app.schemas.learning import QuestionDraft
 from app.services.assessments import confirmation_for, get_or_begin, save_choice, submit_attempt
 from app.schemas.learning import AnswerInput
 from app.services.questions import approve_question, create_question, opts, question_input, quiz_items
+from app.services.demo_students import CLASSROOMS, STUDENTS, TEACHER
 
 
 def fixture_id(key: str):
@@ -24,6 +25,8 @@ LESSON_ID = fixture_id("lesson")
 INITIAL_QUIZ_ID = fixture_id("quiz-initial")
 DEMO_JOIN_CODE = "FAHMDEMO24"
 DEMO_PASSWORD = "FAHM-demo-2026"
+CLASSROOM_IDS = (fixture_id("algo-classroom-a"), fixture_id("classroom-2"))
+ALGO_TEACHER_ID = fixture_id("algo-teacher")
 
 # Reviewed for the synthetic scenario only. Real teachers approve their own bank separately.
 VARIANTS = {
@@ -65,7 +68,56 @@ def parse_variant(concept, target, value):
     )
 
 
+def seed_named_classes(db: Session, now):
+    # Synthetic accounts are loaded only when DEMO_MODE=true.
+    teacher = db.get(User, ALGO_TEACHER_ID)
+    if teacher is None:
+        teacher = db.scalar(select(User).where(User.email == TEACHER["identifiant"]))
+        if teacher is None:
+            teacher = User(id=ALGO_TEACHER_ID, email=TEACHER["identifiant"],
+                           password_hash=password_hash.hash(TEACHER["mot_de_passe"]),
+                           full_name=f"{TEACHER['prenom']} {TEACHER['nom']}",
+                           role=e.Role.teacher, is_synthetic=True)
+            db.add(teacher)
+            db.flush()
+
+    for class_index, class_spec in enumerate(CLASSROOMS):
+        room_id = CLASSROOM_IDS[class_index]
+        room = db.get(Classroom, room_id)
+        if room is None and class_index == 0:
+            legacy_room = db.get(Classroom, CLASSROOM_ID)
+            if legacy_room is not None and legacy_room.teacher_id == teacher.id:
+                room = legacy_room
+                room_id = room.id
+        if room is None:
+            room = Classroom(id=room_id, teacher_id=teacher.id, name=class_spec["nom"],
+                              subject="python_intro", join_code=class_spec["code"],
+                              join_expires_at=now + timedelta(days=3650), is_synthetic=True)
+            db.add(room)
+            db.flush()
+        elif room.teacher_id == ALGO_TEACHER_ID and room.subject == "algorithmique":
+            room.subject = "python_intro"
+        students = STUDENTS[class_index * 40:(class_index + 1) * 40]
+        for student in students:
+            user = db.scalar(select(User).where(User.email == student["identifiant"]))
+            if user is None:
+                user = User(email=student["identifiant"],
+                            password_hash=password_hash.hash(student["mot_de_passe"]),
+                            full_name=f"{student['prenom']} {student['nom']}",
+                            role=e.Role.student, is_synthetic=True)
+                db.add(user)
+                db.flush()
+            member_id = db.scalar(select(Membership.id).where(
+                Membership.classroom_id == room_id, Membership.user_id == user.id,
+            ))
+            if member_id is None:
+                db.add(Membership(classroom_id=room_id, user_id=user.id,
+                                  pseudonym=f"{student['prenom']} {student['nom']}"))
+    db.flush()
+
+
 def seed_demo(db: Session, now):
+    seed_named_classes(db, now)
     if db.get(Classroom, CLASSROOM_ID) is None:
         hash_value = password_hash.hash(DEMO_PASSWORD)
         db.add(User(id=TEACHER_ID, email="prof.fahm@example.com", password_hash=hash_value,
@@ -82,6 +134,8 @@ def seed_demo(db: Session, now):
                    for number, student_id in enumerate(STUDENT_IDS, start=1))
     # Upgrade an existing Phase 0 demo DB without discarding its classes or accounts.
     room = db.get(Classroom, CLASSROOM_ID)
+    if room.teacher_id != TEACHER_ID:
+        return
     if db.get(Quiz, INITIAL_QUIZ_ID):
         return
     existing = {user for user in db.scalars(select(Membership.user_id).where(Membership.classroom_id == room.id))}

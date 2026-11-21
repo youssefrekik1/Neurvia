@@ -191,6 +191,8 @@ Le script démarre le service PostgreSQL de `compose.documents.yml` et y crée u
 
 Comme professeur, **Simuler J+7** avance l’horloge de démonstration après un retest. La date simulée est signalée dans l’interface.
 
+Les classes **Algorithmique A** et **Algorithmique B** contiennent chacune 40 élèves fictifs. Connectez-vous avec `amel.bensalem.prof@neurvia.demo` et le mot de passe `Algo-Prof-2026!`. Les comptes élèves figurent dans [data/demo_classrooms.json](data/demo_classrooms.json). En mode démo, les comptes du dataset soumettent automatiquement des réponses variées à la publication du quiz initial.
+
 ## Parcours type
 
 1. Le professeur crée une classe et choisit sa matière, au besoin rattachée à un établissement. Pour une nouvelle matière, il valide d’abord ses notions et les erreurs diagnostiques associées. Les étudiants rejoignent la classe par code ou QR.
