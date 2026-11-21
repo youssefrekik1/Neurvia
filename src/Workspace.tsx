@@ -24,6 +24,7 @@ import { logout } from "./login/auth";
 import { api, errorMessage, type Schema, useGet } from "./lib/api";
 import Mirror from "./mirror/Mirror";
 import Learning from "./learning/Learning";
+import { roomLabel } from "./learning/service";
 import QuestionBank from "./learning/QuestionBank";
 import { Dashboard, Classes, SettingsPage, Help } from "./workspace/Dashboards";
 
@@ -99,7 +100,7 @@ export default function Workspace({ path }: { path: string }) {
   }
   let content;
   if (page === "dashboard")
-    content = <Dashboard teacher={teacher} classroom={classroom} profile={profile} />;
+    content = <Dashboard teacher={teacher} classroom={classroom} profile={profile} classrooms={classrooms} choose={choose} />;
   else if (page === "classes" || role === "join")
     content = <Classes classroom={classroom} choose={choose} teacher={teacher} classrooms={classrooms} joinCode={role === "join" ? page : undefined} />;
   else if (teacher && page === "settings") content = <SettingsPage />;
@@ -168,7 +169,7 @@ export default function Workspace({ path }: { path: string }) {
             >
               {!classrooms.length && <option value="">Aucune classe</option>}
               {classrooms.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>{roomLabel(c)}</option>
               ))}
             </select>
             <ChevronDown size={14} />
@@ -223,7 +224,7 @@ export default function Workspace({ path }: { path: string }) {
             </div>
           )}
         </header>
-        <main id="contenu" className="nv-content" key={classroom}>
+        <main id="contenu" className="nv-content" key={page === "classes" || role === "join" ? "classes" : classroom}>
           {content}
         </main>
         {failure && <p role="status" className="nv-demo">{failure}</p>}

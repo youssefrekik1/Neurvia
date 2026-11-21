@@ -19,8 +19,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { levels, type Level, type Question } from "./bank";
-import { blankLesson, dayLabel, defaultSubject, lessonHref, prepareQuiz, saveLesson, saveQuestion,
-  subjectLabel, type Lesson, type LearningData } from "./service";
+import { blankLesson, defaultSubject, lessonHref, prepareQuiz, saveLesson, saveQuestion,
+  roomLabel, roomSubject, roomSubjectKey, teachingDateLabel, type Lesson, type LearningData } from "./service";
 import { api, errorMessage, refresh, type Schema, useGet } from "../lib/api";
 import { Empty, Heading, Prompt, Stepper } from "./ui";
 import { CourseDocuments, Sources, TaxonomyForm } from "./CourseDocuments";
@@ -115,7 +115,7 @@ export function TeacherLessons({
                 <div className="lr-grow">
                   <b>{l.title}</b>
                   <small>
-                    {l.subject} · {dayLabel(l.date, true)}
+                    {l.subject} · {teachingDateLabel(l.date, true)}
                   </small>
                 </div>
                 <Status lesson={l} />
@@ -154,7 +154,7 @@ export function LessonDetail({
     <>
       <Heading
         title={lesson.title}
-        description={lesson.subject + " · " + lesson.classroomName}
+        description={[lesson.subject, lesson.classroomName, teachingDateLabel(lesson.date, true)].join(" · ")}
         back={["/teacher/lessons", "Séances & quiz"]}
         action={<Status lesson={lesson} />}
       />
@@ -171,7 +171,7 @@ export function LessonDetail({
             <FileText />
             <h2>Contenu de la séance</h2>
           </div>
-          <div className="lr-bodycopy">{lesson.content}</div>
+          <div className="lr-bodycopy">{lesson.content || "Consultez les documents de cours ci-dessous."}</div>
           <h3>Notions abordées</h3>
           <Tags items={lesson.concepts} />
         </section>
@@ -198,10 +198,8 @@ export function LessonDetail({
             <>
               <a
                 className="lr-btn primary"
-                href={editorHref(
-                  lesson.id,
-                  lesson.questions.length ? "review" : "prepare",
-                )}
+                href={!lesson.quizId && (!lesson.content || !lesson.concepts.length) ? "#documents" :
+                  editorHref(lesson.id, lesson.questions.length ? "review" : "prepare")}
               >
                 Préparer le quiz
                 <ArrowRight size={16} />
@@ -243,10 +241,14 @@ export function LessonEditor({
   );
   const [concepts, setConcepts] = useState(lesson.concepts);
   const rooms = useGet<Schema["ClassroomView"][]>("/classrooms").value ?? [];
+  const [subjectChoice, setSubjectChoice] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  // Concepts belong to the classroom's subject; a new subject starts by validating its first concept.
-  const subject = rooms.find((room) => room.id === lesson.classroom)?.subject ?? defaultSubject;
+  const room = rooms.find((entry) => entry.id === lesson.classroom);
+  const selectedSubject = subjectChoice || (room ? roomSubjectKey(room) : "");
+  const lessonRooms = rooms.filter((entry) => roomSubjectKey(entry) === selectedSubject);
+  const subjects = [...new Map(rooms.map((entry) => [roomSubjectKey(entry), roomSubject(entry)]))];
+  const subject = room?.subject ?? defaultSubject;
   const available = taxonomy.filter((item) => item.subject === subject);
   async function approveConcept(operation: () => Promise<unknown>) {
     setBusy(true);
@@ -255,20 +257,25 @@ export function LessonEditor({
     catch (cause) { setError(errorMessage(cause)); }
     finally { setBusy(false); }
   }
-  function update(key: "title" | "subject" | "classroom" | "content", value: string) {
+  function update(key: "title" | "classroom" | "content" | "date", value: string) {
     setLesson({ ...lesson, [key]: value });
   }
   async function save(prepare: boolean) {
-    if (!lesson.classroom || !lesson.title.trim() || !concepts.length || !lesson.content.trim()) {
-      setError("Renseignez la classe, le titre, le contenu et au moins une notion.");
+    if (!room || !lesson.title.trim() || (!existing && !lesson.date)) {
+      setError("Renseignez la matière, la classe, le titre et la date.");
+      return;
+    }
+    if (prepare && (!concepts.length || !lesson.content.trim())) {
+      setError("Pour un quiz à partir du texte, ajoutez le contenu et au moins une notion.");
       return;
     }
     setBusy(true);
     setError("");
     try {
-      const saved = await saveLesson({ ...lesson, evaluate: concepts }, taxonomy);
+      const saved = await saveLesson({ ...lesson, evaluate: concepts }, available);
       rememberClass(saved.classroom_id);
-      window.location.assign(prepare ? editorHref(saved.id, "prepare") : lessonHref(saved.id));
+      window.location.assign(prepare ? editorHref(saved.id, "prepare") :
+        lessonHref(saved.id) + (existing ? "" : "#documents"));
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {
@@ -279,7 +286,7 @@ export function LessonEditor({
     <>
       <Heading
         title={existing ? "Modifier la séance" : "Nouvelle séance"}
-        description="Rassemblez le contenu et les notions à évaluer."
+        description="Enregistrez les informations de la séance pour importer vos PDF."
         back={["/teacher/lessons", "Séances & quiz"]}
       />
       <Stepper step={0} />
@@ -287,7 +294,7 @@ export function LessonEditor({
         className="lr-panel lr-pad lr-form lr-editor"
         onSubmit={(e) => {
           e.preventDefault();
-          save(true);
+          void save(false);
         }}
       >
         <div className="lr-section-title">
@@ -296,21 +303,36 @@ export function LessonEditor({
         </div>
         <div className="lr-pair">
           <label>
-            Classe
-            <select
-              value={lesson.classroom}
-              onChange={(e) => update("classroom", e.target.value)}
-            >
-              {!rooms.length && <option value="">Aucune classe</option>}
-              {rooms.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            <span id="lr-subject-label">Matière</span>
+            <select required aria-labelledby="lr-subject-label" disabled={!!existing} value={selectedSubject}
+              onChange={(event) => {
+                const key = event.target.value;
+                setSubjectChoice(key);
+                update("classroom", "");
+                setConcepts([]);
+              }}>
+              <option value="">Choisir une matière</option>
+              {subjects.map(([id, name]) => <option value={id} key={id}>{name}</option>)}
             </select>
           </label>
           <label>
-            Matière
-            <input value={subjectLabel(subject)} readOnly aria-describedby="lr-subject-hint" />
-            <small id="lr-subject-hint">La matière est celle de la classe.</small>
+            <span id="lr-class-label">Classe</span>
+            <select
+              aria-labelledby="lr-class-label"
+              required disabled={!!existing}
+              value={lesson.classroom}
+              onChange={(event) => { update("classroom", event.target.value); setConcepts([]); }}
+            >
+              <option value="">Choisir une classe</option>
+              {lessonRooms.map((entry) => <option key={entry.id} value={entry.id}>{roomLabel(entry)}</option>)}
+            </select>
           </label>
         </div>
+        <label>
+          Date de la séance
+          <input type="date" value={lesson.date} required={!existing}
+            onChange={(event) => update("date", event.target.value)} />
+        </label>
         <label>
           Titre de la séance
           <input
@@ -321,7 +343,7 @@ export function LessonEditor({
           />
         </label>
         <fieldset>
-          <legend>Notions principales</legend>
+          <legend>Notions principales (facultatif avant l’import)</legend>
           {!available.length && <p>Aucune notion validée pour cette matière. Validez-en une sous ce formulaire.</p>}
           <div className="lr-checks">{available.map(({ code, label_fr }) =>
             <label className="lr-check" key={code}>
@@ -332,7 +354,7 @@ export function LessonEditor({
             </label>)}</div>
         </fieldset>
         <label>
-          Contenu du cours
+          Contenu du cours (facultatif)
           <textarea
             rows={7}
             value={lesson.content}
@@ -346,10 +368,11 @@ export function LessonEditor({
           </p>
         )}
         <div className="lr-actions">
-          <button type="button" className="lr-btn" disabled={busy} onClick={() => save(false)}>
-            Enregistrer le brouillon
-          </button>
           <button className="lr-btn primary" disabled={busy}>
+            {existing ? "Enregistrer le brouillon" : "Enregistrer et importer les PDF"}
+          </button>
+          <button type="button" className="lr-btn" disabled={busy || !lesson.content.trim() || !concepts.length}
+            onClick={() => void save(true)}>
             Préparer le quiz
             <ArrowRight size={16} />
           </button>

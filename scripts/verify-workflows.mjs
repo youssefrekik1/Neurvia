@@ -76,6 +76,7 @@ async function normalWorkflow(teacher, student) {
 
   await visit(teacher, "/teacher/lessons/new", "Nouvelle séance");
   await teacher.getByLabel("Titre de la séance").fill("Indices et listes " + suffix);
+  await teacher.getByLabel("Date de la séance").fill("2026-11-22");
   await teacher.getByLabel("Indices et listes", { exact: true }).check();
   await teacher.getByLabel("Contenu du cours").fill("Les indices positifs commencent à zéro. len(notes) ne désigne pas un indice.");
   await teacher.getByRole("button", { name: "Préparer le quiz", exact: true }).click();

@@ -33,6 +33,9 @@ class Register(Input):
     password: Annotated[SecretStr, Field(min_length=10, max_length=128)]
     full_name: Annotated[str, Field(min_length=1, max_length=100)]
     role: e.Role
+    cohort_id: UUID | None = None
+    institution_id: UUID | None = None
+    join_code: Annotated[str, Field(min_length=4, max_length=32)] | None = None
 
 
 class Login(Input):
@@ -59,6 +62,21 @@ class InstitutionView(View):
     name: str
 
 
+class SubjectView(View):
+    id: UUID
+    code: str
+    label: str
+    active: bool
+
+
+class RegistrationClass(View):
+    id: UUID
+    name: str
+    institution_id: UUID
+    institution_name: str
+    academic_year: str
+
+
 class ClassroomCreate(Input):
     name: Annotated[str, Field(min_length=1, max_length=120)]
     subject: Annotated[str, Field(min_length=1, max_length=100)] = "python_intro"
@@ -75,6 +93,12 @@ class ClassroomView(View):
     name: str
     subject: str
     is_synthetic: bool
+    assignment_id: UUID | None = None
+    cohort_id: UUID | None = None
+    subject_id: UUID | None = None
+    subject_label: str | None = None
+    academic_year: str | None = None
+    institution_id: UUID | None = None
     join_code: str | None = None
     join_path: str | None = None
     join_expires_at: datetime | None = None

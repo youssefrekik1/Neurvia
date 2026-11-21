@@ -3,9 +3,11 @@ from sqlalchemy.engine import Engine
 
 from app.db.base import Base
 from app.models import documents  # noqa: F401  (registers the document tables)
+from app.models import teaching  # noqa: F401
 
 # Additive upgrade from the existing Phase 0 SQLite schema.
 COLUMNS = {
+    "lessons": {"taught_on": "DATE"},
     "answers": {"justification": "TEXT"},
     "questions": {
         "bank_owner_id": "CHAR(32) REFERENCES users(id)",
@@ -28,7 +30,7 @@ def initialize_schema(engine: Engine) -> None:
             if not inspect(connection).has_table("alembic_version"):
                 raise RuntimeError("Run alembic upgrade head before starting the PostgreSQL application.")
             revisions = set(connection.scalars(text("SELECT version_num FROM alembic_version")))
-            if revisions != {"20261121_05"}:
+            if revisions != {"20261122_06"}:
                 raise RuntimeError("Run alembic upgrade head before starting the PostgreSQL application.")
         return
     Base.metadata.create_all(engine)

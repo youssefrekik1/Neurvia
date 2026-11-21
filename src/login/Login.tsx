@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { login, register, type Role } from "./auth";
-import { errorMessage } from "../lib/api";
+import { errorMessage, type Schema, useGet } from "../lib/api";
 import "./login.css";
 
 const information = {
@@ -145,6 +145,15 @@ export default function Login({ joinCode }: { joinCode?: string }) {
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
+  const chooseClass = creating && role === "student" && !joinCode;
+  const catalog = useGet<Schema["RegistrationClass"][]>(chooseClass ? "/registration/classes" : "");
+  const classes = catalog.value ?? [];
+  const institutions = [...new Map(classes.map((entry) => [entry.institution_id, entry.institution_name]))];
+  const [selectedInstitution, setInstitution] = useState("");
+  const [classQuery, setClassQuery] = useState("");
+  const institution = institutions.length === 1 ? institutions[0][0] : selectedInstitution;
+  const visibleClasses = classes.filter((entry) => entry.institution_id === institution &&
+    (entry.name + " " + entry.academic_year).toLocaleLowerCase("fr").includes(classQuery.trim().toLocaleLowerCase("fr")));
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -153,7 +162,11 @@ export default function Login({ joinCode }: { joinCode?: string }) {
     setBusy(true);
     setFailure("");
     try {
-      if (creating) await register({ email, password, full_name: String(form.get("full_name")), role });
+      if (creating) await register({
+        email, password, full_name: String(form.get("full_name")), role,
+        ...(chooseClass && classes.length ? { cohort_id: String(form.get("cohort")), institution_id: institution } : {}),
+        ...(joinCode && role === "student" ? { join_code: joinCode } : {}),
+      });
       const profile = await login(email, password, remember);
       router.push(joinCode && profile.role === "student" ? "/join/" + encodeURIComponent(joinCode) :
         "/" + profile.role + "/dashboard");
@@ -268,6 +281,28 @@ export default function Login({ joinCode }: { joinCode?: string }) {
             {creating && <label className="nl-label">Nom complet
               <span className="nl-input"><UserRound /><input name="full_name" autoComplete="name" required /></span>
             </label>}
+            {chooseClass && catalog.loading && <p role="status">Chargement des classes…</p>}
+            {chooseClass && catalog.error && <p className="nl-notice" role="alert">{catalog.error}</p>}
+            {chooseClass && classes.length > 0 && <div className="nl-enrollment">
+              {institutions.length > 1 && <label className="nl-label" htmlFor="nl-institution">Établissement</label>}
+              {institutions.length > 1 && <select id="nl-institution" className="nl-input" required value={institution}
+                onChange={(event) => { setInstitution(event.target.value); setClassQuery(""); }}>
+                <option value="">Choisir un établissement</option>
+                {institutions.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+              </select>}
+              {institution && <>
+                <label className="nl-label" htmlFor="nl-class-search">Rechercher une classe</label>
+                <div className="nl-input"><input id="nl-class-search" type="search" value={classQuery}
+                  onChange={(event) => setClassQuery(event.target.value)} /></div>
+                <label className="nl-label" htmlFor="nl-cohort">Classe</label>
+                <select key={institution + ":" + classQuery} id="nl-cohort" className="nl-input" name="cohort" required defaultValue="">
+                  <option value="">{visibleClasses.length ? "Choisir une classe" : "Aucune classe trouvée"}</option>
+                  {visibleClasses.map((entry) => <option key={entry.id} value={entry.id}>
+                    {entry.name} · {entry.academic_year}
+                  </option>)}
+                </select>
+              </>}
+            </div>}
             <label className="nl-label" htmlFor="nl-email">
               Adresse e-mail
             </label>
@@ -320,7 +355,8 @@ export default function Login({ joinCode }: { joinCode?: string }) {
               </label>
             </div>
             {failure && <p className="nl-notice" role="alert">{failure}</p>}
-            <button type="submit" className="nl-primary" disabled={!hydrated || busy}>
+            <button type="submit" className="nl-primary"
+              disabled={!hydrated || busy || (chooseClass && (catalog.loading || !!catalog.error))}>
               {busy ? "Connexion en cours…" : creating ? "Créer le compte" : "Se connecter"}
             </button>
           </form>

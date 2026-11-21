@@ -195,6 +195,22 @@ Placez votre nouvelle clé dans `GEMINI_API_KEY` dans le fichier local `apps/api
 
 Dans MindMirror, l’onglet **Difficultés** permet de demander des hypothèses sur les réponses d’un apprenant. Les réponses observées sont affichées avec chaque hypothèse. Le résultat reste consultatif. Les applications clientes peuvent fournir une justification facultative avec la réponse via le champ `justification`.
 
+## Classes et affectations d’un établissement
+
+Avant la mise à niveau de PostgreSQL, sauvegardez la base, puis exécutez `alembic upgrade head` depuis `apps/api`. Les classes existantes gardent leurs identifiants, leurs élèves, leurs séances, leurs documents et leurs droits d’accès. La migration crée une cohorte privée pour chaque classe historique. Elle ne regroupe jamais deux classes d’après leur nom.
+
+Un opérateur habilité peut créer des cohortes et des affectations depuis `apps/api`. Créez d’abord l’établissement et rattachez les comptes enseignants existants avec `tools.provision_institution`, puis réutilisez son identifiant pour chaque affectation.
+
+```powershell
+python -m tools.provision_institution --name "Université exemple" prof.python@example.com prof.math@example.com
+python -m tools.provision_teaching --institution <UUID> --year 2026-2027 --class L1-INFO-A --enrollment open --teacher prof.python@example.com --subject python_intro
+python -m tools.provision_teaching --institution <UUID> --year 2026-2027 --class L1-INFO-A --teacher prof.math@example.com --subject analyse
+```
+
+Les élèves choisissent une cohorte ouverte à l’inscription dans le formulaire de création de compte. Ils retrouvent ensuite les matières de cette cohorte. L’inscription ouverte ne vérifie pas l’identité de l’élève. Pour une cohorte à accès contrôlé, utilisez `--enrollment closed`. L’opérateur peut inscrire un compte élève existant après vérification avec `--enroll adresse@example.com`. L’option `--no-active` retire une cohorte du catalogue. Les anciens liens et QR restent utilisables pour les classes historiques.
+
+Dans le tableau de bord professeur, choisissez l’année, la matière et la classe. Chaque affectation a son propre espace de séances, de résultats et de documents. Pour créer une séance, indiquez la matière, la classe, la date et le titre, puis cliquez sur **Enregistrer et importer les PDF**. Vous pouvez importer plusieurs fichiers, relire les extractions puis demander à Gemini des propositions de notions. Validez la taxonomie avant la génération du quiz, puis relisez et approuvez le quiz avant publication.
+
 ## Parcours type
 
 1. Le professeur crée une classe et choisit sa matière, au besoin rattachée à un établissement. Pour une nouvelle matière, il valide d’abord ses notions et les erreurs diagnostiques associées. Les étudiants rejoignent la classe par code ou QR.

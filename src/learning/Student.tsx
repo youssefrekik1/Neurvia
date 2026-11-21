@@ -22,6 +22,7 @@ import {
 import {
   confidenceLevels,
   dayLabel,
+  teachingDateLabel,
   feedbackHref,
   isDue,
   modeTitles,
@@ -91,7 +92,7 @@ export function Courses({
       <>
         <Heading
           title={selected.title}
-          description={selected.subject + " · " + dayLabel(selected.date, true)}
+          description={selected.subject + " · " + teachingDateLabel(selected.date, true)}
           back={[
             "/student/courses?course=" +
               encodeURIComponent(courseId(selected.subject)),
@@ -170,7 +171,7 @@ export function Courses({
                 <div className="lr-grow">
                   <b>{l.title}</b>
                   <small>
-                    {dayLabel(l.date, true)} · {l.concepts.join(", ")}
+                    {teachingDateLabel(l.date, true)} · {l.concepts.join(", ")}
                   </small>
                 </div>
                 <ChevronRight size={16} />

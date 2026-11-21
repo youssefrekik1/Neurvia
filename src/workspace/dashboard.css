@@ -278,7 +278,21 @@
 }
 .nd-classcards {
   display: flex;
+  flex-wrap: wrap;
   gap: 14px;
+}
+.nd-assignment-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 12px;
+}
+.nd-assignment-filters label {
+  display: grid;
+  gap: 5px;
+}
+.nd-assignment-filters select {
+  width: 100%;
+  padding: 8px;
 }
 .nd-classcards button {
   display: grid;

@@ -6,8 +6,8 @@ from typing import Annotated, Literal, TypeVar
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.documents.citations import CitationDraft, context, keyed, verify_citations
-from app.schemas.documents import Brief
-from app.schemas.learning import QuestionDraft
+from app.schemas.documents import Brief, SourceView
+from app.schemas.learning import QuestionDraft, ReviewedMisconception
 
 T = TypeVar("T", bound=BaseModel)
 logger = logging.getLogger("uvicorn.error").getChild("neurvia.documents")
@@ -47,6 +47,43 @@ class EvidenceVerdict(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     verdict: Literal["supported", "unsupported", "ambiguous"]
+
+
+class ProposedConcept(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    label: str = Field(min_length=1, max_length=200)
+    misconceptions: list[ReviewedMisconception] = Field(min_length=1, max_length=4)
+    citations: list[CitationDraft] = Field(min_length=1, max_length=3)
+
+
+class ProposedTaxonomy(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    concepts: list[ProposedConcept] = Field(max_length=5)
+
+
+class TaxonomySuggestion(BaseModel):
+    label: str
+    misconceptions: list[ReviewedMisconception]
+    sources: list[SourceView]
+
+
+def suggest_taxonomy(gateway, hits, title):
+    evidence = keyed(hits)
+
+    def check(value):
+        for concept in value.concepts:
+            verify_citations(concept.citations, evidence)
+
+    result = structured(gateway, "course_taxonomy",
+                        "Propose au plus cinq notions enseignées dans les passages, avec des erreurs plausibles "
+                        "et des pistes de remédiation en français. Cite les passages mot pour mot. "
+                        "Si les éléments ne suffisent pas, renvoie une liste vide.",
+                        {"title": title, "passages": context(evidence)}, ProposedTaxonomy, check)
+    if result is None:
+        return None
+    return [(concept, verify_citations(concept.citations, evidence)) for concept in result.concepts]
 
 
 def structured(gateway, task, instruction, payload, schema: type[T],

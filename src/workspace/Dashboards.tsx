@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import QRCode from "qrcode";
 import { useMirrorData } from "../mirror/service";
-import { dayLabel, feedbackHref, useLearningSummary } from "../learning/service";
+import { dayLabel, feedbackHref, roomLabel, roomSubject, roomSubjectKey, teachingDateLabel, useLearningSummary } from "../learning/service";
 import { api, errorMessage, refresh, type Schema, useGet } from "../lib/api";
 import "./dashboard.css";
 import "../learning/learning.css";
@@ -38,16 +38,21 @@ export function Dashboard({
   teacher,
   classroom,
   profile,
+  classrooms,
+  choose,
 }: {
   teacher: boolean;
   classroom: string;
   profile: Schema["Profile"];
+  classrooms: Schema["ClassroomView"][];
+  choose: (id: string) => void;
 }) {
   const summary = useLearningSummary(classroom, teacher);
   const mirror = useMirrorData(classroom, teacher);
   const dashboard = mirror.dashboard;
   const priority = dashboard?.priorities[0];
   const roster = useGet<Schema["Member"][]>(teacher && classroom ? "/classrooms/" + classroom + "/members" : "");
+  const cohorts = useGet<Schema["RegistrationClass"][]>(teacher ? "" : "/me/cohorts");
   const groupCount = mirror.groups.filter((group) => group.status === "suggested").length;
   const name = profile.full_name;
   if (!teacher)
@@ -57,6 +62,13 @@ export function Dashboard({
           title={"Bonjour " + name}
           sub="Voici ce qui compte pour ton apprentissage aujourd’hui."
         />
+        {cohorts.value?.map((cohort) => <p key={cohort.id}>{cohort.name} · {cohort.academic_year} · {cohort.institution_name}</p>)}
+        {classrooms.length > 0 && <section className="nd-card">
+          <h2>Mes matières</h2>
+          <div className="nd-classcards">{classrooms.map((item) => <button key={item.id} type="button"
+            aria-pressed={item.id === classroom} className={"nd-card " + (item.id === classroom ? "active" : "")}
+            onClick={() => choose(item.id)}>{roomLabel(item)}</button>)}</div>
+        </section>}
         {summary.error && <p role="alert">{summary.error}</p>}
         {summary.loading && <p role="status">Chargement des activités…</p>}
         <section className="nd-studentpriority">
@@ -137,12 +149,60 @@ export function Dashboard({
         </section>
       </div>
     );
+  const room = classrooms.find((entry) => entry.id === classroom);
+  const year = room?.academic_year ?? "";
+  const yearOptions = [...new Set(classrooms.map((entry) => entry.academic_year ?? ""))].sort().reverse();
+  const yearRooms = classrooms.filter((entry) => (entry.academic_year ?? "") === year);
+  const subject = room ? roomSubjectKey(room) : "";
+  const subjectOptions = [...new Map(yearRooms.map((entry) => [roomSubjectKey(entry), roomSubject(entry)]))];
+  const scopedRooms = yearRooms.filter((entry) => roomSubjectKey(entry) === subject);
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Africa/Tunis" });
+  const upcoming = summary.lessons.filter((lesson) => lesson.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date)).slice(0, 5);
+  const pendingQuizzes = summary.lessons.filter((lesson) => lesson.quizStatus === "draft");
   return (
     <div className="nd">
       <Heading
         title={"Bonjour, " + name}
-        sub="Voici l’état de votre classe aujourd’hui."
+        sub={room ? roomLabel(room) : "Consultez vos affectations et préparez vos séances."}
       />
+      <section className="nd-card">
+        <h2>Mes affectations</h2>
+        <p>{new Set(classrooms.map(roomSubjectKey)).size} matière(s) · {
+          new Set(classrooms.map((entry) => entry.cohort_id ?? entry.id)).size
+        } classe(s) · {classrooms.length} affectation(s)</p>
+        {room && <div className="nd-assignment-filters">
+          {!!yearOptions.some(Boolean) && <label>Année académique
+            <select aria-label="Année académique" value={year} onChange={(event) => {
+              const next = classrooms.find((entry) => (entry.academic_year ?? "") === event.target.value);
+              if (next) choose(next.id);
+            }}>{yearOptions.map((value) => <option key={value} value={value}>{value || "Non renseignée"}</option>)}</select>
+          </label>}
+          <label>Matière
+            <select aria-label="Filtrer par matière" value={subject} onChange={(event) => {
+              const next = yearRooms.find((entry) => roomSubjectKey(entry) === event.target.value);
+              if (next) choose(next.id);
+            }}>{subjectOptions.map(([id, label]) => <option key={id} value={id}>{label}</option>)}</select>
+          </label>
+          <label>Classe
+            <select aria-label="Filtrer par classe" value={classroom} onChange={(event) => choose(event.target.value)}>
+              {scopedRooms.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
+            </select>
+          </label>
+        </div>}
+      </section>
+      <section className="nd-card">
+        <h2>Quiz à valider</h2>
+        {pendingQuizzes.length ? <ul>{pendingQuizzes.map((lesson) => <li key={lesson.id}>
+          <Link href={"/teacher/quiz?lesson=" + lesson.id + "&step=review"}>{lesson.title}</Link>
+        </li>)}</ul> : <p>Aucun quiz en attente.</p>}
+      </section>
+      {upcoming.length > 0 && <section className="nd-card">
+        <h2>Séances à venir</h2>
+        <ul>{upcoming.map((lesson) => <li key={lesson.id}>
+          <Link href={"/teacher/lessons/" + lesson.id}>{lesson.title}</Link> · {teachingDateLabel(lesson.date, true)}
+        </li>)}</ul>
+      </section>}
       <div className="nd-hero">
         <section className="nd-card nd-priority">
           <div className="nd-topic">
@@ -240,7 +300,7 @@ export function Dashboard({
                   <td>
                     <Link href={"/teacher/lessons/" + s.id}>{s.title}</Link>
                   </td>
-                  <td>{dayLabel(s.date)}</td>
+                  <td>{teachingDateLabel(s.date)}</td>
                   <td>
                     {s.responses} / {roster.value?.length ?? 0}
                   </td>
@@ -269,16 +329,18 @@ export function Classes({ classroom, choose, teacher, classrooms, joinCode }: {
   const [subject, setSubject] = useState("python_intro");
   const [otherSubject, setOtherSubject] = useState("");
   const institutions = useGet<Schema["InstitutionView"][]>(teacher ? "/institutions" : "").value ?? [];
+  const catalog = useGet<Schema["SubjectView"][]>(teacher ? "/subjects" : "").value ?? [];
+  const subjects = [...new Map(catalog.map((item) => [item.code, item.label]))];
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
-  const [qr, setQr] = useState("");
+  const [qr, setQr] = useState<{ link: string; image: string }>();
   const members = useGet<Schema["Member"][]>(teacher && classroom ? "/classrooms/" + classroom + "/members" : "");
   const room = classrooms.find((item) => item.id === classroom);
   const link = room?.join_path ? window.location.origin + room.join_path : "";
   useEffect(() => {
     let active = true;
-    if (link) void QRCode.toDataURL(link, { width: 176 }).then((image) => { if (active) setQr(image); },
-      () => { if (active) setQr(""); });
+    if (link) void QRCode.toDataURL(link, { width: 176 }).then((image) => { if (active) setQr({ link, image }); },
+      () => { if (active) setQr(undefined); });
     return () => { active = false; };
   }, [link]);
   async function run(action: () => Promise<Schema["ClassroomView"]>, message: string) {
@@ -299,7 +361,7 @@ export function Classes({ classroom, choose, teacher, classrooms, joinCode }: {
         <label>Nom de la classe<input value={name} onChange={(event) => setName(event.target.value)} required maxLength={120} /></label>
         <label>Matière
           <select value={subject} onChange={(event) => setSubject(event.target.value)}>
-            <option value="python_intro">Algorithmique & Python</option>
+            {subjects.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
             <option value="other">Autre matière</option>
           </select>
         </label>
@@ -327,19 +389,19 @@ export function Classes({ classroom, choose, teacher, classrooms, joinCode }: {
     </section>
     <div className="nd-classcards">{classrooms.map((item) =>
       <button className={"nd-card " + (item.id === classroom ? "active" : "")} key={item.id} onClick={() => choose(item.id)}>
-        <GraduationCap /><strong>{item.name}</strong>
+        <GraduationCap /><strong>{item.name}</strong><span>{roomSubject(item)}{item.academic_year ? " · " + item.academic_year : ""}</span>
       </button>)}</div>
     {teacher && room && <>
-      <section className="nd-card">
+      {room.join_code && <section className="nd-card">
         <h2>Invitation · {room.name}</h2>
         <p>Code : <strong>{room.join_code}</strong></p>
         {room.join_expires_at && <p>Expire le {dayLabel(room.join_expires_at, true)}</p>}
         {link && <p><a href={link}>{link}</a></p>}
-        {link && qr && <img src={qr} width={176} height={176} alt="QR d’adhésion à la classe" />}
+        {link && qr?.link === link && <img src={qr.image} width={176} height={176} alt="QR d’adhésion à la classe" />}
         <button className="lr-btn" disabled={busy} onClick={() => void run(
           () => api("/classrooms/" + room.id + "/join-code", "POST", { join_ttl_hours: validHours }), "Code renouvelé.",
         )}>Renouveler le code</button>
-      </section>
+      </section>}
       <section className="nd-card">
         <h2>Étudiants · {room.name}</h2>
         <input placeholder="Rechercher un pseudonyme" aria-label="Rechercher un pseudonyme"
