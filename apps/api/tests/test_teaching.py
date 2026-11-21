@@ -51,6 +51,15 @@ def test_assignments_and_atomic_student_enrollment(api):
     assert lesson["content_text"] == "" and lesson["concept_codes"] == []
     call(api, "GET", f"/lessons/{lesson['id']}", bob, expected=404)
     call(api, "POST", f"/lessons/{lesson['id']}/quiz/generate", alice, expected=409)
+    edited = call(api, "PATCH", f"/lessons/{lesson['id']}", alice, {
+        "title": "Indices", "content_text": "Support de cours", "concept_codes": ["C_INDEXING"],
+    })
+    assert edited["taught_on"] == "2026-11-22"
+    rescheduled = call(api, "PATCH", f"/lessons/{lesson['id']}", alice, {
+        "title": "Indices", "taught_on": "2026-11-23",
+    })
+    assert rescheduled["content_text"] == "Support de cours"
+    assert rescheduled["concept_codes"] == ["C_INDEXING"] and rescheduled["taught_on"] == "2026-11-23"
 
     payload = {"email": "enrolled@example.com", "full_name": "Nouvel étudiant",
                "password": "fixture-pass-123", "role": "student"}

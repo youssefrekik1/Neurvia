@@ -164,18 +164,21 @@ def edit_lesson(id: UUID, data: LessonCreate, user: Teacher, db: Db):
     row, classroom = lesson_access(db, user, id, teacher=True, lock=True)
     if row.status != LessonStatus.draft:
         raise error(409, "LESSON_IMMUTABLE", "Cette séance est déjà publiée.")
-    concepts = resolve_concepts(db, data, classroom, user)
-    quiz = current_quiz(db, row.id)
-    if quiz and set(data.concept_codes) != {c.code for c in lesson_concepts(db, row.id)}:
-        raise error(409, "QUIZ_EXISTS", "Conservez les concepts du quiz déjà préparé.")
+    if "concept_codes" in data.model_fields_set:
+        concepts = resolve_concepts(db, data, classroom, user)
+        quiz = current_quiz(db, row.id)
+        if quiz and set(data.concept_codes) != {c.code for c in lesson_concepts(db, row.id)}:
+            raise error(409, "QUIZ_EXISTS", "Conservez les concepts du quiz déjà préparé.")
+        db.execute(delete(LessonConcept).where(LessonConcept.lesson_id == id))
+        db.add_all(LessonConcept(lesson_id=id, concept_id=concept.id) for concept in concepts)
     row.title = data.title
     if "taught_on" in data.model_fields_set:
         if data.taught_on is None and row.taught_on is not None:
             raise error(422, "TEACHING_DATE_REQUIRED", "Choisissez la date de la séance.")
         row.taught_on = data.taught_on
-    row.content_text = data.content_text
-    row.focus_brief_json = data.focus_brief.model_dump()
-    db.execute(delete(LessonConcept).where(LessonConcept.lesson_id == id))
-    db.add_all(LessonConcept(lesson_id=id, concept_id=concept.id) for concept in concepts)
+    if "content_text" in data.model_fields_set:
+        row.content_text = data.content_text
+    if "focus_brief" in data.model_fields_set:
+        row.focus_brief_json = data.focus_brief.model_dump()
     db.commit()
     return lesson_view(db, row, classroom, True)
