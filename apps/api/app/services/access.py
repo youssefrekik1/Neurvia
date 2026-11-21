@@ -7,10 +7,23 @@ from app.models.enums import LessonStatus, Role
 from app.routers.identity import get_classroom
 
 
+# Arbitrary constant naming the application's write lock in PostgreSQL's advisory-lock space.
+WRITE_LOCK = 31478011
+
+
 def start_write(db: Session) -> None:
+    """Serialize read-check-write transactions, as the handlers that call this expect.
+
+    SQLite gets this from BEGIN IMMEDIATE. PostgreSQL takes a transaction-scoped advisory lock with the
+    same single-writer meaning, released at commit or rollback; without it, concurrent requests such as
+    a double-started attempt both pass their existence checks and one fails on a unique constraint.
+    Callers keep model inference outside these transactions, so the lock is held briefly.
+    """
     connection = db.connection()
     if connection.dialect.name == "sqlite" and not connection.connection.driver_connection.in_transaction:
         connection.exec_driver_sql("BEGIN IMMEDIATE")
+    elif connection.dialect.name == "postgresql":
+        connection.exec_driver_sql(f"SELECT pg_advisory_xact_lock({WRITE_LOCK})")
 
 
 def lesson_access(db, user, lesson_id, *, teacher=False, lock=False):
