@@ -6,7 +6,7 @@ Neurvia aide les professeurs d’algorithmique et de Python à comprendre **pour
 
 Le professeur peut aussi importer ses supports de cours en PDF, y compris manuscrits, interroger un assistant qui cite les pages sources, et générer des questions fondées sur ces documents. Chaque quiz exige l’approbation explicite du professeur avant publication.
 
-L’API utilise Gemini par défaut pour la génération, la vision et les embeddings. Ollama et les serveurs compatibles OpenAI restent disponibles sur configuration explicite.
+L’API utilise Gemini par défaut (`gemini-3.5-flash-lite` pour la génération et la vision, `gemini-embedding-2` pour les embeddings). Ollama et les serveurs compatibles OpenAI restent disponibles sur configuration explicite.
 
 ![Assistant de cours avec citation de la page source](docs/screenshots/course-assistant.png)
 
@@ -14,6 +14,8 @@ L’API utilise Gemini par défaut pour la génération, la vision et les embedd
 
 | Parcours | Ce que fait Neurvia |
 | --- | --- |
+| **Matières et classes** | Le professeur déclare les matières qu’il enseigne et coche, pour chacune, ses classes. L’étudiant choisit sa classe à l’inscription et suit automatiquement toutes ses matières |
+| **Quiz guidé** | Écran d’accueil qui explique le déroulé, navigation entre les questions, raccourcis clavier (A–D, Entrée), confiance expliquée, correction en couleurs avec explication |
 | **Préparation de séance** | Notions de la séance, quiz préparé depuis la banque approuvée ou par Gemini, relecture et publication explicite |
 | **Diagnostic** | Réponses avec niveau de confiance. Une erreur seule reste une hypothèse, que vient confirmer une variante indépendante |
 | **MindMirror** | Constellation des profils d’erreurs et priorités de la classe, avec pseudonymes |
@@ -118,6 +120,20 @@ flowchart LR
 
 Les variantes de confirmation, de retest et de J+7 proviennent de la banque approuvée par le professeur. Le bouton **Préparer les variantes de suivi** de la séance les rédige à partir des PDF, en brouillon, pour chaque erreur approuvée.
 
+### Classes, matières et cours
+
+```mermaid
+erDiagram
+    TEACHER ||--o{ TEACHER_SUBJECT : "enseigne"
+    COHORT ||--o{ COHORT_MEMBER : "élèves (une classe par élève)"
+    TEACHER_SUBJECT ||--o{ CLASSROOM : "cours"
+    COHORT ||--o{ CLASSROOM : "cours"
+    CLASSROOM ||--o{ MEMBERSHIP : "inscriptions automatiques"
+    CLASSROOM ||--o{ LESSON : "séances"
+```
+
+Un cours est le couple (matière, classe). Cocher une classe pour une matière crée le cours et y inscrit tous les élèves de la classe ; un élève qui rejoint la classe plus tard est inscrit à tous ses cours. Un cours qui contient déjà des séances ne peut pas être retiré.
+
 ### Modèle de données des documents
 
 ```mermaid
@@ -197,14 +213,25 @@ Dans MindMirror, l’onglet **Difficultés** permet de demander des hypothèses 
 
 ## Parcours type
 
-1. Le professeur crée une classe et choisit sa matière, au besoin rattachée à un établissement. Pour une nouvelle matière, il valide d’abord ses notions et les erreurs diagnostiques associées. Les étudiants rejoignent la classe par code ou QR.
+1. Dans **Matières & classes**, le professeur ajoute les matières qu’il enseigne et coche les classes concernées. Les étudiants choisissent leur classe à l’inscription (ou rejoignent un cours par code). Pour une nouvelle matière, le professeur valide d’abord ses notions et les erreurs diagnostiques associées.
 2. Il crée une séance, importe ses PDF, relit les passages signalés et les fait indexer.
 3. Il interroge l’assistant sur ses documents et précise ses consignes : thèmes, exclusions, difficultés observées. L’assistant en extrait un brief modifiable.
 4. Il génère le quiz à partir des documents sélectionnés, relit chaque question et sa source, puis l’approuve et le publie.
 5. Il clique sur **Préparer les variantes de suivi** : Neurvia rédige depuis les PDF une question de confirmation, de retest et de révision J+7 pour chaque erreur approuvée. Le professeur les relit avec leur source et les approuve dans la **Banque pédagogique**.
-6. Les étudiants répondent en indiquant leur confiance. MindMirror et les groupes orientent la remédiation, puis le retest et le suivi J+7 en mesurent l’effet.
+6. Les étudiants passent un quiz guidé : réponse, puis niveau de confiance (non noté), puis correction détaillée. Une erreur commise avec assurance est signalée comme une idée à corriger plutôt qu’une étourderie. MindMirror et les groupes orientent la remédiation, puis le retest et le suivi J+7 en mesurent l’effet.
 
 Les variantes peuvent aussi être rédigées à la main dans la **Banque pédagogique**. Un profil demande au moins quatre réponses, et un groupe trois profils comparables.
+
+## Performance
+
+En mode développement, Next.js compile chaque page à la première visite : comptez quelques secondes au premier chargement. Pour une démonstration fluide, utilisez une build de production :
+
+```powershell
+npm run build
+$env:BACKEND_URL = "http://127.0.0.1:8010/api/v1"; npm start -- --port 3151
+```
+
+Mesuré : réponses de l’API entre 4 et 110 ms, changement de page entre 30 et 130 ms, premier chargement d’environ 1,5 s en production contre 4,6 s en développement.
 
 ## Données et confidentialité
 

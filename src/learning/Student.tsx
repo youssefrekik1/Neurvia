@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Activity,
   ArrowRight,
@@ -424,6 +424,13 @@ export function Progress({ classroom, data }: StudentProps) {
     </>
   );
 }
+function verdict(score: number, total: number) {
+  const ratio = total ? score / total : 0;
+  if (ratio === 1) return "Parfait ! Tu maîtrises les notions de cette séance.";
+  if (ratio >= 0.7) return "Très bien ! Il reste quelques points à consolider.";
+  if (ratio >= 0.4) return "Bon début. Relis les corrections ci-dessous, puis fais les activités proposées.";
+  return "Pas de panique : les corrections et les activités proposées vont t’aider à progresser.";
+}
 function Feedback({ attempt, data }: { attempt: Attempt; data: LearningData }) {
   const [expanded, setExpanded] = useState<number | null>(0);
   const followups = data.practice.filter(
@@ -452,9 +459,11 @@ function Feedback({ attempt, data }: { attempt: Attempt; data: LearningData }) {
               {attempt.score}
               <small> / {attempt.total}</small>
             </div>
+            <p className="lr-verdict">{verdict(attempt.score, attempt.total)}</p>
             <p>
-              Bonne{attempt.score > 1 ? "s" : ""} réponse
-              {attempt.score > 1 ? "s" : ""} · {dayLabel(attempt.date, true)}
+              <span className="lr-pill green">{attempt.score} correcte{attempt.score > 1 ? "s" : ""}</span>{" "}
+              {wrong > 0 && <span className="lr-pill amber">{wrong} à revoir</span>}{" "}
+              · {dayLabel(attempt.date, true)}
             </p>
             <ProgressBar
               value={(100 * attempt.score) / attempt.total}
@@ -464,6 +473,9 @@ function Feedback({ attempt, data }: { attempt: Attempt; data: LearningData }) {
           <section className="lr-panel">
             <div className="lr-panel-head">
               <h2>Correction détaillée</h2>
+              <button className="lr-textlink" onClick={() => setExpanded(expanded === -1 ? 0 : -1)}>
+                {expanded === -1 ? "Tout replier" : "Tout déplier"}
+              </button>
             </div>
             {attempt.questions.map((q, i) => {
               const answer = attempt.answers[i],
@@ -492,26 +504,28 @@ function Feedback({ attempt, data }: { attempt: Attempt; data: LearningData }) {
                       className={expanded === i ? "turn" : ""}
                     />
                   </button>
-                  {expanded === i && (
+                  {(expanded === i || expanded === -1) && (
                     <div className="lr-correction-body">
                       <Prompt question={q} />
-                      <dl className="lr-facts">
-                        <div>
-                          <dt>Ta réponse</dt>
-                          <dd>{q.options[answer.option]}</dd>
-                        </div>
-                        {!right && (
-                          <div>
-                            <dt>Bonne réponse</dt>
-                            <dd>{q.options[q.correct]}</dd>
+                      <div className="lr-options">
+                        {q.options.map((option, k) => (
+                          <div key={k} className={"lr-option " + (k === q.correct ? "correct" : k === answer.option ? "wrong" : "")}>
+                            <span className="lr-letter">{String.fromCharCode(65 + k)}</span>
+                            <span>{option}</span>
+                            {k === answer.option && <small className="lr-mine">Ta réponse</small>}
                           </div>
-                        )}
+                        ))}
+                      </div>
+                      <dl className="lr-facts">
                         <div>
                           <dt>Confiance</dt>
                           <dd>{answer.confidence}</dd>
                         </div>
                       </dl>
-                      <p>{q.explanation}</p>
+                      {!right && answer.confidence === "Sûr" && (
+                        <p className="lr-hint">Tu étais sûr(e) de cette réponse : c’est souvent le signe d’une idée à corriger, pas d’une étourderie.</p>
+                      )}
+                      {q.explanation && <p className="lr-explain"><b>Explication · </b>{q.explanation}</p>}
 
                     </div>
                   )}
@@ -576,25 +590,59 @@ function Feedback({ attempt, data }: { attempt: Attempt; data: LearningData }) {
     </>
   );
 }
+const confidenceHints: Record<string, string> = {
+  "Sûr": "Je connais la réponse",
+  "Moyennement sûr": "J’hésite un peu",
+  "Incertain": "Je devine",
+};
+const isAnswered = (answer?: Partial<Answer>) => answer?.option !== undefined && Boolean(answer?.confidence);
+function QuizIntro({ lesson, count, minutes, onStart }: { lesson: Lesson; count: number; minutes: number; onStart: () => void }) {
+  return (
+    <section className="lr-panel lr-pad lr-intro">
+      <span className="lr-badge">{lesson.subject}</span>
+      <h2>{lesson.title}</h2>
+      <p className="lr-intro-meta">
+        <ListChecks size={15} /> {count} question{count > 1 ? "s" : ""} · <Clock3 size={15} /> environ {minutes} min
+      </p>
+      <ol className="lr-intro-steps">
+        <li><b>Choisis une réponse</b><small>Clique sur une option ou tape A, B, C, D.</small></li>
+        <li><b>Dis si tu es sûr(e)</b><small>Ta confiance n’est pas notée : elle aide à distinguer une étourderie d’une notion mal comprise.</small></li>
+        <li><b>Découvre ton résultat</b><small>Correction détaillée, explications et, si besoin, une courte activité pour consolider.</small></li>
+      </ol>
+      <button className="lr-btn primary" onClick={onStart} autoFocus>
+        Commencer le quiz <ArrowRight size={15} />
+      </button>
+    </section>
+  );
+}
 function Runner({ lesson, task, session }: { lesson: Lesson; task?: Practice; session: Session }) {
   const [current, setCurrent] = useState(session);
+  const [started, setStarted] = useState(Boolean(task) || Object.keys(session.answers).length > 0);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { index, questions } = current;
   const q = questions[index];
   const answer = current.answers[index] || {};
   const last = index === questions.length - 1;
+  const answered = questions.filter((_, i) => isAnswered(current.answers[i])).length;
+  // Answers are saved one at a time, so any question up to the first unanswered one can be revisited.
+  const reachable = questions.findIndex((_, i) => !isAnswered(current.answers[i]));
+  const minutes = task ? 2 : Math.max(2, Math.round(questions.length * 1.3));
   function update(patch: Partial<Answer>) {
-    setCurrent({ ...current, answers: { ...current.answers, [index]: { ...answer, ...patch } } });
+    setCurrent((state) => ({
+      ...state,
+      answers: { ...state.answers, [state.index]: { ...state.answers[state.index], ...patch } },
+    }));
     setError("");
   }
   function navigate(index: number) {
-    setCurrent({ ...current, index });
+    setCurrent((state) => ({ ...state, index }));
     setError("");
   }
   async function next() {
+    if (busy) return;
     if (answer.option === undefined || !answer.confidence) {
-      setError("Choisis une réponse et indique ton niveau de confiance pour continuer.");
+      setError(answer.option === undefined ? "Choisis d’abord une réponse." : "Indique ton niveau de confiance pour continuer.");
       return;
     }
     setBusy(true);
@@ -615,13 +663,40 @@ function Runner({ lesson, task, session }: { lesson: Lesson; task?: Practice; se
     } catch (cause) { setError(errorMessage(cause)); }
     finally { setBusy(false); }
   }
+  useEffect(() => {
+    if (!started) return;
+    function onKey(event: KeyboardEvent) {
+      const target = event.target as HTMLElement;
+      if (event.ctrlKey || event.metaKey || event.altKey || target.closest("textarea, input[type=text], select")) return;
+      const key = event.key.toUpperCase();
+      const letter = key.length === 1 ? key.charCodeAt(0) - 65 : -1;
+      const digit = key.length === 1 ? Number(key) - 1 : -1;
+      if (letter >= 0 && letter < q.options.length) update({ option: letter });
+      else if (digit >= 0 && digit < q.options.length) update({ option: digit });
+      else if (event.key === "Enter" && !target.closest("button, a")) void next();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+  const heading = (
+    <Heading
+      title={task ? modeTitles[task.mode] : "Quiz — " + lesson.title}
+      description={task ? task.concept : lesson.subject}
+      back={["/student/tasks", "Mes tâches"]}
+    />
+  );
+  if (!started)
+    return (
+      <>
+        {heading}
+        <div className="lr-test">
+          <QuizIntro lesson={lesson} count={questions.length} minutes={minutes} onStart={() => setStarted(true)} />
+        </div>
+      </>
+    );
   return (
     <>
-      <Heading
-        title={task ? modeTitles[task.mode] : "Quiz — " + lesson.title}
-        description={task ? task.concept : lesson.subject}
-        back={["/student/tasks", "Mes tâches"]}
-      />
+      {heading}
       <div className="lr-test">
         <section className="lr-panel lr-pad">
           <div className="lr-kicker">
@@ -630,55 +705,56 @@ function Runner({ lesson, task, session }: { lesson: Lesson; task?: Practice; se
             </span>
             <span className="lr-duration">
               <Clock3 size={14} />
-              {task ? "2" : Math.max(2, Math.round(questions.length * 1.3))} min
+              environ {minutes} min
             </span>
           </div>
-          <ProgressBar
-            value={(100 * (index + 1)) / questions.length}
-            label="Progression dans le quiz"
-          />
+          <ProgressBar value={(100 * answered) / questions.length} label="Questions répondues" />
+          {questions.length > 1 && (
+            <nav className="lr-qnav" aria-label="Questions du quiz">
+              {questions.map((item, i) => {
+                const done = isAnswered(current.answers[i]);
+                const open = reachable === -1 || i <= reachable;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={!open || busy}
+                    aria-current={i === index ? "step" : undefined}
+                    className={(i === index ? "current " : "") + (done ? "done" : "")}
+                    title={"Question " + (i + 1) + (done ? " · répondue" : "")}
+                    onClick={() => navigate(i)}
+                  >
+                    {done && i !== index ? <Check size={13} /> : i + 1}
+                  </button>
+                );
+              })}
+            </nav>
+          )}
           <span className="lr-badge lr-concept">{q.concept}</span>
           <Prompt question={q} />
           <fieldset className="lr-options">
             <legend className="lr-sr">Choisis une réponse</legend>
             {q.options.map((o, i) => (
-              <label
-                key={i}
-                className={
-                  "lr-option interactive " +
-                  (answer.option === i ? "chosen" : "")
-                }
-              >
-                <input
-                  type="radio"
-                  name="lr-answer"
-                  checked={answer.option === i}
-                  onChange={() => update({ option: i })}
-                />
+              <label key={i} className={"lr-option interactive " + (answer.option === i ? "chosen" : "")}>
+                <input type="radio" name="lr-answer" checked={answer.option === i} onChange={() => update({ option: i })} />
                 <span className="lr-letter">{String.fromCharCode(65 + i)}</span>
                 <span>{o}</span>
                 {answer.option === i && <CheckCircle2 size={17} />}
               </label>
             ))}
           </fieldset>
-          <fieldset className="lr-confidence">
-            <legend>Quel est ton niveau de confiance ?</legend>
+          <fieldset className={"lr-confidence" + (answer.option === undefined ? " dim" : "")}>
+            <legend>À quel point es-tu sûr(e) de ta réponse ?</legend>
             <div>
               {confidenceLevels.map((c) => (
-                <label
-                  key={c}
-                  className={answer.confidence === c ? "chosen" : ""}
-                >
-                  <input
-                    type="radio"
-                    name="lr-confidence"
-                    checked={answer.confidence === c}
-                    onChange={() => update({ confidence: c })}
-                  />
-                  {c}
+                <label key={c} className={answer.confidence === c ? "chosen" : ""}>
+                  <input type="radio" name="lr-confidence" checked={answer.confidence === c} onChange={() => update({ confidence: c })} />
+                  <b>{c}</b>
+                  <small>{confidenceHints[c]}</small>
                 </label>
               ))}
             </div>
+            <small className="lr-hint">Ta confiance n’est pas notée : elle aide à repérer les idées fausses plutôt que les étourderies.</small>
           </fieldset>
           {error && (
             <p role="alert" className="lr-error">
@@ -686,16 +762,13 @@ function Runner({ lesson, task, session }: { lesson: Lesson; task?: Practice; se
             </p>
           )}
           <div className="lr-between">
-            <button
-              className="lr-btn"
-              disabled={index === 0}
-              onClick={() => navigate(index - 1)}
-            >
+            <button className="lr-btn" disabled={index === 0 || busy} onClick={() => navigate(index - 1)}>
               <ChevronLeft size={15} />
               Précédent
             </button>
-            <button className="lr-btn primary" onClick={next} disabled={busy}>
-              {last ? "Terminer" : "Suivant"}
+            <span className="lr-hint lr-keys">A–D pour répondre · Entrée pour valider</span>
+            <button className="lr-btn primary" onClick={() => void next()} disabled={busy}>
+              {busy ? "Enregistrement…" : last ? (task ? "Valider ma réponse" : "Terminer et voir mon résultat") : "Valider et continuer"}
               <ArrowRight size={15} />
             </button>
           </div>
