@@ -18,7 +18,15 @@ import {
   ChartNoAxesColumnIncreasing,
   CircleHelp,
   X,
+  Sparkles,
+  Map as MapIcon,
+  MessageCircle,
+  Brain,
 } from "lucide-react";
+import Cockpit from "./insights/Cockpit";
+import { Coach, ExplainBack, StudyPath } from "./insights/Study";
+import { demoRole, startDemo, stopDemo } from "./demo/mode";
+import "./insights/insights.css";
 import Login from "./login/Login";
 import { logout } from "./login/auth";
 import { api, errorMessage, type Schema, useGet } from "./lib/api";
@@ -27,8 +35,10 @@ import Learning from "./learning/Learning";
 import QuestionBank from "./learning/QuestionBank";
 import { Dashboard, Classes, SettingsPage, Help } from "./workspace/Dashboards";
 
-const teacherLinks = [
+type NavLink = { slug: string; label: string; icon: typeof Home; fresh?: boolean };
+const teacherLinks: NavLink[] = [
   { slug: "dashboard", label: "Accueil", icon: Home },
+  { slug: "cockpit", label: "Pilotage IA", icon: Sparkles, fresh: true },
   { slug: "classes", label: "Matières & classes", icon: School },
   { slug: "lessons", label: "Séances & quiz", icon: BookOpen },
   { slug: "bank", label: "Banque pédagogique", icon: Library },
@@ -36,8 +46,11 @@ const teacherLinks = [
   { slug: "groups", label: "Groupes", icon: Users },
   { slug: "settings", label: "Paramètres", icon: Settings },
 ];
-const studentLinks = [
+const studentLinks: NavLink[] = [
   { slug: "dashboard", label: "Mon espace", icon: Home },
+  { slug: "parcours", label: "Mon parcours", icon: MapIcon, fresh: true },
+  { slug: "coach", label: "Coach IA", icon: MessageCircle, fresh: true },
+  { slug: "explain", label: "Explique-le", icon: Brain, fresh: true },
   { slug: "tasks", label: "Mes tâches", icon: ListChecks },
   { slug: "classes", label: "Ma classe", icon: School },
   { slug: "courses", label: "Mes cours", icon: Library },
@@ -97,8 +110,13 @@ export default function Workspace({ path }: { path: string }) {
     setPreferred(value);
     localStorage.setItem("neurvia.classroom", value);
   }
+  const demo = demoRole() !== null;
   let content;
-  if (page === "dashboard")
+  if (teacher && (page === "cockpit" || (demo && page === "dashboard"))) content = <Cockpit />;
+  else if (!teacher && (page === "parcours" || (demo && page === "dashboard"))) content = <StudyPath />;
+  else if (!teacher && page === "coach") content = <Coach />;
+  else if (!teacher && page === "explain") content = <ExplainBack />;
+  else if (page === "dashboard")
     content = <Dashboard teacher={teacher} classroom={classroom} profile={profile} />;
   else if (page === "classes" || role === "join")
     content = <Classes classroom={classroom} choose={choose} teacher={teacher} classrooms={classrooms} joinCode={role === "join" ? page : undefined} />;
@@ -138,7 +156,7 @@ export default function Workspace({ path }: { path: string }) {
           Neurvia
         </Link>
         <nav aria-label="Navigation principale">
-          {links.map(({ slug, label, icon: Icon }) => (
+          {links.map(({ slug, label, icon: Icon, fresh }) => (
             <Link
               key={slug}
               href={"/" + appRole + "/" + slug}
@@ -146,11 +164,19 @@ export default function Workspace({ path }: { path: string }) {
             >
               <Icon size={18} />
               {label}
+              {fresh && <span className="nv-new">IA</span>}
             </Link>
           ))}
         </nav>
       </aside>
       <div className="nv-stage">
+        {demo && <div className="nv-demobar" role="status">
+          <Sparkles size={14} /> Mode démo · données fictives, aucun serveur requis
+          <button type="button" onClick={() => startDemo(teacher ? "student" : "teacher")}>
+            Passer en vue {teacher ? "étudiant" : "professeur"}
+          </button>
+          <button type="button" onClick={stopDemo}>Quitter la démo</button>
+        </div>}
         <header className="nv-bar">
           <button
             className="mobile-menu"

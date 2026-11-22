@@ -1,5 +1,6 @@
 "use client";
 
+import { startDemo } from "../demo/mode";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   ChartNoAxesColumnIncreasing,
@@ -341,6 +342,10 @@ export default function Login({ joinCode }: { joinCode?: string }) {
               {busy ? "Connexion en cours…" : creating ? "Créer le compte" : "Se connecter"}
             </button>
           </form>
+          <button type="button" className="nl-demo" disabled={!hydrated}
+            onClick={() => startDemo(role === "student" ? "student" : "teacher")}>
+            ✨ Lancer la démo {role === "student" ? "étudiant" : "professeur"} · sans compte
+          </button>
           <div className="nl-form-options">
             <button type="button" onClick={() => { setCreating(!creating); setFailure(""); }}>
               {creating ? "J’ai déjà un compte" : "Créer un compte"}

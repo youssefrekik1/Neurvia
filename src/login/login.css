@@ -584,3 +584,6 @@
     padding: 0 7px;
   }
 }
+
+.nl-demo { width: 100%; margin-top: 10px; padding: 12px; border-radius: 10px; border: 1px dashed #7c3aed; background: #f5f3ff; color: #6d28d9; font: inherit; font-weight: 600; cursor: pointer; }
+.nl-demo:hover { background: #ede9fe; }

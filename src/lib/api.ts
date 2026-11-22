@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { components } from "../../docs/api-types";
+import { demoRole, mockResponse } from "../demo/mode";
 
 export type Schema = components["schemas"];
 
@@ -12,13 +13,19 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(path: string, method = "GET", data?: unknown): Promise<T> {
+  const mocked = mockResponse(path, method);
+  if (mocked !== undefined) return mocked as T;
+  const demo = demoRole() !== null;
   const multipart = data instanceof FormData;
   const response = await fetch("/backend" + path, {
     method, cache: "no-store",
     headers: data === undefined || multipart ? undefined : { "Content-Type": "application/json" },
     body: multipart ? data : data === undefined ? undefined : JSON.stringify(data),
   });
-  const payload = await response.json();
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok && demo)
+    throw new ApiError(response.status, "DEMO_OFFLINE",
+      "Cette vue utilise le serveur Neurvia, indisponible en mode démo hors ligne.");
   if (!response.ok) {
     if (response.status === 401 && !path.startsWith("/auth/")) {
       cacheGeneration += 1;
