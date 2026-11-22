@@ -18,18 +18,19 @@ function heat(value: number) {
 }
 
 const BRIEFING = [
-  "Cette semaine, la maîtrise moyenne de la classe est passée de 55 % à 63 % (+8 points), portée par la remédiation sur l’indexation.",
-  "Point d’attention : « Fonctions et return » reste la notion la plus fragile (29 %). L’analyse des prérequis montre que la cause est en amont : 11 étudiants confondent encore le dernier indice d’une liste (décalage d’indice), dont 7 avec une forte confiance.",
+  "Cette semaine, la maîtrise moyenne de la classe est passée de 55 % à 63 % (+8 points), portée par la remédiation sur le passage au modèle relationnel.",
+  "Point d’attention : « Jointure et division » reste la notion la plus fragile (27 %). L’analyse des prérequis montre que la cause est en amont : 11 étudiants lisent encore les cardinalités du mauvais côté, dont 7 avec une forte confiance.",
+  "En Mathématiques du signal, le chapitre manuscrit sur les séries de Fourier a été transcrit et validé : 3 questions sur le calcul de a₀ sont prêtes à relire.",
   "3 étudiants montrent des signes de décrochage (aucune activité depuis 6 jours ou plus). Une session courte de 5 minutes leur est proposée.",
-  "Recommandation : commencez la prochaine séance par 10 minutes sur l’indexation avec le groupe « Décalage d’indice », puis programmez le retest jeudi.",
+  "Recommandation : commencez la prochaine séance par 10 minutes sur les cardinalités avec le groupe « Lecture des cardinalités », puis programmez le retest jeudi.",
 ];
 
 type Action = { id: string; title: string; detail: string; cta: string; done: string; icon: typeof Users };
 const ACTIONS: Action[] = [
-  { id: "group", icon: Users, title: "Former le groupe « Décalage d’indice »", detail: "11 étudiants · erreur confirmée par une variante indépendante", cta: "Créer le groupe", done: "Groupe créé, plan de remédiation prêt à relire" },
-  { id: "retest", icon: RefreshCw, title: "Programmer le retest ciblé", detail: "3 questions générées depuis Chapitre-3-2.pdf p. 5, à relire avant publication", cta: "Relire et programmer", done: "Retest programmé jeudi 9 h, suivi J+7 activé" },
+  { id: "group", icon: Users, title: "Former le groupe « Lecture des cardinalités »", detail: "11 étudiants · erreur confirmée par une variante indépendante", cta: "Créer le groupe", done: "Groupe créé, plan de remédiation prêt à relire" },
+  { id: "retest", icon: RefreshCw, title: "Programmer le retest ciblé", detail: "3 questions générées depuis BD-Cours-1.pdf p. 50, à relire avant publication", cta: "Relire et programmer", done: "Retest programmé jeudi 9 h, suivi J+7 activé" },
   { id: "nudge", icon: Flame, title: "Relancer 3 étudiants en décrochage", detail: "Session courte de 5 minutes sur une notion déjà réussie", cta: "Envoyer la relance", done: "Relance envoyée, message bienveillant et sans note" },
-  { id: "prep", icon: Lightbulb, title: "Préparer la séance « Fonctions »", detail: "Plan suggéré : prérequis d’abord, puis return vs print", cta: "Voir le plan", done: "Plan ajouté à vos séances en brouillon" },
+  { id: "prep", icon: Lightbulb, title: "Préparer la séance « Jointures »", detail: "Plan suggéré : cardinalités et clés étrangères d’abord, puis jointure", cta: "Voir le plan", done: "Plan ajouté à vos séances en brouillon" },
 ];
 
 function Briefing() {
@@ -114,7 +115,7 @@ export default function Cockpit() {
       <div className="ni-heading">
         <div>
           <h1>Pilotage de la classe</h1>
-          <p>L1 Informatique A · Algorithmique &amp; Python · 24 étudiants · semaine 5</p>
+          <p>L2 Informatique A · Bases de données · 24 étudiants · semaine 5</p>
         </div>
         <Link className="ni-primary" href="/teacher/lessons">Préparer la prochaine séance <ArrowRight size={15} /></Link>
       </div>

@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, BookOpen, Brain, Check, Flame, HelpCircle, MessageCircle, Send, Sparkles, Target } from "lucide-react";
-import { COACH_STUDENT, CONCEPTS, KEY_IDEAS, MISCONCEPTIONS, REVIEW, conceptByCode, type Concept } from "../demo/data";
+import { COACH_STUDENT, CONCEPTS, KEY_IDEAS, MISCONCEPTIONS, REVIEW, TARGET, conceptByCode, type Concept } from "../demo/data";
 import "./insights.css";
 
 const pct = (v: number) => Math.round(v * 100) + " %";
@@ -71,24 +71,24 @@ function ConceptMap({ selected, choose, highlight }: { selected: string; choose:
 }
 
 export function StudyPath() {
-  const [selected, setSelected] = useState("C_FUNCTIONS");
+  const [selected, setSelected] = useState(TARGET);
   const [why, setWhy] = useState(false);
-  const { gap, path } = findGap("C_FUNCTIONS");
+  const { gap, path } = findGap(TARGET);
   const highlight = new Set(path.map((c) => c.code));
   const concept = conceptByCode[selected];
   const misconceptions = MISCONCEPTIONS.filter((m) => m.concept === selected);
   return (
     <div className="ni">
       <div className="ni-heading">
-        <div><h1>Mon parcours</h1><p>Ce que tu maîtrises, ce qui bloque, et pourquoi Neurvia te propose cette étape.</p></div>
+        <div><h1>Mon parcours · Bases de données</h1><p>Ce que tu maîtrises, ce qui bloque, et pourquoi Neurvia te propose cette étape.</p></div>
         <span className="ni-streak"><Flame size={16} /> {COACH_STUDENT.streak} jours d’affilée</span>
       </div>
 
       <section className="ni-card ni-next">
         <div>
           <small><Target size={14} /> Prochaine étape recommandée</small>
-          <h2>Revoir « {gap.name} » avant « {conceptByCode.C_FUNCTIONS.name} »</h2>
-          <p>Ta difficulté sur les fonctions vient probablement d’un prérequis : {path.map((c) => c.name).join(" ← ")}.</p>
+          <h2>Revoir « {gap.name} » avant « {conceptByCode[TARGET].name} »</h2>
+          <p>Ta difficulté sur les jointures vient probablement d’un prérequis : {path.map((c) => c.name).join(" ← ")}.</p>
           <div className="ni-row">
             <Link className="ni-primary" href="/student/explain">Explique-le en 3 minutes <ArrowRight size={15} /></Link>
             <button type="button" className="ni-ghost" aria-expanded={why} onClick={() => setWhy(!why)}><HelpCircle size={15} /> Pourquoi ?</button>
@@ -97,9 +97,9 @@ export function StudyPath() {
         {why && (
           <ul className="ni-why ni-fade">
             <li><b>Lacune</b> « {gap.name} » est à {pct(gap.mastery)} et la notion visée en dépend.</li>
-            <li><b>Plateau</b> Les quiz sur « Types et conversions » ne progressent plus depuis 11 jours : on change de format.</li>
+            <li><b>Plateau</b> Les quiz sur « Associations et cardinalités » ne progressent plus depuis 11 jours : on change de format.</li>
             <li><b>Incertitude</b> Fourchette de {pct(gap.low)} à {pct(gap.high)} : une session lèvera le doute.</li>
-            <li><b>Objectif</b> Examen de mi-semestre dans 12 jours : les fonctions y comptent pour 30 %.</li>
+            <li><b>Objectif</b> Examen de Bases de données dans 12 jours : l’algèbre relationnelle y compte pour 30 %.</li>
             <li><b>Fatigue</b> Tu as déjà fait 2 sessions aujourd’hui : on te propose 10 minutes, pas plus.</li>
           </ul>
         )}
@@ -140,27 +140,27 @@ type Message = { from: "me" | "coach"; text: string; sources?: string[]; chips?:
 function coachReply(question: string): Message {
   const q = question.toLowerCase();
   if (q.includes("trompe") || q.includes("erreur") || q.includes("faux")) {
-    return { from: "coach", text: "D’après tes 5 derniers quiz, tes deux erreurs les plus fréquentes :\n\n1. **Décalage d’indice** (4 fois) : tu vises valeurs[len(valeurs)] pour le dernier élément. Le dernier est à len − 1, ou simplement valeurs[-1].\n2. **input() renvoie un nombre** (3 fois) : input() renvoie toujours une chaîne, convertis avec int().\n\nLa première est la plus urgente : tu as répondu « très sûr·e » 3 fois sur 4.", sources: ["Chapitre-3-2.pdf · p. 5", "Chapitre-1-5.pdf · p. 11"], chips: ["Donne-moi un exercice sur les indices", "Explique-moi input()"] };
+    return { from: "coach", text: "D’après tes 5 derniers quiz de Bases de données, tes deux erreurs les plus fréquentes :\n\n1. **Lire la cardinalité du mauvais côté** (4 fois) : dans CLIENT (1,1) — passe — (0,n) COMMANDE, tu as compris « un client passe une seule commande ». La cardinalité se lit côté entité : un client passe 0 à n commandes.\n2. **Clé étrangère placée côté 1** (3 fois) : pour une association 1,n, c’est COMMANDE qui reçoit #id_client.\n\nLa première est la plus urgente : tu as répondu « très sûr » 3 fois sur 4.", sources: ["BD-Cours-1.pdf · p. 50", "BD-cours-2.pdf · p. 11"], chips: ["Donne-moi un exercice sur les cardinalités", "Explique-moi la clé étrangère"] };
   }
-  if (q.includes("exercice") || q.includes("entraîn") || q.includes("indice")) {
-    return { from: "coach", text: "Essaie sans exécuter le code :\n\n```\nnotes = [12, 15, 9, 17]\nprint(notes[len(notes) - 1])\nprint(notes[1:3])\n```\n\nQu’affichent ces deux lignes ? Réponds-moi et je te dis où se trouve le piège.", sources: ["Chapitre-3-2.pdf · p. 6"], chips: ["17 et [15, 9]", "Je ne sais pas"] };
+  if (q.includes("exercice") || q.includes("entraîn") || q.includes("cardinalit")) {
+    return { from: "coach", text: "Lis ce schéma :\n\n```\nÉTUDIANT (0,n) —— s’inscrit —— (1,n) MODULE\n```\n\n1. Un étudiant peut-il ne s’inscrire à aucun module ?\n2. Comment traduis-tu cette association en tables ?\n\nRéponds-moi et je te dis où se trouve le piège.", sources: ["BD-Cours-1.pdf · p. 50", "BD-cours-2.pdf · p. 16"], chips: ["Oui, et on crée une table INSCRIPTION", "Je ne sais pas"] };
   }
-  if (q.includes("17")) {
-    return { from: "coach", text: "Exactement ! notes[3] vaut 17, et la tranche [1:3] s’arrête **avant** l’indice 3, d’où [15, 9]. C’est la même règle que range(n). Ta maîtrise de l’indexation passe de 38 % à 46 %.", chips: ["Et pour range ?", "Qu’est-ce que je dois réviser ensuite ?"] };
+  if (q.includes("inscription") || q.includes("oui")) {
+    return { from: "coach", text: "Exactement ! Le minimum 0 côté ÉTUDIANT signifie qu’il peut n’avoir aucun module. Et comme l’association est **n,n**, elle devient une table à part :\n\n```\nINSCRIPTION(#id_etudiant, #id_module)\n```\n\nSa clé primaire est le couple des deux clés étrangères. Ta maîtrise des cardinalités passe de 38 % à 47 %.", chips: ["Et pour une association 1,n ?", "Qu’est-ce que je dois réviser ensuite ?"] };
   }
-  if (q.includes("input") || q.includes("type")) {
-    return { from: "coach", text: "input() lit ce que tape l’utilisateur **sous forme de texte**. Même si on tape 8, x vaut \"8\".\n\n```\nx = input()      # \"8\"\nprint(x * 2)     # \"88\"\nprint(int(x) * 2)  # 16\n```\n\nRègle : convertis dès la lecture, n = int(input()).", sources: ["Chapitre-1-5.pdf · p. 11"], chips: ["Donne-moi un exercice", "Pourquoi x * 2 donne 88 ?"] };
+  if (q.includes("étrangère") || q.includes("etrangere") || q.includes("1,n") || q.includes("clé")) {
+    return { from: "coach", text: "Pour une association **1,n**, on ne crée pas de table : la clé de l’entité côté 1 « migre » dans la table côté n.\n\n```\nCLIENT(id_client, nom, ville)\nCOMMANDE(id_commande, date, #id_client)\n```\n\nRègle mnémotechnique : la clé étrangère va là où il y a le « n ».", sources: ["BD-cours-2.pdf · p. 11-14"], chips: ["Donne-moi un exercice", "Qu’est-ce que je dois réviser ensuite ?"] };
   }
-  if (q.includes("range")) {
-    return { from: "coach", text: "range(n) produit les entiers de 0 à n − 1 : range(4) donne 0, 1, 2, 3. C’est pour ça que for i in range(len(liste)) parcourt exactement tous les indices valides, sans IndexError.", sources: ["Chapitre-2-5.pdf · p. 9"], chips: ["Qu’est-ce que je dois réviser ensuite ?"] };
+  if (q.includes("jointure") || q.includes("join")) {
+    return { from: "coach", text: "Une jointure combine deux relations en gardant les lignes qui vérifient une condition, en général **clé étrangère = clé primaire** :\n\n```\nCLIENT ⋈ CLIENT.id_client = COMMANDE.id_client COMMANDE\n```\n\nSans cette condition, tu obtiens le produit cartésien : chaque client associé à chaque commande.", sources: ["BD-Cours-4.pdf · p. 56-58"], chips: ["Donne-moi un exercice", "Qu’est-ce que je me trompe le plus ?"] };
   }
-  if (q.includes("réviser") || q.includes("ensuite") || q.includes("quoi faire")) {
-    return { from: "coach", text: "Pour progresser sur les **fonctions**, la notion de ton prochain examen, il faut d’abord consolider l’indexation et range. Je te propose 10 minutes : un « Explique-le » sur les indices, puis 3 questions de vérification.", sources: ["Chapitre-3-2.pdf · p. 12"], chips: ["D’accord, on y va"] };
+  if (q.includes("fourier") || q.includes("signal") || q.includes("a0") || q.includes("a₀")) {
+    return { from: "coach", text: "Dans ton cours manuscrit de Mathématiques du signal, une série de Fourier écrit un signal 2π-périodique comme une somme de cosinus et de sinus.\n\nLe premier coefficient est la **valeur moyenne** du signal :\n\n```\na₀ = 1/(2π) ∫₀^{2π} f(x) dx\n```\n\nPiège fréquent : oublier le facteur 1/(2π). Et si f est paire, tous les bₙ sont nuls.", sources: ["Chapitre-1.pdf (manuscrit) · p. 1"], chips: ["Qu’est-ce que je dois réviser ensuite ?"] };
   }
-  if (q.includes("fonction") || q.includes("return")) {
-    return { from: "coach", text: "Une fonction regroupe des instructions réutilisables. **return** renvoie une valeur à l’appelant, **print** se contente de l’afficher.\n\n```\ndef carre(x):\n    return x * x\n\ny = carre(3) + 1   # 10\n```\n\nSi carre faisait print(x * x), y vaudrait None + 1, donc une erreur.", sources: ["Chapitre-3-2.pdf · p. 12-13"], chips: ["Donne-moi un exercice", "Qu’est-ce que je dois réviser ensuite ?"] };
+  if (q.includes("réviser") || q.includes("ensuite") || q.includes("quoi faire") || q.includes("on y va")) {
+    return { from: "coach", text: "Pour progresser sur les **jointures**, la notion de ton prochain examen, il faut d’abord consolider les cardinalités et le passage au relationnel. Je te propose 10 minutes : un « Explique-le » sur les cardinalités, puis 3 questions de vérification.", sources: ["BD-Cours-1.pdf · p. 50"], chips: ["D’accord, on y va", "Explique-moi les jointures"] };
   }
-  return { from: "coach", text: "Je réponds à partir de tes supports de cours. Je peux t’expliquer une notion, te montrer tes erreurs fréquentes ou te proposer un exercice adapté à ton niveau.", chips: ["Qu’est-ce que je me trompe le plus ?", "Explique-moi les fonctions", "Donne-moi un exercice"] };
+  return { from: "coach", text: "Je réponds à partir de tes supports de cours (Bases de données et Mathématiques du signal). Je peux t’expliquer une notion, te montrer tes erreurs fréquentes ou te proposer un exercice adapté à ton niveau.", chips: ["Qu’est-ce que je me trompe le plus ?", "Explique-moi les jointures", "Explique-moi les séries de Fourier"] };
 }
 
 function Rich({ text }: { text: string }) {
@@ -172,7 +172,7 @@ function Rich({ text }: { text: string }) {
 export function Coach() {
   const [messages, setMessages] = useState<Message[]>([{
     from: "coach", text: `Salut ${COACH_STUDENT.name.split(" ")[0]} ! Je suis ton coach Neurvia. Je connais tes cours et tes résultats. Par quoi on commence ?`,
-    chips: ["Qu’est-ce que je me trompe le plus ?", "Explique-moi les fonctions", "Donne-moi un exercice"],
+    chips: ["Qu’est-ce que je me trompe le plus ?", "Explique-moi les jointures", "Explique-moi les séries de Fourier"],
   }]);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
@@ -205,7 +205,7 @@ export function Coach() {
         {!thinking && last.chips && <div className="ni-chips">{last.chips.map((c) => <button type="button" key={c} onClick={() => ask(c)}>{c}</button>)}</div>}
         <form className="ni-input" onSubmit={(e) => { e.preventDefault(); ask(draft); }}>
           <MessageCircle size={17} />
-          <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Pose ta question… (ex. je ne comprends pas range)" aria-label="Message" />
+          <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Pose ta question… (ex. je ne comprends pas les cardinalités)" aria-label="Message" />
           <button type="submit" aria-label="Envoyer" disabled={!draft.trim() || thinking}><Send size={16} /></button>
         </form>
       </section>
@@ -215,7 +215,7 @@ export function Coach() {
 
 export function ExplainBack() {
   const options = Object.keys(KEY_IDEAS);
-  const [code, setCode] = useState("C_TYPES");
+  const [code, setCode] = useState("C_CARD");
   const [text, setText] = useState("");
   const [checked, setChecked] = useState(false);
   const ideas = KEY_IDEAS[code];
@@ -232,7 +232,7 @@ export function ExplainBack() {
         <label>
           <span><Brain size={16} /> Explique « {conceptByCode[code].name} »</span>
           <textarea rows={7} value={text} onChange={(e) => { setText(e.target.value); setChecked(false); }}
-            placeholder="Par exemple : quand on utilise input(), Python renvoie…" />
+            placeholder="Par exemple : une cardinalité est un couple (min, max) qui indique…" />
         </label>
         <div className="ni-row">
           <button type="button" className="ni-primary" disabled={text.trim().length < 20} onClick={() => setChecked(true)}>Vérifier mon explication</button>
