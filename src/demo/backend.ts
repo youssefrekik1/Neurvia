@@ -112,22 +112,20 @@ const BD2_GENERATED: Q[] = [
 
 // ---------- Mutable state ----------
 type QuizState = { lesson: string; status: Schema["QuizStatus"]; questions: Q[]; mode: Schema["TeacherQuiz"]["generation_mode"]; grounded: boolean };
-type DocState = Schema["DocumentView"] & { lesson: string; key: "bd1" | "sig1" };
+type DocState = Schema["DocumentView"] & { lesson: string; key: "bd1" | "sig1"; uploadedAt?: number };
 type AttemptState = { quiz: string; answers: Record<string, Schema["AnswerSaved"]>; feedback?: Schema["Feedback"] };
 
 const state = {
   lessons: {
     [LESSON_BD1]: { title: "Chapitre 1 · Conception et modèle Entité-Association", concepts: ["C_SGBD", "C_ENTITY", "C_CARD", "C_EA_REL", "C_ALG"], status: "published" as Schema["LessonStatus"], quiz: QUIZ_BD1 as string | null, created: iso(-9), submitted: 22, content: "Conception d’une base de données : entités, attributs, identifiants, associations et cardinalités (BD-Cours-1.pdf).", signal: false },
     [LESSON_BD2]: { title: "Chapitre 2 · Traduction vers le modèle relationnel", concepts: ["C_EA_REL", "C_KEYS"], status: "draft" as Schema["LessonStatus"], quiz: null as string | null, created: iso(-1), submitted: 0, content: "Passage du modèle Entité-Association au modèle relationnel : tables, clés primaires et étrangères.", signal: false },
-    [LESSON_SIG1]: { title: "Chapitre 1 · Séries de Fourier", concepts: ["C_FOURIER", "C_PERIOD"], status: "published" as Schema["LessonStatus"], quiz: QUIZ_SIG1 as string | null, created: iso(-4), submitted: 17, content: "Séries trigonométriques, calcul des coefficients de Fourier a₀, aₙ, bₙ (cours manuscrit).", signal: true },
+    [LESSON_SIG1]: { title: "Chapitre 1 · Séries de Fourier", concepts: ["C_FOURIER", "C_PERIOD"], status: "draft" as Schema["LessonStatus"], quiz: null as string | null, created: iso(-1), submitted: 0, content: "Séries trigonométriques, calcul des coefficients de Fourier a₀, aₙ, bₙ (cours manuscrit).", signal: true },
   } as Record<string, { title: string; concepts: string[]; status: Schema["LessonStatus"]; quiz: string | null; created: string; submitted: number; content: string; signal: boolean }>,
   quizzes: {
     [QUIZ_BD1]: { lesson: LESSON_BD1, status: "published", questions: BD1_QUESTIONS, mode: "mixed", grounded: true },
-    [QUIZ_SIG1]: { lesson: LESSON_SIG1, status: "published", questions: SIG1_QUESTIONS, mode: "llm", grounded: true },
   } as Record<string, QuizState>,
   documents: [
     { id: DOC_BD1, resource_id: id(0xd0f1), name: "BD-Cours-1.pdf", number: 1, revision: 3, state: "ready", page_count: 74, byte_size: 1820221, model_revision: "gemini-3.5-flash-lite", progress: 100, job_kind: null, attempts: 1, failure: null, created_at: iso(-9), lesson: LESSON_BD1, key: "bd1" },
-    { id: DOC_SIG1, resource_id: id(0xd0f2), name: "Chapitre-1.pdf", number: 1, revision: 2, state: "review", page_count: 12, byte_size: 8135479, model_revision: "gemini-3.5-flash-lite", progress: 100, job_kind: null, attempts: 1, failure: null, created_at: iso(-4), lesson: LESSON_SIG1, key: "sig1" },
     { id: DOC_BD2, resource_id: id(0xd0f3), name: "BD-Cours-1.pdf", number: 1, revision: 1, state: "ready", page_count: 74, byte_size: 1820221, model_revision: "gemini-3.5-flash-lite", progress: 100, job_kind: null, attempts: 1, failure: null, created_at: iso(-1), lesson: LESSON_BD2, key: "bd1" },
   ] as DocState[],
   reviewed: new Set<string>(),
@@ -230,6 +228,7 @@ function tasks(room: string): Schema["StudentTask"][] {
   const list: Schema["StudentTask"][] = [];
   const done = (quizId: string) => Object.values(state.attempts).some((a) => a.quiz === quizId && a.feedback);
   if (isSignal(room)) {
+    if (state.quizzes[QUIZ_SIG1]?.status !== "published") return list;
     list.push({ id: id(0xf101), lesson_id: LESSON_SIG1, classroom_id: room, title: "Quiz · Séries de Fourier", kind: "initial",
       status: done(QUIZ_SIG1) ? "done" : "available", quiz_id: QUIZ_SIG1, due_at: iso(1), is_synthetic: true });
     return list;
@@ -340,8 +339,10 @@ function handle(route: string, method: string, data: unknown, role: Role, query:
     return lessonView(m[1], state.lessons[m[1]].signal ? ROOM_SIG_A : ROOM_BD_A, role);
   }
   if ((m = route.match(/^\/lessons\/([^/]+)\/quiz\/generate$/))) {
-    const quizId = m[1] === LESSON_BD2 ? QUIZ_BD2 : id(state.counter++);
-    state.quizzes[quizId] = { lesson: m[1], status: "draft", mode: "mixed", grounded: true, questions: structuredClone(BD2_GENERATED) };
+    const signal = state.lessons[m[1]]?.signal;
+    const quizId = m[1] === LESSON_BD2 ? QUIZ_BD2 : m[1] === LESSON_SIG1 ? QUIZ_SIG1 : id(state.counter++);
+    const drafts = (signal ? SIG1_QUESTIONS : BD2_GENERATED).map((q) => ({ ...q, status: "draft" as const, validated_by: null, validated_at: null }));
+    state.quizzes[quizId] = { lesson: m[1], status: "draft", mode: signal ? "llm" : "mixed", grounded: true, questions: structuredClone(drafts) };
     state.lessons[m[1]].quiz = quizId;
     return teacherQuiz(quizId);
   }
@@ -376,7 +377,19 @@ function handle(route: string, method: string, data: unknown, role: Role, query:
 
   // Documents and course assistant
   if ((m = route.match(/^\/lessons\/([^/]+)\/documents$/))) {
-    if (method === "POST") return state.documents.find((d) => d.lesson === m![1]);
+    if (method === "POST") {
+      if (state.lessons[m[1]]?.signal && !state.documents.some((d) => d.id === DOC_SIG1))
+        state.documents.push({ id: DOC_SIG1, resource_id: id(0xd0f2), name: "Chapitre-1.pdf", number: 1, revision: 1, state: "processing",
+          page_count: 12, byte_size: 8135479, model_revision: "gemini-3.5-flash-lite", progress: 4, job_kind: "extract", attempts: 1,
+          failure: null, created_at: iso(), lesson: m[1], key: "sig1", uploadedAt: Date.now() });
+      return state.documents.find((d) => d.lesson === m![1]);
+    }
+    for (const doc of state.documents) {
+      if (doc.state !== "processing" || !doc.uploadedAt) continue;
+      const elapsed = Date.now() - doc.uploadedAt;
+      if (elapsed < 9000) doc.progress = Math.max(4, Math.round(elapsed / 90));
+      else Object.assign(doc, { state: "review", progress: 100, job_kind: null, revision: 2 });
+    }
     return state.documents.filter((d) => d.lesson === m![1]);
   }
   if ((m = route.match(/^\/lessons\/([^/]+)\/documents\/usage$/))) return { originals_bytes: 9955700, rendered_bytes: 3100000, crops_bytes: 120000, versions: 3 };
