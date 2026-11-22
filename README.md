@@ -189,7 +189,7 @@ Le script démarre le service PostgreSQL de `compose.documents.yml` et y crée u
 
 Comme professeur, **Simuler J+7** avance l’horloge de démonstration après un retest. La date simulée est signalée dans l’interface.
 
-Les classes **Algorithmique A** et **Algorithmique B** contiennent chacune 40 élèves fictifs. Connectez-vous avec `amel.bensalem.prof@neurvia.demo` et le mot de passe `Algo-Prof-2026!`. Les comptes élèves figurent dans [data/demo_classrooms.json](data/demo_classrooms.json). En mode démo, les comptes du dataset soumettent automatiquement des réponses variées à la publication du quiz initial.
+Trois classes fictives, **L1 Informatique A**, **B** (40 élèves chacune) et **C** (30 élèves). La professeure enseigne **Algorithmique & Python** aux trois classes et **Bases de données** aux classes B et C. Connectez-vous avec `amel.bensalem.prof@neurvia.demo` et le mot de passe `Algo-Prof-2026!`. Les comptes élèves figurent dans [data/demo_classrooms.json](data/demo_classrooms.json). En mode démo, les comptes du dataset soumettent automatiquement des réponses variées à la publication du quiz initial.
 
 Placez votre nouvelle clé dans `GEMINI_API_KEY` dans le fichier local `apps/api/.env`. Gardez cette variable côté API et worker. Pour vérifier les modèles accessibles au compte, exécutez `python -m tools.probe_gemini` depuis `apps/api`. Le script utilise des données fictives. Pour démarrer sans génération, utilisez `LLM_ENABLED=false` ou `./start-demo.ps1 -Offline`.
 

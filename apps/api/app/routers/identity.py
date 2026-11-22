@@ -3,6 +3,7 @@ from secrets import token_hex
 from uuid import UUID
 
 from fastapi import APIRouter, Request
+from sqlalchemy.orm import object_session
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
@@ -10,6 +11,8 @@ from app.core.auth import CurrentUser, Student, Teacher, issue_token, password_h
 from app.core.errors import documented_errors, error
 from app.db.session import Db
 from app.models import Classroom, Membership, User
+from app.models.curriculum import Cohort, TeacherSubject
+from app.services.curriculum import BUILTIN_LABELS, join_cohort, open_course, teacher_subject
 from app.models.documents import ClassroomTenant, Institution, InstitutionMember, personal_institution_id
 from app.models.enums import Role
 from app.schemas.common import (
@@ -29,6 +32,15 @@ def register(data: Register, request: Request, db: Db):
     )
     db.add(user)
     try:
+        db.flush()
+        if data.cohort_id is not None and data.role == Role.student:
+            cohort_query = select(Cohort).where(Cohort.id == data.cohort_id)
+            if not request.app.state.settings.demo_mode:
+                cohort_query = cohort_query.where(Cohort.is_synthetic.is_(False))
+            cohort = db.scalar(cohort_query)
+            if cohort is None:
+                raise error(404)
+            join_cohort(db, user, cohort)
         db.commit()
     except IntegrityError:
         db.rollback()
@@ -53,8 +65,13 @@ def me(user: CurrentUser):
 
 
 def classroom_view(row: Classroom, teacher: bool = False) -> ClassroomView:
+    db = object_session(row)
+    cohort = db.get(Cohort, row.cohort_id) if db and row.cohort_id else None
+    subject = db.get(TeacherSubject, row.subject_id) if db and row.subject_id else None
     return ClassroomView(
         id=row.id, name=row.name, subject=row.subject, is_synthetic=row.is_synthetic,
+        cohort_id=cohort.id if cohort else None, cohort_name=cohort.name if cohort else None,
+        subject_name=subject.name if subject else None,
         join_code=row.join_code if teacher else None,
         join_path=f"/join/{row.join_code}" if teacher else None,
         join_expires_at=row.join_expires_at if teacher else None,
@@ -79,13 +96,13 @@ def create_classroom(data: ClassroomCreate, request: Request, user: Teacher, db:
         ))
         if allowed is None:
             raise error(404)
-    row = Classroom(
-        teacher_id=user.id, name=data.name, subject=data.subject,
-        join_code=token_hex(10).upper(),
-        join_expires_at=request.app.state.system_clock.now() + timedelta(hours=data.join_ttl_hours),
-        is_synthetic=user.is_synthetic,
-    )
-    db.add(row)
+    # A class created here is a new cohort taught this subject: one course, named as the teacher typed it.
+    now = request.app.state.system_clock.now()
+    cohort = Cohort(name=data.name, created_by=user.id, is_synthetic=user.is_synthetic)
+    db.add(cohort)
+    db.flush()
+    row = open_course(db, user, teacher_subject(db, user, BUILTIN_LABELS.get(data.subject, data.subject)), cohort, now)
+    row.name, row.join_expires_at = data.name, now + timedelta(hours=data.join_ttl_hours)
     if data.institution_id is not None:
         db.flush()
         db.add(ClassroomTenant(institution_id=data.institution_id, classroom_id=row.id))

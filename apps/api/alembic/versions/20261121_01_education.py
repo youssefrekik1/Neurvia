@@ -10,8 +10,9 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
+# The baseline builds from current metadata, whose classrooms reference the 20261122_06 tables.
 TABLES = (
-    "users", "classrooms", "memberships", "concepts", "misconceptions", "misconception_concepts",
+    "users", "cohorts", "cohort_members", "teacher_subjects", "classrooms", "memberships", "concepts", "misconceptions", "misconception_concepts",
     "lessons", "lesson_concepts", "questions", "question_options", "quizzes", "quiz_questions",
     "attempts", "confirmation_assignments", "answers", "misconception_observations",
     "diagnosis_summaries", "groups", "group_members", "interventions", "retest_schedule",

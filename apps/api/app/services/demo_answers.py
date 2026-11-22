@@ -8,22 +8,17 @@ from app.models import Attempt, Membership, User
 from app.models import enums as e
 from app.schemas.learning import AnswerInput
 from app.services.assessments import get_or_begin, save_choice, submit_attempt
-from app.services.demo_seed import ALGO_TEACHER_ID, CLASSROOM_ID, CLASSROOM_IDS
-from app.services.demo_students import CLASSROOMS, STUDENTS
+from app.services.demo_seed import ALGO_TEACHER_ID, COHORT_IDS
+from app.services.demo_students import STUDENTS
 from app.services.questions import opts, quiz_items
 
 
 def answer_demo_quiz(db, quiz, classroom, now):
+    """Have the synthetic students of a demo class answer a quiz the demo teacher publishes."""
     if (not classroom.is_synthetic or quiz.kind != e.QuestionRole.initial
-            or classroom.teacher_id != ALGO_TEACHER_ID):
+            or classroom.teacher_id != ALGO_TEACHER_ID or classroom.cohort_id not in COHORT_IDS):
         return
-    room_id = CLASSROOM_IDS[0] if classroom.id == CLASSROOM_ID else classroom.id
-    if room_id not in CLASSROOM_IDS:
-        return
-    class_name = CLASSROOMS[CLASSROOM_IDS.index(room_id)]["nom"]
-    roster = {student["identifiant"] for student in STUDENTS if student["classe"] == class_name}
-    if not roster:
-        return
+    roster = {student["identifiant"] for student in STUDENTS}
     users = db.scalars(select(User).join(Membership, Membership.user_id == User.id).where(
         Membership.classroom_id == classroom.id, User.email.in_(roster),
         User.is_synthetic.is_(True), User.role == e.Role.student,

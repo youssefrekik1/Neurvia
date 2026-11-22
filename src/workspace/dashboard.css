@@ -357,3 +357,16 @@
     min-width: 620px;
   }
 }
+
+.nd-courses {
+  margin: 8px 0 14px;
+  padding-left: 18px;
+  line-height: 1.7;
+}
+.nd-subtitle {
+  margin: 22px 0 10px;
+  font-size: 16px;
+}
+.nd-card h2 svg {
+  vertical-align: -3px;
+}

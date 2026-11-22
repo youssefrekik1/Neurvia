@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { login, register, type Role } from "./auth";
-import { errorMessage } from "../lib/api";
+import { api, errorMessage, type Schema } from "../lib/api";
 import "./login.css";
 
 const information = {
@@ -143,6 +143,14 @@ export default function Login({ joinCode }: { joinCode?: string }) {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
   const [creating, setCreating] = useState(false);
+  const [cohorts, setCohorts] = useState<Schema["CohortView"][]>([]);
+  // Students pick their class when they sign up; the list is public (class names only).
+  useEffect(() => {
+    if (!creating || role !== "student") return;
+    let active = true;
+    void api<Schema["CohortView"][]>("/cohorts").then((rows) => { if (active) setCohorts(rows); }, () => undefined);
+    return () => { active = false; };
+  }, [creating, role]);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState("");
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -153,7 +161,8 @@ export default function Login({ joinCode }: { joinCode?: string }) {
     setBusy(true);
     setFailure("");
     try {
-      if (creating) await register({ email, password, full_name: String(form.get("full_name")), role });
+      if (creating) await register({ email, password, full_name: String(form.get("full_name")), role,
+        cohort_id: role === "student" ? String(form.get("cohort_id") || "") || null : null });
       const profile = await login(email, password, remember);
       router.push(joinCode && profile.role === "student" ? "/join/" + encodeURIComponent(joinCode) :
         "/" + profile.role + "/dashboard");
@@ -267,6 +276,14 @@ export default function Login({ joinCode }: { joinCode?: string }) {
           <form method="post" onSubmit={submit}>
             {creating && <label className="nl-label">Nom complet
               <span className="nl-input"><UserRound /><input name="full_name" autoComplete="name" required /></span>
+            </label>}
+            {creating && role === "student" && !!cohorts.length && <label className="nl-label">Ma classe
+              <span className="nl-input"><GraduationCap />
+                <select name="cohort_id" required defaultValue="">
+                  <option value="" disabled>Choisissez votre classe</option>
+                  {cohorts.map((cohort) => <option key={cohort.id} value={cohort.id}>{cohort.name}</option>)}
+                </select>
+              </span>
             </label>}
             <label className="nl-label" htmlFor="nl-email">
               Adresse e-mail

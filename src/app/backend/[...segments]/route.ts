@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const sessionCookie = "neurvia_session";
-const allowed = new Set(["auth", "me", "classrooms", "institutions", "taxonomy", "lessons",
+const allowed = new Set(["auth", "me", "classrooms", "cohorts", "subjects", "institutions", "taxonomy", "lessons",
   "quizzes", "attempts", "bank", "groups", "interventions", "demo"]);
 const noCache = { "Cache-Control": "no-store" };
 
@@ -62,4 +62,4 @@ async function proxy(request: NextRequest, context: { params: Promise<{ segments
   }
 }
 
-export { proxy as GET, proxy as POST, proxy as PATCH, proxy as DELETE };
+export { proxy as GET, proxy as POST, proxy as PUT, proxy as PATCH, proxy as DELETE };

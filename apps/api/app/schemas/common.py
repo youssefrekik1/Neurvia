@@ -33,6 +33,8 @@ class Register(Input):
     password: Annotated[SecretStr, Field(min_length=10, max_length=128)]
     full_name: Annotated[str, Field(min_length=1, max_length=100)]
     role: e.Role
+    # Students choose their class when they create their account.
+    cohort_id: UUID | None = None
 
 
 class Login(Input):
@@ -75,6 +77,9 @@ class ClassroomView(View):
     name: str
     subject: str
     is_synthetic: bool
+    cohort_id: UUID | None = None
+    cohort_name: str | None = None
+    subject_name: str | None = None
     join_code: str | None = None
     join_path: str | None = None
     join_expires_at: datetime | None = None
@@ -121,3 +126,43 @@ class DemoSeedView(DemoClockView):
     lesson_id: UUID
     classroom_id: UUID
     is_synthetic: Literal[True] = True
+
+
+ShortName = Annotated[str, Field(min_length=1, max_length=100)]
+
+
+class CohortView(View):
+    id: UUID
+    name: str
+    student_count: int | None = None
+
+
+class CohortCreate(Input):
+    name: Annotated[str, Field(min_length=1, max_length=120)]
+
+
+class CohortChoice(Input):
+    cohort_id: UUID
+
+
+class SubjectCourse(View):
+    cohort_id: UUID
+    cohort_name: str
+    classroom_id: UUID
+    student_count: int
+    lesson_count: int
+
+
+class SubjectView(View):
+    id: UUID
+    name: str
+    key: str
+    courses: list[SubjectCourse]
+
+
+class SubjectCohorts(Input):
+    cohort_ids: Annotated[list[UUID], Field(max_length=50)] = []
+
+
+class SubjectCreate(SubjectCohorts):
+    name: ShortName

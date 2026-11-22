@@ -22,7 +22,7 @@ class Settings(BaseSettings):
 
     llm_enabled: bool = True
     llm_base_url: str = "http://127.0.0.1:11434"
-    llm_model: str = "gemini-3.8-flash"
+    llm_model: str = "gemini-3.5-flash-lite"
     llm_fallback_model: str | None = None
     llm_think: bool = False
     llm_temperature: float = Field(0.6, ge=0, le=2)
@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     document_ocr_languages: str = "eng+fra+ara"
     document_tesseract: str = "tesseract"
     document_vision_enabled: bool = True
-    document_vision_model: str = "gemini-3.8-flash"
+    document_vision_model: str = "gemini-3.5-flash-lite"
     embedding_model: str = "gemini-embedding-2"
     rag_context_budget: int = Field(5500, ge=2000, le=30000)
     rag_rerank: bool = True

@@ -17,6 +17,7 @@ import { useMirrorData } from "../mirror/service";
 import { dayLabel, feedbackHref, useLearningSummary } from "../learning/service";
 import { api, errorMessage, refresh, type Schema, useGet } from "../lib/api";
 import "./dashboard.css";
+import { StudentClass, TeacherCurriculum } from "./Curriculum";
 import "../learning/learning.css";
 function Go({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -261,14 +262,9 @@ export function Classes({ classroom, choose, teacher, classrooms, joinCode }: {
   classrooms: Schema["ClassroomView"][]; joinCode?: string;
 }) {
   const [query, setQuery] = useState("");
-  const [name, setName] = useState("");
   const [code, setCode] = useState(joinCode ?? "");
   const [pseudonym, setPseudonym] = useState("");
   const [validHours, setValidHours] = useState(72);
-  const [institution, setInstitution] = useState("");
-  const [subject, setSubject] = useState("python_intro");
-  const [otherSubject, setOtherSubject] = useState("");
-  const institutions = useGet<Schema["InstitutionView"][]>(teacher ? "/institutions" : "").value ?? [];
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [qr, setQr] = useState("");
@@ -289,42 +285,25 @@ export function Classes({ classroom, choose, teacher, classrooms, joinCode }: {
     finally { setBusy(false); }
   }
   return <div className="nd lr-workspace">
-    <Heading title="Mes classes" sub={teacher ? "Créez une classe et partagez son code." : "Rejoignez une classe avec le code de votre professeur."} />
+    <Heading title={teacher ? "Matières & classes" : "Ma classe"} sub={teacher
+      ? "Déclarez les matières que vous enseignez et les classes concernées."
+      : "Choisissez votre classe : vous suivrez les matières qui y sont enseignées."} />
     {notice && <p role="status">{notice}</p>}
-    <section className="nd-card">
-      {teacher ? <form className="lr-form" onSubmit={(event) => {
-        event.preventDefault(); void run(() => api("/classrooms", "POST", { name, subject: subject === "other" ? otherSubject.trim() : subject, join_ttl_hours: validHours, institution_id: institution || null }),
-          "Classe créée.");
-      }}>
-        <label>Nom de la classe<input value={name} onChange={(event) => setName(event.target.value)} required maxLength={120} /></label>
-        <label>Matière
-          <select value={subject} onChange={(event) => setSubject(event.target.value)}>
-            <option value="python_intro">Algorithmique & Python</option>
-            <option value="other">Autre matière</option>
-          </select>
-        </label>
-        {subject === "other" && <label>Nom de la matière
-          <input value={otherSubject} onChange={(event) => setOtherSubject(event.target.value)} required maxLength={100}
-            placeholder="Ex. Bases de données" />
-        </label>}
-        {!!institutions.length && <label>Établissement
-          <select value={institution} onChange={(event) => setInstitution(event.target.value)}>
-            <option value="">Espace enseignant</option>
-            {institutions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-          </select>
-        </label>}
-        <label>Validité du code (heures)<input type="number" min={1} max={720} value={validHours} required
-          onChange={(event) => setValidHours(Number(event.target.value))} /></label>
-        <button className="lr-btn primary" disabled={busy}>Créer la classe</button>
-      </form> : <form className="lr-form" onSubmit={(event) => {
-        event.preventDefault(); void run(() => api("/classrooms/join", "POST", { code, pseudonym: pseudonym || null }),
-          "Classe rejointe.");
-      }}>
-        <label>Code de la classe<input value={code} onChange={(event) => setCode(event.target.value)} required /></label>
-        <label>Pseudonyme (facultatif)<input value={pseudonym} onChange={(event) => setPseudonym(event.target.value)} /></label>
-        <button className="lr-btn primary" disabled={busy}>Rejoindre la classe</button>
-      </form>}
-    </section>
+    {teacher ? <TeacherCurriculum /> : <>
+      <StudentClass />
+      <details className="nd-card">
+        <summary>Rejoindre un cours avec un code</summary>
+        <form className="lr-form" onSubmit={(event) => {
+          event.preventDefault(); void run(() => api("/classrooms/join", "POST", { code, pseudonym: pseudonym || null }),
+            "Cours rejoint.");
+        }}>
+          <label>Code du cours<input value={code} onChange={(event) => setCode(event.target.value)} required /></label>
+          <label>Pseudonyme (facultatif)<input value={pseudonym} onChange={(event) => setPseudonym(event.target.value)} /></label>
+          <button className="lr-btn primary" disabled={busy}>Rejoindre</button>
+        </form>
+      </details>
+    </>}
+    {!!classrooms.length && <h2 className="nd-subtitle">Mes cours</h2>}
     <div className="nd-classcards">{classrooms.map((item) =>
       <button className={"nd-card " + (item.id === classroom ? "active" : "")} key={item.id} onClick={() => choose(item.id)}>
         <GraduationCap /><strong>{item.name}</strong>

@@ -13,7 +13,7 @@ Ce guide décrit le déploiement et l’exploitation du pipeline documentaire : 
 | `worker` | File de travaux durable : extraction, OCR, vision, embeddings | idem, système de fichiers en lecture seule |
 | `web` (profil `web`) | Next.js et le proxy `/backend` | `Dockerfile.documents.web` |
 
-Gemini utilise `gemini-embedding-2` pour la recherche et `gemini-3.8-flash` pour la vision, le chat, le brief et la génération. Configurez `GEMINI_API_KEY` dans le fichier local `apps/api/.env`.
+Gemini utilise `gemini-embedding-2` pour la recherche et `gemini-3.5-flash-lite` pour la vision, le chat, le brief et la génération. Configurez `GEMINI_API_KEY` dans le fichier local `apps/api/.env`.
 
 Cycle d’un document :
 
@@ -60,7 +60,7 @@ Pour un frontend de développement hors conteneur, lancez `npm run dev` avec `BA
 | `DOCUMENT_OCR_LANGUAGES` | `eng+fra+ara` | Langues Tesseract installées dans l’image |
 | `DOCUMENT_TESSERACT` | `tesseract` | Binaire OCR |
 | `DOCUMENT_VISION_ENABLED` | `true` | Repli sur Gemini vision pour les pages scannées |
-| `DOCUMENT_VISION_MODEL` | `gemini-3.8-flash` | Modèle de transcription |
+| `DOCUMENT_VISION_MODEL` | `gemini-3.5-flash-lite` | Modèle de transcription |
 | `EMBEDDING_MODEL` | `gemini-embedding-2` | Modèle d’embedding, 1024 dimensions |
 | `RAG_CONTEXT_BUDGET` | `5500` octets | Budget des passages transmis au modèle |
 | `RAG_RERANK` | `true` | Reclassement lexical après fusion |

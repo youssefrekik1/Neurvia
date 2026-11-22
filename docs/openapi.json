@@ -767,6 +767,917 @@
         }
       }
     },
+    "/api/v1/cohorts": {
+      "get": {
+        "tags": [
+          "Classes et matières"
+        ],
+        "summary": "List Cohorts",
+        "description": "Class names for the sign-up form: no authentication, names only.",
+        "operationId": "list_cohorts_api_v1_cohorts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CohortView"
+                  },
+                  "type": "array",
+                  "title": "Response List Cohorts Api V1 Cohorts Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification requise.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "Authentification requise."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé à cette ressource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED_RESOURCE",
+                    "message": "Accès refusé à cette ressource."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": "Ressource introuvable."
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Action impossible dans l'état actuel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "CONFLICT",
+                    "message": "Action impossible dans l'état actuel."
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Les données envoyées sont invalides.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "Les données envoyées sont invalides."
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Classes et matières"
+        ],
+        "summary": "Create Cohort",
+        "operationId": "create_cohort_api_v1_cohorts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CohortCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CohortView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification requise.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "Authentification requise."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé à cette ressource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED_RESOURCE",
+                    "message": "Accès refusé à cette ressource."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": "Ressource introuvable."
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Action impossible dans l'état actuel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "CONFLICT",
+                    "message": "Action impossible dans l'état actuel."
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Les données envoyées sont invalides.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "Les données envoyées sont invalides."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/cohorts": {
+      "get": {
+        "tags": [
+          "Classes et matières"
+        ],
+        "summary": "Teacher Cohorts",
+        "description": "Classes a teacher manages: those they created or already teach.",
+        "operationId": "teacher_cohorts_api_v1_me_cohorts_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CohortView"
+                  },
+                  "type": "array",
+                  "title": "Response Teacher Cohorts Api V1 Me Cohorts Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification requise.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "Authentification requise."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé à cette ressource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED_RESOURCE",
+                    "message": "Accès refusé à cette ressource."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": "Ressource introuvable."
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Action impossible dans l'état actuel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "CONFLICT",
+                    "message": "Action impossible dans l'état actuel."
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Les données envoyées sont invalides.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "Les données envoyées sont invalides."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/cohort": {
+      "get": {
+        "tags": [
+          "Classes et matières"
+        ],
+        "summary": "My Cohort",
+        "operationId": "my_cohort_api_v1_me_cohort_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CohortView"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response My Cohort Api V1 Me Cohort Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification requise.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "Authentification requise."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé à cette ressource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED_RESOURCE",
+                    "message": "Accès refusé à cette ressource."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": "Ressource introuvable."
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Action impossible dans l'état actuel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "CONFLICT",
+                    "message": "Action impossible dans l'état actuel."
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Les données envoyées sont invalides.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "Les données envoyées sont invalides."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Classes et matières"
+        ],
+        "summary": "Choose Cohort",
+        "operationId": "choose_cohort_api_v1_me_cohort_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CohortChoice"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CohortView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification requise.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "Authentification requise."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé à cette ressource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED_RESOURCE",
+                    "message": "Accès refusé à cette ressource."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": "Ressource introuvable."
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Action impossible dans l'état actuel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "CONFLICT",
+                    "message": "Action impossible dans l'état actuel."
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Les données envoyées sont invalides.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "Les données envoyées sont invalides."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/subjects": {
+      "get": {
+        "tags": [
+          "Classes et matières"
+        ],
+        "summary": "List Subjects",
+        "operationId": "list_subjects_api_v1_subjects_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubjectView"
+                  },
+                  "type": "array",
+                  "title": "Response List Subjects Api V1 Subjects Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification requise.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "Authentification requise."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé à cette ressource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED_RESOURCE",
+                    "message": "Accès refusé à cette ressource."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": "Ressource introuvable."
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Action impossible dans l'état actuel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "CONFLICT",
+                    "message": "Action impossible dans l'état actuel."
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Les données envoyées sont invalides.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "Les données envoyées sont invalides."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Classes et matières"
+        ],
+        "summary": "Create Subject",
+        "operationId": "create_subject_api_v1_subjects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubjectCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubjectView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification requise.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "Authentification requise."
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé à cette ressource.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED_RESOURCE",
+                    "message": "Accès refusé à cette ressource."
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": "Ressource introuvable."
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Action impossible dans l'état actuel.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "CONFLICT",
+                    "message": "Action impossible dans l'état actuel."
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Les données envoyées sont invalides.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "Les données envoyées sont invalides."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/subjects/{id}/cohorts": {
+      "put": {
+        "tags": [
+          "Classes et matières"
+        ],
+        "summary": "Update Subject Cohorts",
+        "operationId": "update_subject_cohorts_api_v1_subjects__id__cohorts_put",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubjectCohorts"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubjectView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentification requise.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "UNAUTHENTICATED",
+                    "message": "Authentification requise."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Accès refusé à cette ressource.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "UNAUTHORIZED_RESOURCE",
+                    "message": "Accès refusé à cette ressource."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ressource introuvable.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "RESOURCE_NOT_FOUND",
+                    "message": "Ressource introuvable."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Action impossible dans l'état actuel.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "CONFLICT",
+                    "message": "Action impossible dans l'état actuel."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Les données envoyées sont invalides.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "error": {
+                    "code": "INVALID_INPUT",
+                    "message": "Les données envoyées sont invalides."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/taxonomy": {
       "get": {
         "tags": [
@@ -10142,6 +11053,40 @@
             "type": "boolean",
             "title": "Is Synthetic"
           },
+          "cohort_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cohort Id"
+          },
+          "cohort_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cohort Name"
+          },
+          "subject_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Name"
+          },
           "join_code": {
             "anyOf": [
               {
@@ -10185,6 +11130,67 @@
           "is_synthetic"
         ],
         "title": "ClassroomView"
+      },
+      "CohortChoice": {
+        "properties": {
+          "cohort_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Cohort Id"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "cohort_id"
+        ],
+        "title": "CohortChoice"
+      },
+      "CohortCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "CohortCreate"
+      },
+      "CohortView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "student_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "CohortView"
       },
       "ConceptComparison": {
         "properties": {
@@ -12021,6 +13027,18 @@
           },
           "role": {
             "$ref": "#/components/schemas/Role"
+          },
+          "cohort_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cohort Id"
           }
         },
         "additionalProperties": false,
@@ -12507,6 +13525,116 @@
           "is_synthetic"
         ],
         "title": "StudentTask"
+      },
+      "SubjectCohorts": {
+        "properties": {
+          "cohort_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Cohort Ids",
+            "default": []
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "SubjectCohorts"
+      },
+      "SubjectCourse": {
+        "properties": {
+          "cohort_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Cohort Id"
+          },
+          "cohort_name": {
+            "type": "string",
+            "title": "Cohort Name"
+          },
+          "classroom_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Classroom Id"
+          },
+          "student_count": {
+            "type": "integer",
+            "title": "Student Count"
+          },
+          "lesson_count": {
+            "type": "integer",
+            "title": "Lesson Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cohort_id",
+          "cohort_name",
+          "classroom_id",
+          "student_count",
+          "lesson_count"
+        ],
+        "title": "SubjectCourse"
+      },
+      "SubjectCreate": {
+        "properties": {
+          "cohort_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "maxItems": 50,
+            "title": "Cohort Ids",
+            "default": []
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "SubjectCreate"
+      },
+      "SubjectView": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "courses": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectCourse"
+            },
+            "type": "array",
+            "title": "Courses"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "key",
+          "courses"
+        ],
+        "title": "SubjectView"
       },
       "TaxonomyApproval": {
         "properties": {

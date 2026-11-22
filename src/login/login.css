@@ -269,7 +269,8 @@
   width: max(17px, calc(23 * var(--nl-unit)));
   height: auto;
 }
-.nl-input input {
+.nl-input input,
+.nl-input select {
   font: inherit;
   font-size: max(14px, calc(16 * var(--nl-unit)));
   width: 100%;

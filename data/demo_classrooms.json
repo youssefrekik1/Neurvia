@@ -4,578 +4,809 @@
     "prenom": "Amel",
     "matiere": "Algorithmique",
     "identifiant": "amel.bensalem.prof@neurvia.demo",
-    "mot_de_passe": "Algo-Prof-2026!"
+    "mot_de_passe": "Algo-Prof-2026!",
+    "matieres": [
+      {
+        "nom": "Algorithmique & Python",
+        "classes": [
+          "L1 Informatique A",
+          "L1 Informatique B",
+          "L1 Informatique C"
+        ]
+      },
+      {
+        "nom": "Bases de données",
+        "classes": [
+          "L1 Informatique B",
+          "L1 Informatique C"
+        ]
+      }
+    ]
   },
   "classes": [
     {
-      "nom": "Algorithmique A",
+      "nom": "L1 Informatique A",
       "code": "ALGOCLASSA26"
     },
     {
-      "nom": "Algorithmique B",
+      "nom": "L1 Informatique B",
       "code": "ALGOCLASSB26"
+    },
+    {
+      "nom": "L1 Informatique C",
+      "code": "ALGOCLASSC26"
     }
   ],
   "eleves": [
     {
       "nom": "Ben Ali",
       "prenom": "Adam",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "adam.01.a@neurvia.demo",
       "mot_de_passe": "Algo-A-01-2026"
     },
     {
       "nom": "Mabrouk",
       "prenom": "Nour",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "nour.02.a@neurvia.demo",
       "mot_de_passe": "Algo-A-02-2026"
     },
     {
       "nom": "Riahi",
       "prenom": "Marwan",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "marwan.03.a@neurvia.demo",
       "mot_de_passe": "Algo-A-03-2026"
     },
     {
       "nom": "Guesmi",
       "prenom": "Mariam",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "mariam.04.a@neurvia.demo",
       "mot_de_passe": "Algo-A-04-2026"
     },
     {
       "nom": "Karray",
       "prenom": "Salma",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "salma.05.a@neurvia.demo",
       "mot_de_passe": "Algo-A-05-2026"
     },
     {
       "nom": "Oueslati",
       "prenom": "Sirine",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "sirine.06.a@neurvia.demo",
       "mot_de_passe": "Algo-A-06-2026"
     },
     {
       "nom": "Kotti",
       "prenom": "Amine",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "amine.07.a@neurvia.demo",
       "mot_de_passe": "Algo-A-07-2026"
     },
     {
       "nom": "Ben Amor",
       "prenom": "Anis",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "anis.08.a@neurvia.demo",
       "mot_de_passe": "Algo-A-08-2026"
     },
     {
       "nom": "Dridi",
       "prenom": "Taha",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "taha.09.a@neurvia.demo",
       "mot_de_passe": "Algo-A-09-2026"
     },
     {
       "nom": "Ben Fredj",
       "prenom": "Sarra",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "sarra.10.a@neurvia.demo",
       "mot_de_passe": "Algo-A-10-2026"
     },
     {
       "nom": "Ayari",
       "prenom": "Dorra",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "dorra.11.a@neurvia.demo",
       "mot_de_passe": "Algo-A-11-2026"
     },
     {
       "nom": "Abid",
       "prenom": "Leila",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "leila.12.a@neurvia.demo",
       "mot_de_passe": "Algo-A-12-2026"
     },
     {
       "nom": "Mejri",
       "prenom": "Ilyes",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "ilyes.13.a@neurvia.demo",
       "mot_de_passe": "Algo-A-13-2026"
     },
     {
       "nom": "Chaabane",
       "prenom": "Walid",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "walid.14.a@neurvia.demo",
       "mot_de_passe": "Algo-A-14-2026"
     },
     {
       "nom": "Mami",
       "prenom": "Zied",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "zied.15.a@neurvia.demo",
       "mot_de_passe": "Algo-A-15-2026"
     },
     {
       "nom": "Boughanmi",
       "prenom": "Yasmine",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "yasmine.16.a@neurvia.demo",
       "mot_de_passe": "Algo-A-16-2026"
     },
     {
       "nom": "Bouzid",
       "prenom": "Hana",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "hana.17.a@neurvia.demo",
       "mot_de_passe": "Algo-A-17-2026"
     },
     {
       "nom": "Khlifi",
       "prenom": "Nadia",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "nadia.18.a@neurvia.demo",
       "mot_de_passe": "Algo-A-18-2026"
     },
     {
       "nom": "Chaari",
       "prenom": "Rayan",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "rayan.19.a@neurvia.demo",
       "mot_de_passe": "Algo-A-19-2026"
     },
     {
       "nom": "Khalfallah",
       "prenom": "Aymen",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "aymen.20.a@neurvia.demo",
       "mot_de_passe": "Algo-A-20-2026"
     },
     {
       "nom": "Zouari",
       "prenom": "Lina",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "lina.21.a@neurvia.demo",
       "mot_de_passe": "Algo-A-21-2026"
     },
     {
       "nom": "Brahmi",
       "prenom": "Nour",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "nour.22.a@neurvia.demo",
       "mot_de_passe": "Algo-A-22-2026"
     },
     {
       "nom": "Saidi",
       "prenom": "Maya",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "maya.23.a@neurvia.demo",
       "mot_de_passe": "Algo-A-23-2026"
     },
     {
       "nom": "Fakhfakh",
       "prenom": "Yanis",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "yanis.24.a@neurvia.demo",
       "mot_de_passe": "Algo-A-24-2026"
     },
     {
       "nom": "Tlili",
       "prenom": "Youssef",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "youssef.25.a@neurvia.demo",
       "mot_de_passe": "Algo-A-25-2026"
     },
     {
       "nom": "Jebali",
       "prenom": "Bilel",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "bilel.26.a@neurvia.demo",
       "mot_de_passe": "Algo-A-26-2026"
     },
     {
       "nom": "Dali",
       "prenom": "Ines",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "ines.27.a@neurvia.demo",
       "mot_de_passe": "Algo-A-27-2026"
     },
     {
       "nom": "Rekik",
       "prenom": "Amira",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "amira.28.a@neurvia.demo",
       "mot_de_passe": "Algo-A-28-2026"
     },
     {
       "nom": "Gharbi",
       "prenom": "Fatma",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "fatma.29.a@neurvia.demo",
       "mot_de_passe": "Algo-A-29-2026"
     },
     {
       "nom": "Ben Salem",
       "prenom": "Mehdi",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "mehdi.30.a@neurvia.demo",
       "mot_de_passe": "Algo-A-30-2026"
     },
     {
       "nom": "Ben Youssef",
       "prenom": "Karim",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "karim.31.a@neurvia.demo",
       "mot_de_passe": "Algo-A-31-2026"
     },
     {
       "nom": "Haddad",
       "prenom": "Omar",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "omar.32.a@neurvia.demo",
       "mot_de_passe": "Algo-A-32-2026"
     },
     {
       "nom": "Baccar",
       "prenom": "Aya",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "aya.33.a@neurvia.demo",
       "mot_de_passe": "Algo-A-33-2026"
     },
     {
       "nom": "Masmoudi",
       "prenom": "Rim",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "rim.34.a@neurvia.demo",
       "mot_de_passe": "Algo-A-34-2026"
     },
     {
       "nom": "Mansour",
       "prenom": "Farah",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "farah.35.a@neurvia.demo",
       "mot_de_passe": "Algo-A-35-2026"
     },
     {
       "nom": "Khemiri",
       "prenom": "Sami",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "sami.36.a@neurvia.demo",
       "mot_de_passe": "Algo-A-36-2026"
     },
     {
       "nom": "Jaziri",
       "prenom": "Fares",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "fares.37.a@neurvia.demo",
       "mot_de_passe": "Algo-A-37-2026"
     },
     {
       "nom": "Trabelsi",
       "prenom": "Mourad",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "mourad.38.a@neurvia.demo",
       "mot_de_passe": "Algo-A-38-2026"
     },
     {
       "nom": "Hamdi",
       "prenom": "Rania",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "rania.39.a@neurvia.demo",
       "mot_de_passe": "Algo-A-39-2026"
     },
     {
       "nom": "Sassi",
       "prenom": "Nesrine",
-      "classe": "Algorithmique A",
+      "classe": "L1 Informatique A",
       "identifiant": "nesrine.40.a@neurvia.demo",
       "mot_de_passe": "Algo-A-40-2026"
     },
     {
       "nom": "Ben Salem",
       "prenom": "Walid",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "walid.01.b@neurvia.demo",
       "mot_de_passe": "Algo-B-01-2026"
     },
     {
       "nom": "Ben Youssef",
       "prenom": "Zied",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "zied.02.b@neurvia.demo",
       "mot_de_passe": "Algo-B-02-2026"
     },
     {
       "nom": "Haddad",
       "prenom": "Yasmine",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "yasmine.03.b@neurvia.demo",
       "mot_de_passe": "Algo-B-03-2026"
     },
     {
       "nom": "Baccar",
       "prenom": "Hana",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "hana.04.b@neurvia.demo",
       "mot_de_passe": "Algo-B-04-2026"
     },
     {
       "nom": "Masmoudi",
       "prenom": "Nadia",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "nadia.05.b@neurvia.demo",
       "mot_de_passe": "Algo-B-05-2026"
     },
     {
       "nom": "Mansour",
       "prenom": "Rayan",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "rayan.06.b@neurvia.demo",
       "mot_de_passe": "Algo-B-06-2026"
     },
     {
       "nom": "Khemiri",
       "prenom": "Aymen",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "aymen.07.b@neurvia.demo",
       "mot_de_passe": "Algo-B-07-2026"
     },
     {
       "nom": "Jaziri",
       "prenom": "Lina",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "lina.08.b@neurvia.demo",
       "mot_de_passe": "Algo-B-08-2026"
     },
     {
       "nom": "Trabelsi",
       "prenom": "Nour",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "nour.09.b@neurvia.demo",
       "mot_de_passe": "Algo-B-09-2026"
     },
     {
       "nom": "Hamdi",
       "prenom": "Maya",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "maya.10.b@neurvia.demo",
       "mot_de_passe": "Algo-B-10-2026"
     },
     {
       "nom": "Sassi",
       "prenom": "Yanis",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "yanis.11.b@neurvia.demo",
       "mot_de_passe": "Algo-B-11-2026"
     },
     {
       "nom": "Ben Ali",
       "prenom": "Youssef",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "youssef.12.b@neurvia.demo",
       "mot_de_passe": "Algo-B-12-2026"
     },
     {
       "nom": "Mabrouk",
       "prenom": "Bilel",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "bilel.13.b@neurvia.demo",
       "mot_de_passe": "Algo-B-13-2026"
     },
     {
       "nom": "Riahi",
       "prenom": "Ines",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "ines.14.b@neurvia.demo",
       "mot_de_passe": "Algo-B-14-2026"
     },
     {
       "nom": "Guesmi",
       "prenom": "Amira",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "amira.15.b@neurvia.demo",
       "mot_de_passe": "Algo-B-15-2026"
     },
     {
       "nom": "Karray",
       "prenom": "Fatma",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "fatma.16.b@neurvia.demo",
       "mot_de_passe": "Algo-B-16-2026"
     },
     {
       "nom": "Oueslati",
       "prenom": "Mehdi",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "mehdi.17.b@neurvia.demo",
       "mot_de_passe": "Algo-B-17-2026"
     },
     {
       "nom": "Kotti",
       "prenom": "Karim",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "karim.18.b@neurvia.demo",
       "mot_de_passe": "Algo-B-18-2026"
     },
     {
       "nom": "Ben Amor",
       "prenom": "Omar",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "omar.19.b@neurvia.demo",
       "mot_de_passe": "Algo-B-19-2026"
     },
     {
       "nom": "Dridi",
       "prenom": "Aya",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "aya.20.b@neurvia.demo",
       "mot_de_passe": "Algo-B-20-2026"
     },
     {
       "nom": "Ben Fredj",
       "prenom": "Rim",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "rim.21.b@neurvia.demo",
       "mot_de_passe": "Algo-B-21-2026"
     },
     {
       "nom": "Ayari",
       "prenom": "Farah",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "farah.22.b@neurvia.demo",
       "mot_de_passe": "Algo-B-22-2026"
     },
     {
       "nom": "Abid",
       "prenom": "Sami",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "sami.23.b@neurvia.demo",
       "mot_de_passe": "Algo-B-23-2026"
     },
     {
       "nom": "Mejri",
       "prenom": "Fares",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "fares.24.b@neurvia.demo",
       "mot_de_passe": "Algo-B-24-2026"
     },
     {
       "nom": "Chaabane",
       "prenom": "Mourad",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "mourad.25.b@neurvia.demo",
       "mot_de_passe": "Algo-B-25-2026"
     },
     {
       "nom": "Mami",
       "prenom": "Rania",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "rania.26.b@neurvia.demo",
       "mot_de_passe": "Algo-B-26-2026"
     },
     {
       "nom": "Boughanmi",
       "prenom": "Nesrine",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "nesrine.27.b@neurvia.demo",
       "mot_de_passe": "Algo-B-27-2026"
     },
     {
       "nom": "Bouzid",
       "prenom": "Adam",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "adam.28.b@neurvia.demo",
       "mot_de_passe": "Algo-B-28-2026"
     },
     {
       "nom": "Khlifi",
       "prenom": "Nour",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "nour.29.b@neurvia.demo",
       "mot_de_passe": "Algo-B-29-2026"
     },
     {
       "nom": "Chaari",
       "prenom": "Marwan",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "marwan.30.b@neurvia.demo",
       "mot_de_passe": "Algo-B-30-2026"
     },
     {
       "nom": "Khalfallah",
       "prenom": "Mariam",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "mariam.31.b@neurvia.demo",
       "mot_de_passe": "Algo-B-31-2026"
     },
     {
       "nom": "Zouari",
       "prenom": "Salma",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "salma.32.b@neurvia.demo",
       "mot_de_passe": "Algo-B-32-2026"
     },
     {
       "nom": "Brahmi",
       "prenom": "Sirine",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "sirine.33.b@neurvia.demo",
       "mot_de_passe": "Algo-B-33-2026"
     },
     {
       "nom": "Saidi",
       "prenom": "Amine",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "amine.34.b@neurvia.demo",
       "mot_de_passe": "Algo-B-34-2026"
     },
     {
       "nom": "Fakhfakh",
       "prenom": "Anis",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "anis.35.b@neurvia.demo",
       "mot_de_passe": "Algo-B-35-2026"
     },
     {
       "nom": "Tlili",
       "prenom": "Taha",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "taha.36.b@neurvia.demo",
       "mot_de_passe": "Algo-B-36-2026"
     },
     {
       "nom": "Jebali",
       "prenom": "Sarra",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "sarra.37.b@neurvia.demo",
       "mot_de_passe": "Algo-B-37-2026"
     },
     {
       "nom": "Dali",
       "prenom": "Dorra",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "dorra.38.b@neurvia.demo",
       "mot_de_passe": "Algo-B-38-2026"
     },
     {
       "nom": "Rekik",
       "prenom": "Leila",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "leila.39.b@neurvia.demo",
       "mot_de_passe": "Algo-B-39-2026"
     },
     {
       "nom": "Gharbi",
       "prenom": "Ilyes",
-      "classe": "Algorithmique B",
+      "classe": "L1 Informatique B",
       "identifiant": "ilyes.40.b@neurvia.demo",
       "mot_de_passe": "Algo-B-40-2026"
+    },
+    {
+      "nom": "Trabelsi",
+      "prenom": "Yassine",
+      "classe": "L1 Informatique C",
+      "identifiant": "yassine.01.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-01-2026"
+    },
+    {
+      "nom": "Jebali",
+      "prenom": "Ines",
+      "classe": "L1 Informatique C",
+      "identifiant": "ines.02.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-02-2026"
+    },
+    {
+      "nom": "Hammami",
+      "prenom": "Omar",
+      "classe": "L1 Informatique C",
+      "identifiant": "omar.03.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-03-2026"
+    },
+    {
+      "nom": "Chaabane",
+      "prenom": "Lina",
+      "classe": "L1 Informatique C",
+      "identifiant": "lina.04.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-04-2026"
+    },
+    {
+      "nom": "Bouazizi",
+      "prenom": "Aziz",
+      "classe": "L1 Informatique C",
+      "identifiant": "aziz.05.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-05-2026"
+    },
+    {
+      "nom": "Gharbi",
+      "prenom": "Rania",
+      "classe": "L1 Informatique C",
+      "identifiant": "rania.06.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-06-2026"
+    },
+    {
+      "nom": "Mejri",
+      "prenom": "Hedi",
+      "classe": "L1 Informatique C",
+      "identifiant": "hedi.07.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-07-2026"
+    },
+    {
+      "nom": "Sassi",
+      "prenom": "Malek",
+      "classe": "L1 Informatique C",
+      "identifiant": "malek.08.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-08-2026"
+    },
+    {
+      "nom": "Dridi",
+      "prenom": "Sarra",
+      "classe": "L1 Informatique C",
+      "identifiant": "sarra.09.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-09-2026"
+    },
+    {
+      "nom": "Ayari",
+      "prenom": "Firas",
+      "classe": "L1 Informatique C",
+      "identifiant": "firas.10.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-10-2026"
+    },
+    {
+      "nom": "Khelifi",
+      "prenom": "Amira",
+      "classe": "L1 Informatique C",
+      "identifiant": "amira.11.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-11-2026"
+    },
+    {
+      "nom": "Ferchichi",
+      "prenom": "Karim",
+      "classe": "L1 Informatique C",
+      "identifiant": "karim.12.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-12-2026"
+    },
+    {
+      "nom": "Masmoudi",
+      "prenom": "Yosra",
+      "classe": "L1 Informatique C",
+      "identifiant": "yosra.13.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-13-2026"
+    },
+    {
+      "nom": "Zouari",
+      "prenom": "Bilel",
+      "classe": "L1 Informatique C",
+      "identifiant": "bilel.14.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-14-2026"
+    },
+    {
+      "nom": "Ben Amor",
+      "prenom": "Nadia",
+      "classe": "L1 Informatique C",
+      "identifiant": "nadia.15.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-15-2026"
+    },
+    {
+      "nom": "Hamdi",
+      "prenom": "Skander",
+      "classe": "L1 Informatique C",
+      "identifiant": "skander.16.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-16-2026"
+    },
+    {
+      "nom": "Jlassi",
+      "prenom": "Emna",
+      "classe": "L1 Informatique C",
+      "identifiant": "emna.17.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-17-2026"
+    },
+    {
+      "nom": "Saidi",
+      "prenom": "Wassim",
+      "classe": "L1 Informatique C",
+      "identifiant": "wassim.18.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-18-2026"
+    },
+    {
+      "nom": "Baccouche",
+      "prenom": "Hiba",
+      "classe": "L1 Informatique C",
+      "identifiant": "hiba.19.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-19-2026"
+    },
+    {
+      "nom": "Kammoun",
+      "prenom": "Ahmed",
+      "classe": "L1 Informatique C",
+      "identifiant": "ahmed.20.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-20-2026"
+    },
+    {
+      "nom": "Mansouri",
+      "prenom": "Rim",
+      "classe": "L1 Informatique C",
+      "identifiant": "rim.21.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-21-2026"
+    },
+    {
+      "nom": "Tlili",
+      "prenom": "Seif",
+      "classe": "L1 Informatique C",
+      "identifiant": "seif.22.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-22-2026"
+    },
+    {
+      "nom": "Chebbi",
+      "prenom": "Asma",
+      "classe": "L1 Informatique C",
+      "identifiant": "asma.23.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-23-2026"
+    },
+    {
+      "nom": "Hajji",
+      "prenom": "Mehdi",
+      "classe": "L1 Informatique C",
+      "identifiant": "mehdi.24.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-24-2026"
+    },
+    {
+      "nom": "Ghanmi",
+      "prenom": "Ons",
+      "classe": "L1 Informatique C",
+      "identifiant": "ons.25.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-25-2026"
+    },
+    {
+      "nom": "Bouslama",
+      "prenom": "Nizar",
+      "classe": "L1 Informatique C",
+      "identifiant": "nizar.26.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-26-2026"
+    },
+    {
+      "nom": "Mzoughi",
+      "prenom": "Chaima",
+      "classe": "L1 Informatique C",
+      "identifiant": "chaima.27.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-27-2026"
+    },
+    {
+      "nom": "Sellami",
+      "prenom": "Tarek",
+      "classe": "L1 Informatique C",
+      "identifiant": "tarek.28.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-28-2026"
+    },
+    {
+      "nom": "Ouertani",
+      "prenom": "Dorra",
+      "classe": "L1 Informatique C",
+      "identifiant": "dorra.29.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-29-2026"
+    },
+    {
+      "nom": "Belhadj",
+      "prenom": "Zied",
+      "classe": "L1 Informatique C",
+      "identifiant": "zied.30.c@neurvia.demo",
+      "mot_de_passe": "Algo-C-30-2026"
     }
   ]
 }

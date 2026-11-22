@@ -37,6 +37,9 @@ class Classroom(Record):
     join_code: Mapped[str] = mapped_column(String(32), unique=True)
     join_expires_at: Mapped[datetime] = mapped_column(UTCDateTime())
     is_synthetic: Mapped[bool] = mapped_column(default=False)
+    # A course: the subject (app.models.curriculum) taught to a cohort. Null only before startup adoption.
+    cohort_id: Mapped[UUID | None] = mapped_column(ForeignKey("cohorts.id"), index=True, nullable=True)
+    subject_id: Mapped[UUID | None] = mapped_column(ForeignKey("teacher_subjects.id"), index=True, nullable=True)
 
 
 class Membership(Record):
@@ -302,3 +305,7 @@ class TeacherDecision(Record):
     before_json: Mapped[dict | None] = mapped_column(JSON)
     after_json: Mapped[dict | None] = mapped_column(JSON)
     at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
+
+
+# Registered here because Classroom references their tables.
+from app.models import curriculum  # noqa: E402,F401

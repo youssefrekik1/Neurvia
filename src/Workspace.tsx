@@ -29,7 +29,7 @@ import { Dashboard, Classes, SettingsPage, Help } from "./workspace/Dashboards";
 
 const teacherLinks = [
   { slug: "dashboard", label: "Accueil", icon: Home },
-  { slug: "classes", label: "Mes classes", icon: School },
+  { slug: "classes", label: "Matières & classes", icon: School },
   { slug: "lessons", label: "Séances & quiz", icon: BookOpen },
   { slug: "bank", label: "Banque pédagogique", icon: Library },
   { slug: "mindmirror", label: "MindMirror", icon: Network },
@@ -39,7 +39,7 @@ const teacherLinks = [
 const studentLinks = [
   { slug: "dashboard", label: "Mon espace", icon: Home },
   { slug: "tasks", label: "Mes tâches", icon: ListChecks },
-  { slug: "classes", label: "Mes classes", icon: School },
+  { slug: "classes", label: "Ma classe", icon: School },
   { slug: "courses", label: "Mes cours", icon: Library },
   {
     slug: "progress",

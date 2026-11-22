@@ -12,6 +12,8 @@ from app.services.assessments import confirmation_for, get_or_begin, save_choice
 from app.schemas.learning import AnswerInput
 from app.services.questions import approve_question, create_question, opts, question_input, quiz_items
 from app.services.demo_students import CLASSROOMS, STUDENTS, TEACHER
+from app.models.curriculum import Cohort, CohortMember
+from app.services.curriculum import open_course, teacher_subject
 
 
 def fixture_id(key: str):
@@ -25,7 +27,7 @@ LESSON_ID = fixture_id("lesson")
 INITIAL_QUIZ_ID = fixture_id("quiz-initial")
 DEMO_JOIN_CODE = "FAHMDEMO24"
 DEMO_PASSWORD = "FAHM-demo-2026"
-CLASSROOM_IDS = (fixture_id("algo-classroom-a"), fixture_id("classroom-2"))
+COHORT_IDS = tuple(fixture_id(f"demo-cohort-{index}") for index in range(3))
 ALGO_TEACHER_ID = fixture_id("algo-teacher")
 
 # Reviewed for the synthetic scenario only. Real teachers approve their own bank separately.
@@ -69,7 +71,7 @@ def parse_variant(concept, target, value):
 
 
 def seed_named_classes(db: Session, now):
-    # Synthetic accounts are loaded only when DEMO_MODE=true.
+    """Three synthetic classes and a teacher teaching two subjects across them (DEMO_MODE only)."""
     teacher = db.get(User, ALGO_TEACHER_ID)
     if teacher is None:
         teacher = db.scalar(select(User).where(User.email == TEACHER["identifiant"]))
@@ -81,24 +83,16 @@ def seed_named_classes(db: Session, now):
             db.add(teacher)
             db.flush()
 
+    cohorts = {}
     for class_index, class_spec in enumerate(CLASSROOMS):
-        room_id = CLASSROOM_IDS[class_index]
-        room = db.get(Classroom, room_id)
-        if room is None and class_index == 0:
-            legacy_room = db.get(Classroom, CLASSROOM_ID)
-            if legacy_room is not None and legacy_room.teacher_id == teacher.id:
-                room = legacy_room
-                room_id = room.id
-        if room is None:
-            room = Classroom(id=room_id, teacher_id=teacher.id, name=class_spec["nom"],
-                              subject="python_intro", join_code=class_spec["code"],
-                              join_expires_at=now + timedelta(days=3650), is_synthetic=True)
-            db.add(room)
+        cohort = db.get(Cohort, COHORT_IDS[class_index])
+        if cohort is None:
+            cohort = Cohort(id=COHORT_IDS[class_index], name=class_spec["nom"], created_by=teacher.id,
+                            is_synthetic=True)
+            db.add(cohort)
             db.flush()
-        elif room.teacher_id == ALGO_TEACHER_ID and room.subject == "algorithmique":
-            room.subject = "python_intro"
-        students = STUDENTS[class_index * 40:(class_index + 1) * 40]
-        for student in students:
+        cohorts[class_spec["nom"]] = cohort
+        for student in (row for row in STUDENTS if row["classe"] == class_spec["nom"]):
             user = db.scalar(select(User).where(User.email == student["identifiant"]))
             if user is None:
                 user = User(email=student["identifiant"],
@@ -107,12 +101,19 @@ def seed_named_classes(db: Session, now):
                             role=e.Role.student, is_synthetic=True)
                 db.add(user)
                 db.flush()
-            member_id = db.scalar(select(Membership.id).where(
-                Membership.classroom_id == room_id, Membership.user_id == user.id,
-            ))
-            if member_id is None:
-                db.add(Membership(classroom_id=room_id, user_id=user.id,
-                                  pseudonym=f"{student['prenom']} {student['nom']}"))
+            if db.scalar(select(CohortMember.id).where(CohortMember.user_id == user.id)) is None:
+                db.add(CohortMember(cohort_id=cohort.id, user_id=user.id))
+        db.flush()
+
+    codes = {spec["nom"]: spec["code"] for spec in CLASSROOMS}
+    for subject_spec in TEACHER.get("matieres", []):
+        subject = teacher_subject(db, teacher, subject_spec["nom"])
+        for class_name in subject_spec["classes"]:
+            room = open_course(db, teacher, subject, cohorts[class_name], now)
+            # The built-in subject keeps the class's published join code.
+            if subject.key == "python_intro" and room.join_code != codes[class_name]:
+                if db.scalar(select(Classroom.id).where(Classroom.join_code == codes[class_name])) is None:
+                    room.join_code = codes[class_name]
     db.flush()
 
 

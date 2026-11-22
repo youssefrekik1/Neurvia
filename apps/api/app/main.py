@@ -15,8 +15,11 @@ from app.db.migrate import initialize_schema
 from app.db.seed import import_bank, read_seed
 from app.db.session import build_database
 from app.documents.storage import ObjectStore
-from app.routers import analytics, attempts, bank, course_assistant, dev, documents, identity, lessons, quizzes
+from app.routers import (
+    analytics, attempts, bank, course_assistant, curriculum, dev, documents, identity, lessons, quizzes,
+)
 from app.schemas.common import Health
+from app.services.curriculum import adopt_legacy_classrooms
 from app.services.demo_seed import seed_demo
 
 
@@ -38,6 +41,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 import_bank(db, read_seed())
                 if settings.demo_mode:
                     seed_demo(db, app.state.system_clock.now())
+                adopt_legacy_classrooms(db)
             with model_http(settings) as http:
                 client, app.state.document_models = model_clients(http, settings)
                 app.state.gateway = LLMGateway(client, settings, sessions)
@@ -69,7 +73,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def health():
         return Health()
 
-    for router in (identity, lessons, bank, quizzes, attempts, analytics, dev, documents, course_assistant):
+    for router in (identity, curriculum, lessons, bank, quizzes, attempts, analytics, dev, documents, course_assistant):
         app.include_router(router.router, prefix="/api/v1")
     return app
 
