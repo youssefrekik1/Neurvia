@@ -456,7 +456,7 @@ function Parameters({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["Co
           <label>Consigne de génération<textarea value={instructions} onChange={(event) => setInstructions(event.target.value)} /></label>
           <label className="lr-check">
             <input type="checkbox" checked={useSeed} onChange={(event) => setUseSeed(event.target.checked)} />
-            Inclure les brouillons de la banque Python à relire
+            Inclure les brouillons de la banque pédagogique à relire
           </label>
           <div className="lr-actions">
             <button className="lr-btn primary" disabled={busy}>
@@ -471,7 +471,7 @@ function Parameters({ lesson, taxonomy }: { lesson: Lesson; taxonomy: Schema["Co
             <h2>Banque pédagogique</h2>
           </div>
           <p>
-            Les questions approuvées sont sélectionnées en priorité. Qwen peut compléter le brouillon.
+            Les questions approuvées sont sélectionnées en priorité. Gemini peut compléter le brouillon à partir de vos supports.
           </p>
           <div className="lr-rule" />
           <small>Chaque question peut être modifiée avant publication.</small>

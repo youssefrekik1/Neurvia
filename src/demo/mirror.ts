@@ -45,7 +45,8 @@ const PLANS: Record<string, Schema["RemediationPlan"]> = {
 type State = {
   groups: Record<string, { status: Schema["GroupStatus"]; members?: string[]; intervention?: Schema["InterventionView"] }>;
 };
-const state: State = { groups: {} };
+export const mirrorState: State = { groups: {} };
+const state = mirrorState;
 
 function lesson(): Schema["LessonView"] {
   return {

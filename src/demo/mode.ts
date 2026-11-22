@@ -2,7 +2,7 @@
 // Demo mode: runs the app on fictional data in the browser, with no backend or account.
 // Enable from the login page ("Lancer la démo") or by visiting /demo/teacher or /demo/student.
 
-import { mirrorResponse } from "./mirror";
+import { demoBackend, resetDemoState } from "./backend";
 
 export type DemoRole = "teacher" | "student";
 const KEY = "neurvia.demo";
@@ -14,17 +14,16 @@ export function demoRole(): DemoRole | null {
 }
 
 export function startDemo(role: DemoRole) {
+  if (!demoRole()) resetDemoState(); // fresh data when the demo starts from the login page
   localStorage.setItem(KEY, role);
   window.location.assign(role === "teacher" ? "/teacher/cockpit" : "/student/parcours");
 }
 
 export function stopDemo() {
   localStorage.removeItem(KEY);
+  resetDemoState();
   window.location.assign("/login");
 }
-
-const CLASSROOM = { id: "00000000-0000-4000-8000-0000000000a1", name: "Bases de données · L2 Informatique A", subject: "Bases de données", is_synthetic: true };
-const CLASSROOM_B = { id: "00000000-0000-4000-8000-0000000000b1", name: "Mathématiques du signal · L2 Informatique A", subject: "Mathématiques du signal", is_synthetic: true };
 
 function profile(role: DemoRole) {
   return role === "teacher"
@@ -36,10 +35,8 @@ function profile(role: DemoRole) {
 export function mockResponse(path: string, method: string, data?: unknown): unknown {
   const role = demoRole();
   if (!role) return undefined;
-  const route = path.split("?")[0];
+  const [route, search = ""] = path.split("?");
   if (route === "/me") return profile(role);
-  if (route === "/classrooms" && method === "GET") return [CLASSROOM, CLASSROOM_B];
   if (route === "/auth/logout") { localStorage.removeItem(KEY); return { ok: true }; }
-  if (role === "teacher") return mirrorResponse(route, method, data);
-  return undefined;
+  return demoBackend(route, method, data, role, new URLSearchParams(search));
 }

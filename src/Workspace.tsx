@@ -112,8 +112,8 @@ export default function Workspace({ path }: { path: string }) {
   }
   const demo = demoRole() !== null;
   let content;
-  if (teacher && (page === "cockpit" || (demo && page === "dashboard"))) content = <Cockpit />;
-  else if (!teacher && (page === "parcours" || (demo && page === "dashboard"))) content = <StudyPath />;
+  if (teacher && page === "cockpit") content = <Cockpit />;
+  else if (!teacher && page === "parcours") content = <StudyPath />;
   else if (!teacher && page === "coach") content = <Coach />;
   else if (!teacher && page === "explain") content = <ExplainBack />;
   else if (page === "dashboard")

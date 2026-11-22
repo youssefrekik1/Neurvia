@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { FileText, MessageSquare } from "lucide-react";
 import { api, errorMessage, refresh, useGet, type Schema } from "../lib/api";
+import { demoRole } from "../demo/mode";
 
 type Document = Schema["DocumentView"];
 type Conversation = Schema["ConversationView"];
@@ -313,7 +314,7 @@ export function CourseDocuments({ lessonId, allowQuiz, hasGroundedQuiz, allowTax
           <span className="lr-doc-state" data-state={doc.state}>
             {states[doc.state]}{doc.state === "processing" && " · " + doc.progress + " %"}
           </span>
-          <a href={"/backend" + root + "/" + doc.id + "/original"}>PDF original</a>
+          <a href={demoRole() ? "/backend/demo/" + doc.name : "/backend" + root + "/" + doc.id + "/original"} target="_blank" rel="noreferrer">PDF original</a>
           {doc.page_count > 0 && <button className="lr-btn" aria-expanded={open === doc.id} onClick={() => setOpen(open === doc.id ? "" : doc.id)}>
             {open === doc.id ? "Fermer les pages" : "Voir les pages"}
           </button>}
