@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  AlertTriangle, ArrowRight, Check, Clock, Flame, Lightbulb, RefreshCw, Sparkles, TrendingUp, Users, X,
+  AlertTriangle, ArrowRight, Check, Clock, Flame, Lightbulb, Network, RefreshCw, Sparkles, TrendingUp, Users, X,
 } from "lucide-react";
 import { BEFORE_AFTER, CONCEPTS, MISCONCEPTIONS, STUDENTS, WEEKLY, conceptByCode, type StudentRow } from "../demo/data";
 import "./insights.css";
@@ -117,7 +117,10 @@ export default function Cockpit() {
           <h1>Pilotage de la classe</h1>
           <p>L2 Informatique A · Bases de données · 24 étudiants · semaine 5</p>
         </div>
-        <Link className="ni-primary" href="/teacher/lessons">Préparer la prochaine séance <ArrowRight size={15} /></Link>
+        <div className="ni-row">
+          <Link className="ni-ghost" href="/teacher/groups"><Users size={15} /> Groupes de remédiation</Link>
+          <Link className="ni-primary" href="/teacher/mindmirror"><Network size={15} /> Ouvrir MindMirror <ArrowRight size={15} /></Link>
+        </div>
       </div>
 
       <div className="ni-kpis">

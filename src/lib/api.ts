@@ -13,7 +13,7 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(path: string, method = "GET", data?: unknown): Promise<T> {
-  const mocked = mockResponse(path, method);
+  const mocked = mockResponse(path, method, data);
   if (mocked !== undefined) return mocked as T;
   const demo = demoRole() !== null;
   const multipart = data instanceof FormData;

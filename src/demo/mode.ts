@@ -2,6 +2,8 @@
 // Demo mode: runs the app on fictional data in the browser, with no backend or account.
 // Enable from the login page ("Lancer la démo") or by visiting /demo/teacher or /demo/student.
 
+import { mirrorResponse } from "./mirror";
+
 export type DemoRole = "teacher" | "student";
 const KEY = "neurvia.demo";
 
@@ -31,12 +33,13 @@ function profile(role: DemoRole) {
 }
 
 /** Returns a mocked payload, or undefined to let the request reach the real backend. */
-export function mockResponse(path: string, method: string): unknown {
+export function mockResponse(path: string, method: string, data?: unknown): unknown {
   const role = demoRole();
   if (!role) return undefined;
   const route = path.split("?")[0];
   if (route === "/me") return profile(role);
   if (route === "/classrooms" && method === "GET") return [CLASSROOM, CLASSROOM_B];
   if (route === "/auth/logout") { localStorage.removeItem(KEY); return { ok: true }; }
+  if (role === "teacher") return mirrorResponse(route, method, data);
   return undefined;
 }
