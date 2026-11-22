@@ -10,3 +10,6 @@ __pycache__/
 *.db
 *.db-*
 next-env.d.ts
+
+# Written by next dev for coding agents
+AGENTS.md

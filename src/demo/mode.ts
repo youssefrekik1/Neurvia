@@ -1,6 +1,6 @@
 "use client";
 // Demo mode: runs the app on fictional data in the browser, with no backend or account.
-// Enable from the login page ("Lancer la démo") or by visiting /demo/teacher or /demo/student.
+// Enable it from the login page with « Lancer la démo ». The fictional API lives in ./backend.ts.
 
 import { demoBackend, resetDemoState } from "./backend";
 
@@ -16,13 +16,15 @@ export function demoRole(): DemoRole | null {
 export function startDemo(role: DemoRole) {
   if (!demoRole()) resetDemoState(); // fresh data when the demo starts from the login page
   localStorage.setItem(KEY, role);
-  window.location.assign(role === "teacher" ? "/teacher/cockpit" : "/student/parcours");
+  window.location.href = role === "teacher" ? "/teacher/cockpit" : "/student/parcours";
 }
 
 export function stopDemo() {
   localStorage.removeItem(KEY);
   resetDemoState();
-  window.location.assign("/login");
+  // A full reload drops every cached demo response before returning to the real login.
+  // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+  window.location.href = "/login";
 }
 
 function profile(role: DemoRole) {

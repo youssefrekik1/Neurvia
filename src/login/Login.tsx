@@ -27,7 +27,7 @@ const information = {
   ],
   Établissements: [
     "Neurvia accompagne les établissements scolaires, les centres de formation et les universités.",
-    "La démonstration vous invite à explorer une classe de première année en Python du point de vue du professeur ou de l’étudiant.",
+    "La démonstration vous invite à explorer une classe de L2 Informatique en Bases de données et en Mathématiques du signal, du point de vue du professeur ou de l’étudiant.",
   ],
   Tarifs: [
     "L’accès à cette démonstration est gratuit. Vous pouvez explorer les deux espaces sans abonnement.",

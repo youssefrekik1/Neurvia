@@ -1,55 +1,133 @@
-# Neurvia (FAHM)
+# Neurvia
 
 [![CI](https://github.com/youssefrekik1/Neurvia/actions/workflows/ci.yml/badge.svg)](https://github.com/youssefrekik1/Neurvia/actions/workflows/ci.yml)
 
-Neurvia aide les professeurs d’algorithmique et de Python à comprendre **pourquoi** leurs étudiants se trompent, puis à y remédier. Après une séance, le professeur publie un quiz diagnostique. Neurvia relie chaque mauvaise réponse à une erreur de raisonnement connue, regroupe les étudiants qui partagent la même difficulté, propose une remédiation et vérifie ses effets par un retest puis un suivi à sept jours.
+**Comprendre pourquoi un étudiant se trompe, puis l’aider à ne plus se tromper.**
 
-Le professeur peut aussi importer ses supports de cours en PDF, y compris manuscrits, interroger un assistant qui cite les pages sources, et générer des questions fondées sur ces documents. Chaque quiz exige l’approbation explicite du professeur avant publication.
+Neurvia est une plateforme d’apprentissage fondée sur l’IA. Elle relie chaque mauvaise réponse d’un étudiant à une **erreur de raisonnement** précise, remonte jusqu’au **prérequis** qui bloque, propose une remédiation ciblée et en **mesure l’effet** dans le temps. Le professeur garde la main à chaque étape : rien n’est publié sans sa validation, et chaque réponse de l’IA cite la page du cours d’où elle vient.
 
-L’API utilise Gemini par défaut (`gemini-3.5-flash-lite` pour la génération et la vision, `gemini-embedding-2` pour les embeddings). Ollama et les serveurs compatibles OpenAI restent disponibles sur configuration explicite.
+![Pilotage IA de la classe](docs/screenshots/pilotage-ia.png)
 
-![Assistant de cours avec citation de la page source](docs/screenshots/course-assistant.png)
+## Sommaire
+
+- [Le défi](#le-défi)
+- [Essayer en deux minutes](#essayer-en-deux-minutes)
+- [Fonctionnalités](#fonctionnalités)
+- [Où intervient l’IA](#où-intervient-lia)
+- [Architecture](#architecture)
+- [Installation complète](#installation-complète)
+- [Tests et qualité](#tests-et-qualité)
+- [Structure du dépôt](#structure-du-dépôt)
+- [État du projet et limites](#état-du-projet-et-limites)
+
+## Le défi
+
+> Comment concevoir une solution fondée sur l’intelligence artificielle capable de répondre aux difficultés de compréhension des étudiants, d’enrichir leurs processus d’apprentissage et d’améliorer durablement leur expérience éducative ?
+
+| Le défi demande de… | Neurvia répond par… |
+| --- | --- |
+| **Répondre aux difficultés de compréhension** | Un diagnostic des **erreurs de raisonnement**, pas seulement des notes. Chaque mauvais choix de réponse est relié à une idée fausse connue (« la cardinalité se lit du mauvais côté »). Une erreur donnée avec assurance est traitée comme une idée à corriger, pas comme une étourderie, puis **confirmée** par une question indépendante. La **règle des prérequis** remonte de la notion qui bloque à la lacune qui la cause. |
+| **Enrichir les processus d’apprentissage** | Un **coach IA** qui répond à partir des supports du cours et cite ses pages, **Explique-le** (l’étudiant reformule une notion et voit les idées clés couvertes), des quiz générés depuis les PDF du professeur, y compris **manuscrits**, et un **parcours** qui explique pourquoi telle étape est proposée. |
+| **Améliorer durablement l’expérience** | Des **révisions espacées**, un **retest** puis un **suivi à J+7** qui vérifient que l’apprentissage tient, une vue **avant / après** pour le professeur et des **signaux de décrochage** pour relancer à temps. |
+
+## Essayer en deux minutes
+
+Le **mode démo** fait tourner toute l’interface dans le navigateur, sur des données fictives, **sans serveur, sans base de données et sans clé d’API**.
+
+```powershell
+npm ci
+npm run dev -- --port 3151
+```
+
+Ouvrez <http://localhost:3151/login>, choisissez **Professeur** ou **Étudiant**, puis cliquez sur **« Lancer la démo »**. Le bandeau violet permet de changer de rôle à tout moment.
+
+La démo met en scène une classe de **L2 Informatique** et deux matières construites à partir de vrais supports de cours : **Bases de données** (`BD-Cours-1.pdf`, modèle Entité-Association) et **Mathématiques du signal** (`Chapitre-1.pdf`, séries de Fourier, **cours manuscrit scanné**).
+
+**Parcours conseillé**
+
+1. **Professeur · Pilotage IA** : briefing de la semaine, actions en un clic, carte de chaleur de la classe.
+2. **MindMirror**, puis **Groupes** : constellation des erreurs, groupes de remédiation, plan de 10 minutes, retest.
+3. **Séances & quiz → Chapitre 1 BD** : poser une question à l’assistant de cours, qui répond en citant les pages.
+4. **Chapitre 2 BD → Préparer le quiz** : questions générées depuis le PDF, chacune avec sa page source.
+5. **Mathématiques du signal → Chapitre 1 → Voir les pages** : la page manuscrite à côté de sa transcription, avec les passages incertains à relire.
+6. **Étudiant · Mon parcours** (bouton « Pourquoi ? »), **Coach IA**, **Explique-le**, puis le **quiz** de Fourier et la **vérification** dans *Mes tâches*.
 
 ## Fonctionnalités
 
-| Parcours | Ce que fait Neurvia |
-| --- | --- |
-| **Matières et classes** | Le professeur déclare les matières qu’il enseigne et coche, pour chacune, ses classes. L’étudiant choisit sa classe à l’inscription et suit automatiquement toutes ses matières |
-| **Quiz guidé** | Écran d’accueil qui explique le déroulé, navigation entre les questions, raccourcis clavier (A–D, Entrée), confiance expliquée, correction en couleurs avec explication |
-| **Préparation de séance** | Notions de la séance, quiz préparé depuis la banque approuvée ou par Gemini, relecture et publication explicite |
-| **Diagnostic** | Réponses avec niveau de confiance. Une erreur seule reste une hypothèse, que vient confirmer une variante indépendante |
-| **MindMirror** | Constellation des profils d’erreurs et priorités de la classe, avec pseudonymes |
-| **Groupes et remédiation** | Groupes proposés par similarité, plan de remédiation éditable, affectation et retest ciblé |
-| **Suivi J+7** | Vérification différée et vue avant / après avec effectifs |
-| **Documents de cours** | Import de PDF, extraction, OCR et vision, relecture obligatoire des passages incertains, indexation |
-| **Assistant de cours** | Conversation sur les PDF sélectionnés, recherche hybride, citations vérifiées mot pour mot |
-| **Quiz fondés sur les sources** | Questions générées à partir des passages, distracteurs liés à des erreurs approuvées, sources visibles à la relecture |
-| **Établissements** | Isolation par établissement, classe et séance, notions et erreurs validées par les professeurs |
+### Pour le professeur
 
-| Relecture d’un scan manuscrit | Quiz fondé sur les sources |
+| | |
 | --- | --- |
-| ![Transcription à relire à côté de la page](docs/screenshots/documents-review.png) | ![Question avec page source et objectif](docs/screenshots/grounded-quiz-review.png) |
+| **Pilotage IA** | Briefing hebdomadaire rédigé par l’IA, actions recommandées exécutables en un clic, carte de chaleur maîtrise × notion, erreurs de la classe, impact de la remédiation et signaux de décrochage. |
+| **Documents de cours** | Import de PDF numériques ou **manuscrits** : extraction, OCR, transcription par vision, **relecture obligatoire** des passages incertains, puis indexation. |
+| **Assistant de cours** | Questions sur les PDF sélectionnés. Recherche hybride, réponses **citées mot pour mot** avec lien vers la page, refus quand le cours ne contient pas la réponse. |
+| **Quiz fondés sur les sources** | Génération depuis les documents : chaque mauvais choix correspond à une erreur diagnostique, chaque question affiche sa page source. **Rien n’est publié sans approbation.** |
+| **MindMirror** | Constellation de la classe : les étudiants qui partagent la même erreur se rapprochent. Priorités, profils détaillés et analyse IA des réponses d’un étudiant. |
+| **Groupes et remédiation** | Groupes proposés par similarité d’erreurs, plan de remédiation de 10 minutes éditable, affectation, retest ciblé, suivi J+7 et tableau **avant / après**. |
+| **Banque pédagogique** | Questions de confirmation, de retest et de révision, relues et approuvées par le professeur. |
+| **Matières & classes** | Le professeur déclare ses matières et coche ses classes. Les étudiants choisissent leur classe et suivent automatiquement toutes ses matières. |
+
+| Relecture d’un cours manuscrit | Quiz généré depuis le PDF |
+| --- | --- |
+| ![Relecture d’une page manuscrite](docs/screenshots/relecture-manuscrit.png) | ![Question générée avec sa page source](docs/screenshots/quiz-genere.png) |
+
+| MindMirror | Groupes et remédiation |
+| --- | --- |
+| ![Constellation MindMirror](docs/screenshots/mindmirror.png) | ![Groupes, plan et avant / après](docs/screenshots/groupes.png) |
+
+![Assistant de cours avec citations](docs/screenshots/assistant-de-cours.png)
+
+### Pour l’étudiant
+
+| | |
+| --- | --- |
+| **Mon parcours** | Carte des notions avec la maîtrise estimée et sa fourchette, chemin vers la **lacune de prérequis**, prochaine étape recommandée et panneau **« Pourquoi ? »** (lacune, plateau, incertitude, objectif d’examen, fatigue). |
+| **Coach IA** | Conversation fondée sur les supports du cours, avec citations. Il connaît les erreurs fréquentes de l’étudiant et propose des exercices adaptés. |
+| **Explique-le** | L’étudiant explique une notion avec ses mots. Neurvia indique les idées clés couvertes et celles à ajouter, avec la page du cours à relire. |
+| **Quiz guidé** | Réponse, puis niveau de confiance (non noté), puis correction détaillée. Raccourcis clavier A–D et Entrée. |
+| **Vérification** | Une erreur seule reste une hypothèse : une question indépendante la confirme ou l’écarte. |
+| **Révisions espacées** | Chaque notion revient au bon moment selon sa maîtrise ; retest immédiat puis révision à J+7. |
+
+| Mon parcours | Coach IA | Explique-le |
+| --- | --- | --- |
+| ![Carte des notions et prérequis](docs/screenshots/mon-parcours.png) | ![Coach IA avec citations](docs/screenshots/coach-ia.png) | ![Idées clés couvertes](docs/screenshots/explique-le.png) |
+
+## Où intervient l’IA
+
+Neurvia utilise **Gemini** par défaut (`gemini-3.5-flash-lite` pour la génération et la vision, `gemini-embedding-2` pour les embeddings). Ollama et les serveurs compatibles OpenAI restent disponibles sur configuration.
+
+| Étape | Rôle de l’IA | Garde-fou |
+| --- | --- | --- |
+| Lecture des cours | Transcription des pages scannées ou manuscrites | Passages incertains signalés, relus et validés par le professeur avant indexation |
+| Recherche | Embeddings et recherche hybride (pgvector et plein texte) | Filtrage strict par établissement, classe et séance |
+| Assistant de cours | Réponse structurée à partir des passages retrouvés | Chaque citation doit exister mot pour mot ; une seconde passe vérifie que la réponse est soutenue |
+| Génération de quiz | Questions, distracteurs liés à des erreurs approuvées, variantes de suivi | Une seule bonne réponse vérifiée ; approbation du professeur obligatoire |
+| Diagnostic | Hypothèses d’erreur sur les réponses d’un étudiant | Consultatif ; confirmation par une question indépendante |
+| Remédiation | Plan de séance de 10 minutes par groupe | Plan éditable, affecté seulement par le professeur |
+
+Les PDF sont traités comme des **données non fiables** : une instruction cachée dans un document ne modifie ni les consignes du modèle ni les droits. Aucune donnée d’identité de l’étudiant n’est envoyée au modèle.
 
 ## Architecture
-
-### Vue d’ensemble
 
 ```mermaid
 flowchart LR
     browser["Navigateur<br/>professeur ou étudiant"]
     subgraph web["Next.js · src/"]
         ui["Interface React"]
+        demo["Mode démo<br/>API fictive dans le navigateur"]
         proxy["Route /backend<br/>cookie HttpOnly, contrôle d’origine"]
     end
     subgraph backend["FastAPI · apps/api"]
         api["API /api/v1<br/>authentification, autorisations, quotas"]
         worker["Worker de documents<br/>extraction, OCR, vision, embeddings"]
     end
-    db[("PostgreSQL + pgvector<br/>données, chunks, vecteurs, file de travaux")]
-    s3[("Stockage S3 privé<br/>PDF, rendus de pages, images")]
-    models["Serveur de modèles<br/>Gemini API (défaut)<br/>Ollama ou compatible OpenAI sur configuration"]
+    db[("PostgreSQL + pgvector<br/>données, chunks, vecteurs, travaux")]
+    s3[("Stockage S3 privé<br/>PDF et rendus de pages")]
+    models["Gemini API"]
 
-    browser --> ui --> proxy -->|"Bearer JWT"| api
+    browser --> ui
+    ui -. "mode démo" .-> demo
+    ui --> proxy -->|"Bearer JWT"| api
     api --> db
     api --> s3
     api -->|"chat, vérification, génération"| models
@@ -58,115 +136,47 @@ flowchart LR
     worker -->|"embeddings, transcription"| models
 ```
 
-PostgreSQL est la base de référence, y compris pour la démonstration. SQLite reste possible pour une démonstration sans Docker. Les documents de cours exigent PostgreSQL, le stockage S3 et le worker.
+### Boucle diagnostique
+
+```mermaid
+flowchart LR
+    quiz["Quiz approuvé<br/>et publié"] --> answers["Réponses<br/>+ confiance"]
+    answers --> hypothesis["Hypothèse d’erreur"]
+    hypothesis --> confirm["Question de<br/>vérification"]
+    confirm --> mirror["MindMirror<br/>priorités"]
+    mirror --> groups["Groupes<br/>validés par le professeur"]
+    groups --> plan["Plan de remédiation<br/>10 minutes"]
+    plan --> retest["Retest immédiat"]
+    retest --> j7["Révision J+7"]
+    j7 --> compare["Avant / après"]
+```
 
 ### Traitement d’un PDF
 
 ```mermaid
 flowchart LR
-    upload["Import du PDF<br/>contrôle d’accès, taille, signature, SHA-256"] --> original[("Original dans S3")]
-    upload --> job["Travail « extract »<br/>bail, reprise, nouvelles tentatives"]
-    job --> kind{"Page numérique<br/>ou scannée ?"}
-    kind -->|numérique| digital["Texte, code, tableaux<br/>et figures avec coordonnées"]
-    kind -->|scannée| ocr["Tesseract (fra, eng, ara)"]
-    ocr -->|"texte vide ou peu fiable"| vision["Transcription littérale<br/>par Gemini"]
-    digital --> flagged{"Bloc incertain ?"}
+    upload["Import du PDF<br/>taille, signature, SHA-256"] --> kind{"Page numérique<br/>ou scannée ?"}
+    kind -->|numérique| digital["Texte, tableaux, figures<br/>avec coordonnées"]
+    kind -->|scannée| ocr["OCR Tesseract<br/>fra, eng, ara"]
+    ocr -->|"texte peu fiable"| vision["Transcription<br/>par Gemini"]
+    digital --> flagged{"Passage<br/>incertain ?"}
     ocr --> flagged
     vision --> flagged
-    flagged -->|oui| review["Relecture du professeur<br/>correction et validation"]
+    flagged -->|oui| review["Relecture<br/>du professeur"]
     flagged -->|non| index
-    review --> index["Travail « index »<br/>chunks parents et enfants, embeddings"]
-    index --> ready(["Document prêt<br/>révision publiée de façon atomique"])
+    review --> index["Indexation<br/>chunks + embeddings"]
+    index --> ready(["Document prêt"])
 ```
 
 Un passage illisible n’est jamais inventé : il est marqué `[illisible]` et reste à relire.
 
-### Réponse de l’assistant
+**Technologies** : Next.js 16 et React 19 · FastAPI, SQLAlchemy, Pydantic · PostgreSQL et pgvector, migrations Alembic · stockage S3 · Gemini. Le contrat d’API est publié dans [docs/openapi.json](docs/openapi.json), avec les types générés dans [docs/api-types.d.ts](docs/api-types.d.ts).
 
-```mermaid
-sequenceDiagram
-    actor P as Professeur
-    participant A as API
-    participant R as Recherche hybride
-    participant L as Gemini API
-    P->>A: question sur les PDF sélectionnés
-    A->>R: requête filtrée par établissement, classe, séance et documents
-    R->>R: pgvector + plein texte, fusion des rangs, reclassement, budget de contexte
-    R-->>A: passages P1…Pn avec leurs pages
-    A->>L: réponse structurée, passages traités comme données non fiables
-    L-->>A: réponse et citations mot pour mot
-    A->>A: chaque citation doit exister dans son passage
-    A->>L: vérification indépendante de la réponse
-    L-->>A: verdict « soutenue » ou non
-    A-->>P: réponse avec liens vers les pages, ou refus faute de preuve
-```
+## Installation complète
 
-La génération de questions suit le même chemin. Elle ajoute la taxonomie approuvée, un distracteur par erreur diagnostique, la vérification qu’une seule réponse est correcte, et l’approbation finale du professeur.
+Le mode démo suffit pour découvrir le produit. L’installation complète active les vrais comptes, l’import de PDF et l’IA.
 
-### Boucle diagnostique
-
-```mermaid
-flowchart LR
-    quiz["Quiz initial<br/>approuvé et publié"] --> answers["Réponses<br/>et niveau de confiance"]
-    answers --> hypothesis["Hypothèse d’erreur<br/>(une réponse seule)"]
-    hypothesis --> confirm["Variante de confirmation<br/>indépendante"]
-    confirm --> mirror["MindMirror<br/>profils et priorités"]
-    mirror --> groups["Groupes proposés<br/>décision du professeur"]
-    groups --> plan["Plan de remédiation<br/>relu et affecté"]
-    plan --> retest["Retest immédiat"]
-    retest --> j7["Révision J+7"]
-    j7 --> compare["Vue avant / après<br/>avec effectifs"]
-```
-
-Les variantes de confirmation, de retest et de J+7 proviennent de la banque approuvée par le professeur. Le bouton **Préparer les variantes de suivi** de la séance les rédige à partir des PDF, en brouillon, pour chaque erreur approuvée.
-
-### Classes, matières et cours
-
-```mermaid
-erDiagram
-    TEACHER ||--o{ TEACHER_SUBJECT : "enseigne"
-    COHORT ||--o{ COHORT_MEMBER : "élèves (une classe par élève)"
-    TEACHER_SUBJECT ||--o{ CLASSROOM : "cours"
-    COHORT ||--o{ CLASSROOM : "cours"
-    CLASSROOM ||--o{ MEMBERSHIP : "inscriptions automatiques"
-    CLASSROOM ||--o{ LESSON : "séances"
-```
-
-Un cours est le couple (matière, classe). Cocher une classe pour une matière crée le cours et y inscrit tous les élèves de la classe ; un élève qui rejoint la classe plus tard est inscrit à tous ses cours. Un cours qui contient déjà des séances ne peut pas être retiré.
-
-### Modèle de données des documents
-
-```mermaid
-erDiagram
-    INSTITUTION ||--o{ INSTITUTION_MEMBER : "regroupe"
-    INSTITUTION ||--o{ CLASSROOM_TENANT : "héberge"
-    CLASSROOM_TENANT ||--|| CLASSROOM : "rattache"
-    CLASSROOM ||--o{ LESSON : "contient"
-    LESSON ||--o{ RESOURCE : "documents"
-    RESOURCE ||--o{ DOCUMENT_VERSION : "versions"
-    DOCUMENT_VERSION ||--o{ DOCUMENT_PAGE : "pages"
-    DOCUMENT_PAGE ||--o{ DOCUMENT_BLOCK : "blocs relus"
-    DOCUMENT_BLOCK ||--o{ DOCUMENT_CHUNK : "chunks parents et enfants"
-    DOCUMENT_CHUNK ||--o| CHUNK_EMBEDDING : "vecteur par révision de modèle"
-    LESSON ||--o{ CONVERSATION : "assistant"
-    CONVERSATION ||--|| GENERATION_BRIEF : "consignes"
-    DOCUMENT_CHUNK ||--o{ SOURCE_CITATION : "cité par"
-    SOURCE_CITATION }o--o| QUESTION : "justifie"
-    SOURCE_CITATION }o--o| MESSAGE : "justifie"
-```
-
-Chaque requête documentaire filtre par établissement, classe et séance. Les clés d’objets S3 reprennent ce préfixe, et une ressource hors périmètre répond `404`.
-
-### Technologies
-
-- **Frontend** : Next.js 16 et React 19. Le navigateur n’appelle jamais FastAPI directement : la route `/backend` conserve le JWT dans un cookie `HttpOnly` et contrôle l’origine des écritures.
-- **API** : FastAPI, SQLAlchemy, Pydantic. Contrat publié dans [docs/openapi.json](docs/openapi.json) et types générés dans [docs/api-types.d.ts](docs/api-types.d.ts).
-- **Base** : PostgreSQL avec pgvector et migrations Alembic pour l’installation complète. SQLite reste disponible pour la démonstration sans documents.
-- **Documents** : stockage S3 privé, travaux durables avec reprise, recherche hybride (pgvector et plein texte PostgreSQL) avec fusion des rangs.
-
-## Démarrage
-
-Prérequis : **Windows et PowerShell**, **Python 3.11+**, **Node.js 24**, une clé Gemini pour les fonctions IA, et **Docker Desktop** pour les documents de cours.
+**Prérequis** : Windows et PowerShell, Python 3.11+, Node.js 24, Docker Desktop et une clé d’API Gemini.
 
 ```powershell
 python -m venv apps/api/.venv
@@ -175,112 +185,65 @@ npm ci
 if (!(Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
-### Option A : installation complète, avec les documents de cours
-
-PostgreSQL, le stockage S3, l’API et le worker tournent dans Docker. Le frontend tourne en mode développement.
+Ajoutez votre clé Gemini dans `.env` (`MODEL_API_KEY=…`) : Docker Compose la transmet à l’API et au worker. Puis lancez la pile :
 
 ```powershell
-docker compose -f compose.documents.yml up -d --build
+docker compose -f compose.documents.yml up -d --build   # PostgreSQL, S3, API et worker
 $env:BACKEND_URL = "http://127.0.0.1:8010/api/v1"
 npm run dev -- --port 3151
 ```
 
-Ouvrez <http://localhost:3151/login>, créez un compte professeur, une classe et une séance, puis importez des PDF dans la section **Documents de cours** de la séance. L’API répond sur <http://127.0.0.1:8010/docs>. Pour un frontend conteneurisé, ajoutez `--profile web` : il écoute alors sur le port 3152.
+L’interface est sur <http://localhost:3151/login>, la documentation de l’API sur <http://127.0.0.1:8010/docs>.
 
-Les mots de passe de `compose.documents.yml` ne servent qu’au développement local. L’API refuse de démarrer en production avec ces valeurs. Le déploiement, les secrets, les sauvegardes et les établissements sont décrits dans [docs/DOCUMENTS.md](docs/DOCUMENTS.md).
-
-### Option B : démonstration rapide, sans documents
-
-```powershell
-./start-demo.ps1            # 20 apprenants fictifs, une séance publiée et des réponses
-./start-demo.ps1 -Fresh     # nouvelle base de démonstration
-./start-demo.ps1 -Offline   # sans génération IA
-./start-demo.ps1 -Sqlite    # sans Docker, avec une base SQLite locale
-```
-
-Le script démarre le service PostgreSQL de `compose.documents.yml` et y crée une base dédiée, `neurvia_demo`, séparée des données réelles. Il lance ensuite FastAPI sur le port 8000 et l’interface sur <http://127.0.0.1:3147>. Sans Docker, il bascule sur SQLite. Next.js n’autorise qu’un serveur de développement par dossier : arrêtez celui de l’option A avant de lancer la démonstration. Les comptes fictifs utilisent le mot de passe `FAHM-demo-2026` :
-
-- professeur `prof.fahm@example.com` ;
-- étudiants `eleve1.fahm@example.com` et `eleve2.fahm@example.com`.
-
-Comme professeur, **Simuler J+7** avance l’horloge de démonstration après un retest. La date simulée est signalée dans l’interface.
-
-Trois classes fictives, **L1 Informatique A**, **B** (40 élèves chacune) et **C** (30 élèves). La professeure enseigne **Algorithmique & Python** aux trois classes et **Bases de données** aux classes B et C. Connectez-vous avec `amel.bensalem.prof@neurvia.demo` et le mot de passe `Algo-Prof-2026!`. Les comptes élèves figurent dans [data/demo_classrooms.json](data/demo_classrooms.json). En mode démo, les comptes du dataset soumettent automatiquement des réponses variées à la publication du quiz initial.
-
-Placez votre nouvelle clé dans `GEMINI_API_KEY` dans le fichier local `apps/api/.env`. Gardez cette variable côté API et worker. Pour vérifier les modèles accessibles au compte, exécutez `python -m tools.probe_gemini` depuis `apps/api`. Le script utilise des données fictives. Pour démarrer sans génération, utilisez `LLM_ENABLED=false` ou `./start-demo.ps1 -Offline`.
-
-Dans MindMirror, l’onglet **Difficultés** permet de demander des hypothèses sur les réponses d’un apprenant. Les réponses observées sont affichées avec chaque hypothèse. Le résultat reste consultatif. Les applications clientes peuvent fournir une justification facultative avec la réponse via le champ `justification`.
-
-## Parcours type
-
-1. Dans **Matières & classes**, le professeur ajoute les matières qu’il enseigne et coche les classes concernées. Les étudiants choisissent leur classe à l’inscription (ou rejoignent un cours par code). Pour une nouvelle matière, le professeur valide d’abord ses notions et les erreurs diagnostiques associées.
-2. Il crée une séance, importe ses PDF, relit les passages signalés et les fait indexer.
-3. Il interroge l’assistant sur ses documents et précise ses consignes : thèmes, exclusions, difficultés observées. L’assistant en extrait un brief modifiable.
-4. Il génère le quiz à partir des documents sélectionnés, relit chaque question et sa source, puis l’approuve et le publie.
-5. Il clique sur **Préparer les variantes de suivi** : Neurvia rédige depuis les PDF une question de confirmation, de retest et de révision J+7 pour chaque erreur approuvée. Le professeur les relit avec leur source et les approuve dans la **Banque pédagogique**.
-6. Les étudiants passent un quiz guidé : réponse, puis niveau de confiance (non noté), puis correction détaillée. Une erreur commise avec assurance est signalée comme une idée à corriger plutôt qu’une étourderie. MindMirror et les groupes orientent la remédiation, puis le retest et le suivi J+7 en mesurent l’effet.
-
-Les variantes peuvent aussi être rédigées à la main dans la **Banque pédagogique**. Un profil demande au moins quatre réponses, et un groupe trois profils comparables.
-
-## Performance
-
-En mode développement, Next.js compile chaque page à la première visite : comptez quelques secondes au premier chargement. Pour une démonstration fluide, utilisez une build de production :
-
-```powershell
-npm run build
-$env:BACKEND_URL = "http://127.0.0.1:8010/api/v1"; npm start -- --port 3151
-```
-
-Mesuré : réponses de l’API entre 4 et 110 ms, changement de page entre 30 et 130 ms, premier chargement d’environ 1,5 s en production contre 4,6 s en développement.
-
-## Données et confidentialité
-
-- Les extraits de cours, les images de pages et les contenus utilisés pour les embeddings sont envoyés à Gemini quand ce fournisseur est sélectionné. L’analyse assistée transmet le contenu pédagogique de la réponse sans transmettre le profil ni les identifiants du compte. Utilisez des cours et justifications sans données personnelles.
-- Les PDF sont traités comme des données non fiables : une instruction cachée dans un document ne modifie ni les consignes du modèle ni les droits.
-- Une classe ne peut jamais accéder aux documents d’une autre. Les ressources hors périmètre répondent `404`.
-
-## Tests et vérification
+**Comptes de démonstration réels.** Le script suivant crée, via l’API, une professeure (Hela Ben Amor) qui enseigne les deux matières à **L2 Informatique A** et **B**, et un étudiant (Yassine Jaziri) en L2 Informatique A. L’option `--upload` importe aussi les deux cours :
 
 ```powershell
 Set-Location apps/api
-.\.venv\Scripts\python.exe -m pytest -q                       # SQLite
-$env:NEURVIA_TEST_POSTGRES = "postgresql+psycopg://neurvia:neurvia-local-db@127.0.0.1:55432/neurvia"
-.\.venv\Scripts\python.exe -m pytest -q                       # PostgreSQL : une base neuve par test
-Remove-Item Env:NEURVIA_TEST_POSTGRES
-.\.venv\Scripts\python.exe -m tools.check_documents --web http://localhost:3151   # parcours documentaire en direct
-Set-Location ../..
-npm run lint; npm run typecheck; npm run build
+.\.venv\Scripts\python.exe tools/setup_demo_accounts.py --upload
 ```
 
-- `scripts/verify-workflows.mjs` et `scripts/verify-navigation.mjs` pilotent l’interface active avec Playwright. Définissez `NEURVIA_URL`, et `NEURVIA_MODE=demo` pour le scénario de démonstration.
-- Après une modification de l’API, régénérez le contrat avec `python -m tools.export_contract` depuis `apps/api`, puis `npx --yes openapi-typescript@7.10.1 docs/openapi.json --output docs/api-types.d.ts` depuis la racine.
-- L’évaluation de la recherche documentaire est décrite dans [docs/DOCUMENTS.md](docs/DOCUMENTS.md#évaluation-de-la-recherche).
+Les identifiants sont définis en tête de [apps/api/tools/setup_demo_accounts.py](apps/api/tools/setup_demo_accounts.py). Pour vérifier la clé et les modèles accessibles : `python -m tools.probe_gemini` depuis `apps/api`.
+
+Le déploiement, les secrets, les sauvegardes et l’exploitation du pipeline documentaire sont décrits dans [docs/DOCUMENTS.md](docs/DOCUMENTS.md). Les mots de passe de `compose.documents.yml` ne servent qu’en local : l’API refuse de démarrer en production avec ces valeurs.
+
+## Tests et qualité
+
+```powershell
+npm run lint; npm run typecheck; npm run build
+Set-Location apps/api
+.\.venv\Scripts\python.exe -m pytest -q        # tests de l’API (SQLite ; PostgreSQL avec NEURVIA_TEST_POSTGRES)
+```
+
+- La CI GitHub Actions exécute ces vérifications à chaque push.
+- `scripts/verify-workflows.mjs` et `scripts/verify-navigation.mjs` parcourent l’interface avec Playwright.
+- Après une modification de l’API : `python -m tools.export_contract` depuis `apps/api`, puis `npx --yes openapi-typescript@7.10.1 docs/openapi.json --output docs/api-types.d.ts`.
 
 ## Structure du dépôt
 
 ```text
+src/
+  demo/            mode démo : données fictives et API simulée dans le navigateur
+  insights/        Pilotage IA, Mon parcours, Coach IA, Explique-le
+  learning/        séances, quiz, documents de cours, espace étudiant
+  mirror/          MindMirror et groupes de remédiation
+  workspace/       accueil, matières et classes, paramètres
+public/backend/demo/  supports de cours de la démo (PDF et rendus de pages)
 apps/api/
-  app/            API FastAPI : routers, services, modèles, schémas
-  app/documents/  extraction, worker, recherche, citations, génération fondée
-  app/ai/         passerelle LLM, cache et serveurs de modèles
-  alembic/        migrations PostgreSQL
-  tools/          vérifications en direct, import SQLite, établissements, réindexation
-  tests/          tests SQLite et PostgreSQL
-src/              interface Next.js : professeur, étudiant, MindMirror, documents
-data/             banque de questions Python de référence
-docs/             contrat d’API, guide d’exploitation, captures d’écran
-compose.documents.yml   pile Docker locale
-start-demo.ps1          démonstration (PostgreSQL, ou SQLite avec -Sqlite)
+  app/             API FastAPI : routers, services, modèles, schémas
+  app/documents/   extraction, worker, recherche, citations, génération fondée
+  app/ai/          passerelle vers les modèles, cache
+  alembic/         migrations PostgreSQL
+  tools/           comptes de démonstration, vérifications, réindexation
+  tests/           tests SQLite et PostgreSQL
+data/              banque de questions de référence et jeu de données de démonstration de l’API
+docs/              contrat d’API, guide des documents, captures d’écran
+compose.documents.yml  pile Docker locale
 ```
 
-## Documentation
+## État du projet et limites
 
-- [docs/DOCUMENTS.md](docs/DOCUMENTS.md) : documents de cours, assistant, déploiement, sécurité, sauvegardes, capacité.
-- [docs/API.md](docs/API.md) : correspondance entre écrans et routes de l’API.
-- [FAHM_Specification_Finale_Pour_Codex.md](FAHM_Specification_Finale_Pour_Codex.md) : spécification pédagogique.
-
-## Limites connues
-
-- La transcription manuscrite n’a été vérifiée que sur un tracé synthétique. La relecture par le professeur reste obligatoire.
-- Le matériel validé est un GPU portable de 8 Go. Prévoyez une attente au-delà d’un ou deux professeurs actifs en même temps, ou un serveur d’inférence dédié.
-- Le backend compatible OpenAI a été vérifié contre l’API `/v1` d’Ollama, pas contre vLLM.
+- **Branché sur l’API réelle** : comptes et classes, matières, séances, import et relecture de PDF, assistant de cours, quiz fondés sur les sources, quiz étudiant avec confiance, vérification, MindMirror, groupes, remédiation, retest et suivi J+7.
+- **Prototypes sur données de démonstration** : *Pilotage IA*, *Mon parcours*, *Coach IA* et *Explique-le* fonctionnent aujourd’hui sur les données du mode démo. Leur branchement sur l’API est la prochaine étape. Les réponses du coach y sont scénarisées ; l’évaluation d’*Explique-le* repose sur la détection d’idées clés.
+- **Quota Gemini** : l’offre gratuite limite les embeddings à 1 000 requêtes par jour, soit l’indexation de quelques cours. Une clé avec facturation est nécessaire pour une classe réelle.
+- **Manuscrit** : la transcription doit toujours être relue par le professeur ; c’est un choix de conception, pas seulement une limite.
+- Le **mode démo** conserve son état dans l’onglet du navigateur ; il repart de zéro à chaque lancement depuis la page de connexion.

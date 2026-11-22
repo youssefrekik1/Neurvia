@@ -1,7 +1,7 @@
 """Create the hackathon demo accounts through the API: one teacher, two classes, two subjects, one student.
 
 Usage: python tools/setup_demo_accounts.py [--api http://127.0.0.1:8010/api/v1] [--upload]
---upload sends the course PDFs from "cours BD" and "cours math signal" to the lessons of each class
+--upload sends the course PDFs from public/backend/demo to the lessons of each class
 (requires a Gemini key in the API and worker so that the documents can be indexed).
 """
 
@@ -17,7 +17,7 @@ CLASSES = ["L2 Informatique A", "L2 Informatique B"]
 
 SUBJECTS = {
     "Bases de données": {
-        "folder": "cours BD",
+        "folder": "public/backend/demo",
         "concepts": [
             ("Modèle Entité-Association et cardinalités", [
                 ("Inverser les cardinalités d’une association", "Lire la cardinalité du côté de l’entité : un client passe 0,n commandes."),
@@ -38,13 +38,10 @@ SUBJECTS = {
         ],
         "lessons": [
             ("Chapitre 1 · Conception et modèle Entité-Association", 0, "BD-Cours-1.pdf"),
-            ("Chapitre 2 · Traduction vers le modèle relationnel", 1, "BD-cours-2.pdf"),
-            ("Chapitre 3 · Normalisation", 2, "BD-Cours-3.pdf"),
-            ("Chapitre 4 · Algèbre relationnelle", 3, "BD-Cours-4.pdf"),
         ],
     },
     "Mathématiques du signal": {
-        "folder": "cours math signal",
+        "folder": "public/backend/demo",
         "concepts": [
             ("Séries de Fourier et coefficients", [
                 ("Oublier le facteur 1/2π dans a₀", "a₀ = (1/2π)∫₀^{2π} f(x) dx : c’est la valeur moyenne du signal."),
@@ -61,8 +58,6 @@ SUBJECTS = {
         ],
         "lessons": [
             ("Chapitre 1 · Séries de Fourier", 0, "Chapitre-1.pdf"),
-            ("Chapitre 2 · Transformée de Fourier", 1, "Chapitre-2.pdf"),
-            ("Chapitre 3 · Transformée de Laplace", 2, "Chapitre-3.pdf"),
         ],
     },
 }
